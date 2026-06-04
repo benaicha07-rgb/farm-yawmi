@@ -177,6 +177,85 @@ textarea{resize:vertical;min-height:52px}
 
 /* arabic_css_added */
 </style>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, setDoc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAU7xM6yCvUJgHRXKYSz6cdgN2-4GrXsLo",
+      authDomain: "farm-yawmi-f3b64.firebaseapp.com",
+      projectId: "farm-yawmi-f3b64",
+      storageBucket: "farm-yawmi-f3b64.firebasestorage.app",
+      messagingSenderId: "1075651877975",
+      appId: "1:1075651877975:web:7ca7b4cb36e9eebcca1712"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const DOC_REF = doc(db, "farms", "yawmi");
+
+    // Save to Firestore
+    window.syncToCloud = async function(data) {
+      try {
+        await setDoc(DOC_REF, {
+          tasks: data.tasks,
+          irrigation: data.irrigation,
+          harvest: data.harvest,
+          costs: data.costs,
+          lastUpdated: new Date().toISOString()
+        });
+        showSyncStatus("synced");
+      } catch(e) {
+        showSyncStatus("error");
+        console.error("Sync error:", e);
+      }
+    };
+
+    // Listen for real-time changes from any device
+    onSnapshot(DOC_REF, (snapshot) => {
+      if (snapshot.exists()) {
+        const cloudData = snapshot.data();
+        const localData = JSON.parse(localStorage.getItem("farmYawmi_v3") || "{}");
+        const cloudTime = cloudData.lastUpdated || "0";
+        const localTime = localData.lastUpdated || "0";
+
+        // Use whichever is newer
+        if (cloudTime > localTime) {
+          window.D = {
+            tasks: cloudData.tasks || [],
+            irrigation: cloudData.irrigation || [],
+            harvest: cloudData.harvest || [],
+            costs: cloudData.costs || []
+          };
+          window.D.lastUpdated = cloudTime;
+          localStorage.setItem("farmYawmi_v3", JSON.stringify(window.D));
+          if (typeof renderAll === "function") renderAll();
+          showSyncStatus("synced");
+        }
+      }
+    });
+
+    function showSyncStatus(status) {
+      const el = document.getElementById("sync-status");
+      if (!el) return;
+      if (status === "synced") {
+        el.textContent = "☁ Synced";
+        el.style.color = "var(--green-mid)";
+      } else if (status === "syncing") {
+        el.textContent = "⟳ Syncing...";
+        el.style.color = "var(--text2)";
+      } else {
+        el.textContent = "⚠ Offline";
+        el.style.color = "var(--amber)";
+      }
+    }
+
+    window.showSyncStatus = showSyncStatus;
+    showSyncStatus("synced");
+  </script>
+
 </head>
 <body>
 
@@ -190,6 +269,7 @@ textarea{resize:vertical;min-height:52px}
     </div>
   </div>
   <div class="header-right">
+    <span id="sync-status" style="font-size:11px;color:var(--text2)">☁ Synced</span>
     <span class="season-pill" id="season-pill">Loading…</span>
     <span style="font-size:12px;color:var(--text3)" id="date-pill"></span>
     <button class="btn btn-sm" onclick="exportData()">↓ Export</button>
