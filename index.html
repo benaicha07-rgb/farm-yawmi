@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Farm Yawmi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f6f0;--surface:#fff;--surface2:#eef0ea;--surface3:#e6e9e0;
+  --text:#1c1f18;--text2:#4a4f42;--text3:#878c7e;
+  --border:#d6d9ce;
+  --green:#2d6a0f;--green-bg:#e8f5d6;--green-light:#f0f9e6;--green-mid:#4a9a1a;
+  --amber:#7a4a00;--amber-bg:#fef3d6;--amber-mid:#d4820a;
+  --red:#8b1a1a;--red-bg:#fdeaea;--red-mid:#d63030;
+  --blue:#0f4f8a;--blue-bg:#e6f2fc;--blue-mid:#2278c4;
+  --teal:#0a5c45;--teal-bg:#e0f5ee;--teal-mid:#1a9e72;
+  --r:12px;--r-sm:8px;--r-xs:5px;
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 1px 2px rgba(0,0,0,0.04);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#161a12;--surface:#1e2318;--surface2:#252c1e;--surface3:#2c3524;
+  --text:#e8ece0;--text2:#a8af9a;--text3:#6a7260;
+  --border:#323826;
+  --green:#a0d060;--green-bg:#1a2e0a;--green-light:#1e3410;--green-mid:#6ab030;
+  --amber:#f0b840;--amber-bg:#2a1e00;--amber-mid:#d4820a;
+  --red:#f08080;--red-bg:#2a0808;--red-mid:#d63030;
+  --blue:#80b8f0;--blue-bg:#081828;--blue-mid:#2278c4;
+  --teal:#60d0a8;--teal-bg:#081e16;--teal-mid:#1a9e72;
+}}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── HEADER ── */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
+.header-brand{display:flex;align-items:center;gap:10px}
+.brand-icon{width:36px;height:36px;background:var(--green-bg);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.brand-name{font-size:16px;font-weight:600;color:var(--text)}
+.brand-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.season-pill{background:var(--green-bg);color:var(--green);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.btn{padding:6px 12px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-size:12px;font-family:var(--font);font-weight:500;transition:all .15s}
+.btn:hover{background:var(--surface2);color:var(--text)}
+.btn-primary{background:var(--green-mid);border-color:var(--green-mid);color:#fff}
+.btn-primary:hover{opacity:.9}
+.btn-sm{padding:4px 10px;font-size:11px}
+
+/* ── NAV ── */
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto}
+.nav-item{padding:11px 14px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font)}
+.nav-item:hover{color:var(--text2)}
+.nav-item.active{color:var(--green);border-bottom-color:var(--green)}
+
+/* ── LAYOUT ── */
+.page{display:none;padding:16px;max-width:100%;margin:0}
+.page.active{display:block}
+.section-title{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+
+/* ── KPI STRIP ── */
+.kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px}
+.kpi-val{font-size:22px;font-weight:700;color:var(--text);line-height:1}
+.kpi-label{font-size:11px;color:var(--text3);margin-top:4px}
+.kpi-label-ar{font-size:13px;color:var(--text3);direction:rtl;margin-top:1px}
+.kpi-delta{font-size:11px;margin-top:4px}
+
+/* ── ALERT BAR ── */
+.alert{padding:10px 14px;border-radius:var(--r-sm);margin-bottom:12px;font-size:13px;display:flex;gap:10px;align-items:flex-start;border:1px solid}
+.alert-amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-mid)}
+.alert-green{background:var(--green-bg);color:var(--green);border-color:var(--green-mid)}
+.alert-red{background:var(--red-bg);color:var(--red);border-color:var(--red-mid)}
+.alert-blue{background:var(--blue-bg);color:var(--blue);border-color:var(--blue-mid)}
+.alert-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.alert-body{flex:1;line-height:1.5}
+.alert-ar{font-size:14px;direction:rtl;margin-top:2px;opacity:.8}
+
+/* ── BLOCK CARDS GRID ── */
+.blocks-grid{display:grid;grid-template-columns:repeat(4,1fr);align-items:start;gap:14px;margin-bottom:16px}
+.block-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:all .2s;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.block-card:hover{border-color:var(--green-mid);transform:translateY(-1px)}
+.block-card.selected{border-color:var(--green-mid);border-width:2px}
+.bc-header{padding:14px 16px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-height:80px}
+.bc-title{font-size:15px;font-weight:600;color:var(--text)}
+.bc-subtitle{font-size:12px;color:var(--text3);margin-top:2px;direction:rtl}
+.bc-badge{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
+.bc-species-row{padding:0 16px 8px;display:flex;flex-wrap:nowrap;gap:6px;overflow:hidden;align-items:center}
+.species-chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border-radius:20px;padding:3px 9px;font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+.sp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.bc-metrics{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border);height:72px}
+.bc-metric{padding:10px 12px;text-align:center;border-right:1px solid var(--border)}
+.bc-metric:last-child{border-right:none}
+.bc-metric-val{font-size:16px;font-weight:700;color:var(--text)}
+.bc-metric-label{font-size:10px;color:var(--text3);margin-top:2px}
+.bc-footer{padding:10px 16px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bc-footer-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+.status-dot{width:7px;height:7px;border-radius:50%}
+.status-green{background:var(--green-mid)}
+.status-amber{background:var(--amber-mid)}
+.status-red{background:var(--red-mid)}
+
+/* ── BLOCK DETAIL PANEL ── */
+.block-detail{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden;display:none}
+.block-detail.open{display:block}
+.bd-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.bd-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0}
+.bd-section{padding:14px 16px;border-right:1px solid var(--border)}
+.bd-section:last-child{border-right:none}
+.bd-section-title{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px}
+.task-row{display:flex;align-items:flex-start;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)}
+.task-row:last-child{border-bottom:none}
+.task-check{width:16px;height:16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.task-check.done{background:var(--green-mid);border-color:var(--green-mid);color:#fff;font-size:10px}
+.task-text{font-size:13px;color:var(--text);flex:1}
+.task-text.done{text-decoration:line-through;color:var(--text3)}
+.task-date{font-size:11px;color:var(--text3);margin-top:2px}
+
+/* ── PROGRESS BAR ── */
+.prog{height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:3px;transition:width .4s}
+
+/* ── TABLES ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;padding:8px 10px;background:var(--surface2);color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
+.tbl td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--surface2)}
+.tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--r)}
+
+/* ── FORM ── */
+.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:14px}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:8px}
+.fg{display:flex;flex-direction:column;gap:3px}
+label{font-size:11px;color:var(--text3);font-weight:500}
+input,select,textarea{padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%}
+input:focus,select:focus,textarea:focus{border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(74,154,26,.12)}
+textarea{resize:vertical;min-height:52px}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.b-green{background:var(--green-bg);color:var(--green)}
+.b-amber{background:var(--amber-bg);color:var(--amber)}
+.b-red{background:var(--red-bg);color:var(--red)}
+.b-blue{background:var(--blue-bg);color:var(--blue)}
+.b-teal{background:var(--teal-bg);color:var(--teal)}
+
+/* ── SEASON TIMELINE ── */
+.timeline{display:flex;gap:3px;margin-bottom:8px}
+.tl-month{flex:1;padding:5px 2px;border-radius:4px;text-align:center;font-size:9px;font-weight:500;cursor:default;transition:all .2s}
+.tl-month.cur{outline:2px solid var(--green-mid);font-weight:700}
+
+/* ── AI BRIEF ── */
+.ai-brief{background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
+.ai-brief-head{font-size:12px;font-weight:600;color:var(--green);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ai-brief-body{font-size:13px;color:var(--green);line-height:1.7}
+
+/* ── IRRIG STATUS ── */
+.irrig-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.irrig-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.irrig-row:last-child{border-bottom:none}
+.irrig-name{min-width:90px}
+.irrig-name strong{font-size:13px;color:var(--text)}
+.irrig-name span{font-size:11px;color:var(--text3);display:block}
+
+/* ── GRID 2 ── */
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:14px}
+
+/* ── MISC ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-head h3{font-size:14px;font-weight:600;color:var(--text)}
+.divider{border:none;border-top:1px solid var(--border);margin:12px 0}
+.empty{color:var(--text3);font-size:13px;padding:16px 0;text-align:center}
+@media(max-width:500px){.kpi-val{font-size:18px}.bc-title{font-size:14px}.nav-item{padding:10px 10px;font-size:12px}}
+
+[dir="rtl"], *:lang(ar) { font-size: 14px; }
+.alert-ar { font-size: 13px !important; }
+
+/* arabic_css_added */
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-brand">
+    <div class="brand-icon">🌿</div>
+    <div>
+      <div class="brand-name">Farm Yawmi <span style="font-size:12px;font-weight:400;color:var(--text3)">مزرعة يومي</span></div>
+      <div class="brand-sub">Khenchela · ~394 trees · 1.015 ha · 1,194 m</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="season-pill" id="season-pill">Loading…</span>
+    <span style="font-size:12px;color:var(--text3)" id="date-pill"></span>
+    <button class="btn btn-sm" onclick="exportData()">↓ Export</button>
+    <button class="btn btn-sm" onclick="document.getElementById('imp').click()">↑ Import</button>
+    <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)"/>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-item active" onclick="goPage('overview',this)">Overview · نظرة عامة</button>
+  <button class="nav-item" onclick="goPage('farm',this)">Farm Map · الخريطة</button>
+  <button class="nav-item" onclick="goPage('tasks',this)">Tasks · المهام</button>
+  <button class="nav-item" onclick="goPage('irrigation',this)">Irrigation · الري</button>
+  <button class="nav-item" onclick="goPage('harvest',this)">Harvest · الحصاد</button>
+  <button class="nav-item" onclick="goPage('costs',this)">Costs · التكاليف</button>
+</div>
+
+<!-- ═══ OVERVIEW ═══ -->
+<div id="page-overview" class="page active">
+  <div id="alert-zone"></div>
+
+  <div class="kpi-strip">
+    <div class="kpi">
+      <div class="kpi-val">~394</div>
+      <div class="kpi-label">Total trees · الأشجار</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val" id="ov-pending">—</div>
+      <div class="kpi-label">Tasks pending · مهام معلقة</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val" id="ov-irrig">—</div>
+      <div class="kpi-label">Last irrigation · آخر ري</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val" id="ov-yield">0 kg</div>
+      <div class="kpi-label">Season yield · محصول الموسم</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-val" id="ov-costs">0</div>
+      <div class="kpi-label">Costs DZD · التكاليف</div>
+    </div>
+  </div>
+
+  <!-- Season timeline -->
+  <div class="card">
+    <div class="card-head"><h3>2026 season · الموسم</h3><span id="stage-label" class="badge b-green"></span></div>
+    <div class="timeline" id="timeline"></div>
+    <div style="font-size:12px;color:var(--text3)" id="stage-tasks"></div>
+  </div>
+
+  <!-- AI Brief -->
+  <div class="ai-brief">
+    <div class="ai-brief-head">✦ This month's brief · ملخص الشهر</div>
+    <div class="ai-brief-body" id="ai-brief"></div>
+  </div>
+
+  <!-- Quick previews -->
+  <div class="grid2">
+    <div class="card" style="margin-bottom:0">
+      <div class="card-head"><h3>Upcoming tasks · مهام قريبة</h3><button class="btn btn-sm" onclick="goPage('tasks',null)">All →</button></div>
+      <div id="ov-tasks"></div>
+    </div>
+    <div class="card" style="margin-bottom:0">
+      <div class="card-head"><h3>Irrigation status · حالة الري</h3><button class="btn btn-sm" onclick="goPage('irrigation',null)">All →</button></div>
+      <div id="ov-irrig-status"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ FARM MAP (BLOCK CARDS) ═══ -->
+<div id="page-farm" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <div>
+      <div style="font-size:15px;font-weight:600;color:var(--text)">Farm blocks · قطع المزرعة</div>
+      <div style="font-size:12px;color:var(--text3);margin-top:2px">Tap a block to see details, tasks and history</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap" id="block-filter-row">
+      <button class="btn btn-sm active-filter" onclick="filterBlocks('all',this)">All blocks</button>
+      <button class="btn btn-sm" onclick="filterBlocks('apple',this)">Apple</button>
+      <button class="btn btn-sm" onclick="filterBlocks('other',this)">Other fruits</button>
+    </div>
+  </div>
+
+  <div class="blocks-grid" id="blocks-grid"></div>
+  <div class="block-detail" id="block-detail"></div>
+
+  <!-- Other fruits summary -->
+  <div class="card">
+    <div class="card-head"><h3>Other fruit trees · أشجار الفاكهة الأخرى</h3></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Species</th><th>Arabic</th><th>Age</th><th>Count</th><th>Harvest window</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sp-dot" style="background:#dc2626;display:inline-block;border-radius:50%;width:8px;height:8px;margin-right:6px"></span>Cherry</td><td dir="rtl">كرز</td><td>10 yrs</td><td>~6</td><td>June – July</td><td><span class="badge b-green">Mature</span></td></tr>
+          <tr><td><span class="sp-dot" style="background:#f9a8d4;display:inline-block;border-radius:50%;width:8px;height:8px;margin-right:6px"></span>Apricot</td><td dir="rtl">مشمش</td><td>1–5 yrs</td><td>~6</td><td>July – Aug</td><td><span class="badge b-amber">Mixed ages</span></td></tr>
+          <tr><td><span class="sp-dot" style="background:#fef3c7;border:1px solid #d97706;display:inline-block;border-radius:50%;width:8px;height:8px;margin-right:6px"></span>Pomegranate</td><td dir="rtl">رمان</td><td>4 yrs</td><td>~10</td><td>October</td><td><span class="badge b-green">Producing</span></td></tr>
+          <tr><td><span class="sp-dot" style="background:#a3a3a3;display:inline-block;border-radius:50%;width:8px;height:8px;margin-right:6px"></span>Pear</td><td dir="rtl">إجاص</td><td>7 yrs</td><td>~8</td><td>Sept – Oct</td><td><span class="badge b-green">Producing</span></td></tr>
+          <tr><td><span class="sp-dot" style="background:#1e3a8a;display:inline-block;border-radius:50%;width:8px;height:8px;margin-right:6px"></span>Olive</td><td dir="rtl">زيتون</td><td>8 yrs</td><td>~12</td><td>Oct – Nov</td><td><span class="badge b-green">Producing</span></td></tr>
+          <tr><td><span class="sp-dot" style="background:#d97706;display:inline-block;border-radius:50%;width:8px;height:8px;margin-right:6px"></span>Fig</td><td dir="rtl">تين</td><td>7+ yrs</td><td>~5</td><td>Aug – Sept</td><td><span class="badge b-green">Producing</span></td></tr>
+          <tr><td><span class="sp-dot" style="background:#4c1d95;display:inline-block;border-radius:50%;width:8px;height:8px;margin-right:6px"></span>Grapes</td><td dir="rtl">عنب</td><td>8 yrs</td><td>~4</td><td>September</td><td><span class="badge b-green">Producing</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TASKS ═══ -->
+<div id="page-tasks" class="page">
+  <div class="form-card">
+    <div class="card-head"><h3>Add task · إضافة مهمة</h3><button class="btn btn-sm" onclick="toggleEl('task-form')">+ New</button></div>
+    <div id="task-form" style="display:none">
+      <div class="form-grid">
+        <div class="fg"><label>Title · العنوان</label><input id="t-title" placeholder="e.g. Spray sulfur on Block D"/></div>
+        <div class="fg"><label>Date · التاريخ</label><input type="date" id="t-date"/></div>
+        <div class="fg"><label>Block · القطعة</label>
+          <select id="t-block">
+            <option>Block A — Apple orange 4yr</option>
+            <option>Block B — Mixed</option>
+            <option>Block C — Apple cyan 3yr</option>
+            <option>Block D — Apple green 7yr</option>
+            <option>All blocks</option>
+            <option>Other fruits</option>
+          </select>
+        </div>
+        <div class="fg"><label>Category · الفئة</label>
+          <select id="t-cat">
+            <option>Spraying · رش</option>
+            <option>Pruning · تقليم</option>
+            <option>Fertilising · تسميد</option>
+            <option>Thinning · ترقيق</option>
+            <option>Irrigation · ري</option>
+            <option>Monitoring · مراقبة</option>
+            <option>Harvest · حصاد</option>
+            <option>Other · أخرى</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:10px"><label>Notes · ملاحظات</label><textarea id="t-notes" placeholder="Optional…"></textarea></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="saveTask()">Save task</button>
+        <button class="btn btn-sm" onclick="toggleEl('task-form')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI suggestions -->
+  <div class="ai-brief" style="margin-bottom:14px">
+    <div class="ai-brief-head">✦ Suggested for this month · مقترحات الشهر</div>
+    <div id="ai-suggestions"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><h3>All tasks · جميع المهام</h3><span id="task-counts" style="font-size:12px;color:var(--text3)"></span></div>
+    <div id="tasks-body"></div>
+  </div>
+</div>
+
+<!-- ═══ IRRIGATION ═══ -->
+<div id="page-irrigation" class="page">
+  <div class="grid2">
+    <div>
+      <div class="section-title">Schedule status · حالة الجدول</div>
+      <div class="irrig-card" id="irrig-status-cards"></div>
+    </div>
+    <div>
+      <div class="section-title">Log session · تسجيل جلسة</div>
+      <div class="form-card" style="margin-bottom:0">
+        <div class="form-grid">
+          <div class="fg"><label>Date · التاريخ</label><input type="date" id="ir-date"/></div>
+          <div class="fg"><label>Block · القطعة</label>
+            <select id="ir-block">
+              <option>Block A — Apple orange</option>
+              <option>Block B — Mixed</option>
+              <option>Block C — Apple cyan</option>
+              <option>Block D — Apple green</option>
+              <option>All blocks</option>
+            </select>
+          </div>
+          <div class="fg"><label>Method · الطريقة</label>
+            <select id="ir-method">
+              <option>Drip · تنقيط</option>
+              <option>Flood · غمر</option>
+              <option>Both · كلاهما</option>
+            </select>
+          </div>
+          <div class="fg"><label>Duration min · المدة</label><input type="number" id="ir-dur" placeholder="60"/></div>
+        </div>
+        <div class="fg" style="margin-bottom:10px"><label>Notes · ملاحظات</label><input id="ir-notes" placeholder="e.g. soil was dry"/></div>
+        <button class="btn btn-primary" style="width:100%" onclick="logIrrigation()">Log irrigation · تسجيل الري</button>
+      </div>
+    </div>
+  </div>
+  <div class="section-title" style="margin-top:4px">History · السجل</div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Date</th><th>Block</th><th>Method</th><th>Duration</th><th>Notes</th><th></th></tr></thead>
+    <tbody id="irrig-body"></tbody></table>
+  </div>
+</div>
+
+<!-- ═══ HARVEST ═══ -->
+<div id="page-harvest" class="page">
+  <div class="kpi-strip" style="margin-bottom:14px">
+    <div class="kpi"><div class="kpi-val" id="h-total">0 kg</div><div class="kpi-label">Total yield · الإجمالي</div></div>
+    <div class="kpi"><div class="kpi-val" id="h-apple">0 kg</div><div class="kpi-label">Apple · تفاح</div></div>
+    <div class="kpi"><div class="kpi-val" id="h-grade-a">0 kg</div><div class="kpi-label">Grade A · الدرجة أ</div></div>
+    <div class="kpi"><div class="kpi-val" id="h-avg">—</div><div class="kpi-label">Avg/tree G2 · متوسط</div></div>
+  </div>
+  <div class="alert alert-amber"><div class="alert-icon">📅</div><div class="alert-body">Apple G2 harvest: September – early October. Check starch-iodine + pressure test before picking. G1 cyan: 2–3 fruits max.<div class="alert-ar">حصاد التفاح: سبتمبر–أكتوبر. اختبار النشا قبل القطف.</div></div></div>
+  <div class="form-card">
+    <div class="card-head"><h3>Log harvest · تسجيل الحصاد</h3></div>
+    <div class="form-grid">
+      <div class="fg"><label>Date</label><input type="date" id="hv-date"/></div>
+      <div class="fg"><label>Species · النوع</label>
+        <select id="hv-species">
+          <option>Apple G2 orange (4yr)</option>
+          <option>Apple G2 lime green (7yr)</option>
+          <option>Apple G1 cyan (3yr)</option>
+          <option>Cherry · كرز</option><option>Apricot · مشمش</option>
+          <option>Pear · إجاص</option><option>Fig · تين</option>
+          <option>Pomegranate · رمان</option><option>Grapes · عنب</option><option>Olive · زيتون</option>
+        </select>
+      </div>
+      <div class="fg"><label>Block</label><input id="hv-block" placeholder="Block D"/></div>
+      <div class="fg"><label>Variety · الصنف</label><input id="hv-variety" placeholder="e.g. Golden Delicious"/></div>
+      <div class="fg"><label>Total kg</label><input type="number" id="hv-kg" placeholder="0"/></div>
+      <div class="fg"><label>Grade A kg</label><input type="number" id="hv-a" placeholder="0"/></div>
+      <div class="fg"><label>Grade B kg</label><input type="number" id="hv-b" placeholder="0"/></div>
+      <div class="fg"><label>Rejected kg</label><input type="number" id="hv-rej" placeholder="0"/></div>
+    </div>
+    <div class="fg" style="margin-bottom:10px"><label>Pickers · العمال</label><input id="hv-pickers" placeholder="Names or count"/></div>
+    <button class="btn btn-primary" style="width:100%" onclick="logHarvest()">Log harvest · تسجيل الحصاد</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Date</th><th>Species</th><th>Block</th><th>Variety</th><th>Total kg</th><th>Grade A</th><th>Grade B</th><th>Rejected</th><th></th></tr></thead>
+    <tbody id="harvest-body"></tbody></table>
+  </div>
+</div>
+
+<!-- ═══ COSTS ═══ -->
+<div id="page-costs" class="page">
+  <div class="kpi-strip" style="margin-bottom:14px">
+    <div class="kpi"><div class="kpi-val" id="c-total">0</div><div class="kpi-label">Total DZD · الإجمالي</div></div>
+    <div class="kpi"><div class="kpi-val" id="c-tree">0</div><div class="kpi-label">Per tree · لكل شجرة</div></div>
+    <div class="kpi"><div class="kpi-val" id="c-top">—</div><div class="kpi-label">Top category · أعلى فئة</div></div>
+    <div class="kpi"><div class="kpi-val" id="c-count">0</div><div class="kpi-label">Entries · إدخالات</div></div>
+  </div>
+  <div class="form-card">
+    <div class="card-head"><h3>Add entry · إضافة إدخال</h3></div>
+    <div class="form-grid">
+      <div class="fg"><label>Date</label><input type="date" id="co-date"/></div>
+      <div class="fg"><label>Category · الفئة</label>
+        <select id="co-cat">
+          <option>Fertiliser · سماد</option><option>Pesticide · مبيد</option>
+          <option>Irrigation · ري</option><option>Labour · عمالة</option>
+          <option>Equipment · معدات</option><option>Packaging · تعبئة</option>
+          <option>Transport · نقل</option><option>Other · أخرى</option>
+        </select>
+      </div>
+      <div class="fg"><label>Applies to · يخص</label>
+        <select id="co-applies">
+          <option>All trees</option><option>Apple only</option>
+          <option>Block A</option><option>Block B</option><option>Block C</option><option>Block D</option>
+          <option>Other fruits</option>
+        </select>
+      </div>
+      <div class="fg"><label>Item · المنتج</label><input id="co-item" placeholder="e.g. NPK 20-20-20"/></div>
+      <div class="fg"><label>Supplier · المورد</label><input id="co-supplier" placeholder="Supplier name"/></div>
+      <div class="fg"><label>Qty · الكمية</label><input type="number" id="co-qty" placeholder="1"/></div>
+      <div class="fg"><label>Unit · الوحدة</label><input id="co-unit" placeholder="bag / L / day"/></div>
+      <div class="fg"><label>Unit price DZD</label><input type="number" id="co-price" placeholder="0"/></div>
+    </div>
+    <div class="fg" style="margin-bottom:10px"><label>Receipt ref · مرجع الإيصال</label><input id="co-receipt" placeholder="e.g. Blue folder #3"/></div>
+    <button class="btn btn-primary" style="width:100%" onclick="logCost()">Save entry · حفظ</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl"><thead><tr><th>Date</th><th>Category</th><th>Item</th><th>Applies to</th><th>Qty</th><th>Unit price</th><th>Total DZD</th><th></th></tr></thead>
+    <tbody id="costs-body"></tbody></table>
+  </div>
+</div>
+
+<script>
+// ═══ DATA ═══
+let D={tasks:[],irrigation:[],harvest:[],costs:[]};
+const saved=localStorage.getItem('farmYawmi3');
+if(saved)try{D=JSON.parse(saved);}catch(e){}
+
+function save(){localStorage.setItem('farmYawmi3',JSON.stringify(D));}
+function persist(){save();renderAll();}
+
+// ═══ BLOCKS CONFIG ═══
+const BLOCKS=[
+  {id:'A',name:'Block A',nameAr:'القطعة أ',species:'Apple 4yr',speciesAr:'تفاح 4 سنوات',color:'#f97316',bg:'#fff7ed',count:95,group:'G2',zone:'Upper section',irrigation:'Drip + Flood',tasks_key:'Block A',desc:'Established apple trees, 4 years old, main upper section of the farm.'},
+  {id:'B',name:'Block B',nameAr:'القطعة ب',species:'Mixed + other fruits',speciesAr:'أصناف متعددة',color:'#8b5cf6',bg:'#f5f3ff',count:95,group:'Mixed',zone:'Mid section near buildings',irrigation:'Mixed',tasks_key:'Block B',desc:'Transition zone around the farm house. Orange apple trees mixed with cherry, apricot, fig, pear, olive, pomegranate and grapes.'},
+  {id:'C',name:'Block C',nameAr:'القطعة ج',species:'Apple 3yr',speciesAr:'تفاح 3 سنوات',color:'#06b6d4',bg:'#ecfeff',count:95,group:'G1',zone:'Lower-mid section',irrigation:'Drip',tasks_key:'Block C',desc:'Young apple trees, 3 years old. Still establishing. No harvest — remove flowers to direct energy to root growth.'},
+  {id:'D',name:'Block D',nameAr:'القطعة د',species:'Apple 7yr',speciesAr:'تفاح 7 سنوات',color:'#84cc16',bg:'#f7fee7',count:159,group:'G2',zone:'Lower section (largest)',irrigation:'Drip + Flood',tasks_key:'Block D',desc:'Most productive block. 159 lime green trees, 7 years old, approaching full production of 30–50 kg/tree.'},
+];
+
+// ═══ SEASON DATA ═══
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const SEASON={
+  0:{en:'Dormancy',ar:'السكون',color:'#b4b2a9',tasks:['Pruning apple trees · تقليم أشجار التفاح','Tool preparation · تحضير الأدوات','Soil sampling · أخذ عينات التربة']},
+  1:{en:'Late dormancy',ar:'السكون المتأخر',color:'#b4b2a9',tasks:['Complete pruning · إنهاء التقليم','Dormant oil spray · رش زيت السكون','Watch apricot bloom · مراقبة تفتح المشمش']},
+  2:{en:'Bud swell',ar:'انتفاخ البراعم',color:'#c0dd97',tasks:['⚠️ Frost watch · مراقبة الصقيع','First fungicide · أول مبيد فطري','Nitrogen fertiliser · تسميد آزوتي']},
+  3:{en:'Bloom',ar:'التزهير',color:'#fac775',tasks:['Pollination management · إدارة التلقيح','Scab prevention spray · رش منع الجرب','Remove flowers Block C · إزالة أزهار القطعة ج']},
+  4:{en:'Fruit set',ar:'عقد الثمار',color:'#fac775',tasks:['Fruit thinning G2 · ترقيق ثمار مجموعة 2','Start drip irrigation · بدء الري بالتنقيط','Monitor aphids · مراقبة حشرة المن']},
+  5:{en:'Cell division',ar:'انقسام الخلايا',color:'#5dcaa5',tasks:['K+P fertiliser · تسميد البوتاسيوم والفوسفور','Irrigate every 5–7 days · ري كل 5–7 أيام','Monitor spider mites · مراقبة العناكب الحمراء','Cherry harvest check · فحص نضج الكرز']},
+  6:{en:'Fruit development',ar:'تطور الثمار',color:'#5dcaa5',tasks:['Peak irrigation 3–5 days · ري مكثف','Codling moth traps · فخاخ دودة التفاح','Harvest cherry · حصاد الكرز','Harvest apricot · حصاد المشمش']},
+  7:{en:'Colour development',ar:'تطور اللون',color:'#fac775',tasks:['Reduce nitrogen · تقليل الآزوت','Monitor apple maturity · مراقبة نضج التفاح','Harvest fig (start) · بداية حصاد التين']},
+  8:{en:'Harvest',ar:'الحصاد',color:'#97c459',tasks:['Harvest apple G2 A+D · حصاد تفاح المجموعة 2','Starch-iodine test · اختبار النشا','Harvest fig + grapes · حصاد التين والعنب','Post-harvest fertiliser · تسميد ما بعد الحصاد']},
+  9:{en:'Post-harvest',ar:'ما بعد الحصاد',color:'#fac775',tasks:['Leaf collection · جمع الأوراق','Soil amendments · تعديلات التربة','Pomegranate + pear harvest · حصاد الرمان والإجاص']},
+  10:{en:'Early dormancy',ar:'بداية السكون',color:'#b4b2a9',tasks:['Trunk whitewashing · طلاء الجذوع','Copper spray · رش النحاس','Mulch Block C trees · تغطية أشجار القطعة ج']},
+  11:{en:'Dormancy',ar:'السكون',color:'#b4b2a9',tasks:['Equipment maintenance · صيانة المعدات','Next season planning · تخطيط الموسم القادم']},
+};
+
+const BRIEFS={
+  5:`<strong>Early summer — cell division phase.</strong> Fruit on your <strong>Block D (159 trees, 7yr)</strong> and <strong>Block A (95 trees, 4yr)</strong> is sizing rapidly. Irrigate every 5–7 days and apply potassium + phosphorus fertiliser this month. Monitor spider mites across all apple blocks in the heat. <strong>Block C (3yr cyan)</strong> needs consistent water for root establishment — no fruit intervention. Your cherry trees in Block B are approaching harvest — check ripeness in late June.<br><span dir="rtl" style="display:block;margin-top:4px;font-size:12px">بداية الصيف: ري كل 5–7 أيام، تسميد البوتاسيوم، مراقبة العناكب. الكرز في القطعة ب يقترب من الحصاد.</span>`,
+};
+
+// ═══ INIT ═══
+function init(){
+  const m=new Date().getMonth();
+  document.getElementById('date-pill').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+  document.getElementById('season-pill').textContent=SEASON[m].en+' · '+SEASON[m].ar;
+  setDefaults();
+  buildTimeline();
+  buildAlerts();
+  buildAIBrief();
+  buildAISuggestions();
+  buildBlockCards();
+  buildIrrigStatus();
+  renderAll();
+}
+
+function setDefaults(){
+  const t=new Date().toISOString().split('T')[0];
+  ['t-date','ir-date','hv-date','co-date'].forEach(id=>{const el=document.getElementById(id);if(el)el.value=t;});
+}
+
+// ═══ TIMELINE ═══
+function buildTimeline(){
+  const m=new Date().getMonth();
+  const tl=document.getElementById('timeline');
+  tl.innerHTML='';
+  MONTHS.forEach((mo,i)=>{
+    const d=document.createElement('div');
+    d.className='tl-month'+(i===m?' cur':'');
+    d.style.background=SEASON[i].color+(i===m?'':'aa');
+    d.style.color='#1a1a18';
+    d.title=SEASON[i].en;
+    d.textContent=mo;
+    tl.appendChild(d);
+  });
+  const s=SEASON[m];
+  document.getElementById('stage-label').textContent=s.en+' · '+s.ar;
+  document.getElementById('stage-tasks').textContent='This month: '+s.tasks.slice(0,2).join(' · ');
+}
+
+// ═══ ALERTS ═══
+function buildAlerts(){
+  const m=new Date().getMonth();
+  const z=document.getElementById('alert-zone');
+  z.innerHTML='';
+  const add=(type,icon,msg,ar)=>z.innerHTML+=`<div class="alert alert-${type}"><div class="alert-icon">${icon}</div><div class="alert-body">${msg}<div class="alert-ar">${ar}</div></div></div>`;
+  if(m===2||m===3)add('red','⚠️','<strong>Frost risk period</strong> — at 1,194m elevation, monitor night temperatures closely. Protect bloom if forecast drops below 0°C. Apricot blooms earliest and is most vulnerable.','خطر الصقيع على ارتفاع 1194م — المشمش الأكثر عرضة');
+  if(m===5)add('green','🍒','<strong>Cherry harvest approaching</strong> (late June – July). Check ripeness on your red-marked trees in Block B.','اقتراب موسم الكرز في القطعة ب');
+  if(m===6||m===7)add('amber','🌸','<strong>Apricot harvest</strong> in progress (July – August). Monitor daily — they ripen fast.','حصاد المشمش جارٍ — مراقبة يومية');
+  if(m===8)add('green','🍎','<strong>Apple harvest season.</strong> Block D (7yr) and Block A (4yr) ready for G2 harvest. Perform starch-iodine test before picking.','موسم حصاد التفاح — إجراء اختبار النشا');
+}
+
+// ═══ AI BRIEF ═══
+function buildAIBrief(){
+  const m=new Date().getMonth();
+  document.getElementById('ai-brief').innerHTML=BRIEFS[m]||`<strong>${SEASON[m].en} · ${SEASON[m].ar}</strong> — Priority tasks this month:<br>`+SEASON[m].tasks.map(t=>`• ${t}`).join('<br>');
+}
+
+// ═══ AI SUGGESTIONS ═══
+function buildAISuggestions(){
+  const m=new Date().getMonth();
+  const el=document.getElementById('ai-suggestions');
+  el.innerHTML=SEASON[m].tasks.map(t=>`
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;color:var(--green)">
+      <span style="opacity:.5">→</span><span style="flex:1">${t}</span>
+      <button class="btn btn-sm" style="font-size:11px;border-color:var(--green-mid);color:var(--green)" onclick="quickAddTask('${t.replace(/'/g,"\\'")}')">+ Add</button>
+    </div>`).join('')+`<div style="font-size:11px;color:var(--green);opacity:.6;margin-top:6px">Based on Khenchela seasonal calendar · بناءً على تقويم خنشلة الموسمي</div>`;
+}
+
+function quickAddTask(title){
+  D.tasks.push({id:Date.now(),title,date:new Date().toISOString().split('T')[0],block:'All blocks',cat:'Monitoring · مراقبة',notes:'AI suggested',done:false});
+  persist();
+}
+
+// ═══ BLOCK CARDS ═══
+let selectedBlock=null;
+function buildBlockCards(){
+  const grid=document.getElementById('blocks-grid');
+  grid.innerHTML='';
+  BLOCKS.forEach(b=>{
+    const tasks=D.tasks.filter(t=>t.block&&t.block.includes(b.id)&&!t.done).length;
+    const lastIr=getLastIrrig(b.id);
+    const days=lastIr?Math.round((Date.now()-new Date(lastIr))/86400000):null;
+    const m=new Date().getMonth();
+    const freq=m>=6&&m<=7?4:6;
+    const irStatus=days===null?'not logged':days>freq+1?'overdue':days>freq-1?'due soon':'ok';
+    const irColor=irStatus==='overdue'?'var(--red-mid)':irStatus==='due soon'?'var(--amber-mid)':'var(--green-mid)';
+    const irPct=days!==null?Math.min(100,Math.round(days/freq*100)):0;
+
+    const yieldKg=D.harvest.filter(h=>h.block&&h.block.includes('Block '+b.id)).reduce((s,h)=>s+parseFloat(h.kg||0),0);
+    const pendingTasks=D.tasks.filter(t=>t.block&&(t.block.includes(b.id)||t.block==='All blocks')&&!t.done);
+
+    const groupBadge=b.group==='G1'?'<span class="badge b-blue">G1 — Young</span>':b.group==='G2'?'<span class="badge b-green">G2 — Producing</span>':'<span class="badge b-teal">Mixed</span>';
+
+    const card=document.createElement('div');
+    card.className='block-card';
+    card.id='bc-'+b.id;
+    card.innerHTML=`
+      <div class="bc-header">
+        <div>
+          <div class="bc-title">${b.name} <span style="font-size:12px;font-weight:400;color:var(--text3)">· ${b.nameAr}</span></div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">${b.zone}</div>
+        </div>
+        ${groupBadge}
+      </div>
+      <div class="bc-species-row">
+        <div class="species-chip"><div class="sp-dot" style="background:${b.color}"></div>${b.species}</div>
+        <div class="species-chip">~${b.count} trees</div>
+      </div>
+      <div style="padding:0 16px 6px">
+        <div style="font-size:13px;color:var(--text3);direction:rtl;text-align:right">${b.speciesAr}</div>
+      </div>
+      <div style="padding:0 16px 10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px">
+          <span>Irrigation · الري</span>
+          <span style="color:${irColor};font-weight:600">${days!==null?days+'d ago':irStatus}</span>
+        </div>
+        <div class="prog"><div class="prog-fill" style="width:${irPct}%;background:${irColor}"></div></div>
+      </div>
+      <div class="bc-metrics">
+        <div class="bc-metric">
+          <div class="bc-metric-val" style="color:${pendingTasks.length?'var(--amber)':'var(--green)'}">${pendingTasks.length}</div>
+          <div class="bc-metric-label">Pending tasks</div>
+        </div>
+        <div class="bc-metric">
+          <div class="bc-metric-val">${yieldKg?yieldKg.toLocaleString()+' kg':'—'}</div>
+          <div class="bc-metric-label">Season yield</div>
+        </div>
+        <div class="bc-metric">
+          <div class="bc-metric-val" style="font-size:12px">${b.irrigation}</div>
+          <div class="bc-metric-label">Irrigation type</div>
+        </div>
+      </div>
+      <div class="bc-footer">
+        <div class="bc-footer-item">
+          <div class="status-dot ${irStatus==='overdue'?'status-red':irStatus==='due soon'?'status-amber':'status-green'}"></div>
+          <span>${irStatus==='overdue'?'Irrigation overdue':irStatus==='due soon'?'Irrigation due soon':'Irrigation ok'}</span>
+        </div>
+        <button class="btn btn-sm" style="font-size:11px" onclick="openBlock('${b.id}',event)">Details →</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function openBlock(id,e){
+  e.stopPropagation();
+  const b=BLOCKS.find(x=>x.id===id);
+  const panel=document.getElementById('block-detail');
+  if(selectedBlock===id){selectedBlock=null;panel.classList.remove('open');document.querySelectorAll('.block-card').forEach(c=>c.classList.remove('selected'));return;}
+  selectedBlock=id;
+  document.querySelectorAll('.block-card').forEach(c=>c.classList.remove('selected'));
+  document.getElementById('bc-'+id).classList.add('selected');
+
+  const tasks=D.tasks.filter(t=>t.block&&(t.block.includes(id)||t.block==='All blocks'));
+  const pending=tasks.filter(t=>!t.done);
+  const done=tasks.filter(t=>t.done);
+  const irHistory=[...D.irrigation].filter(r=>r.block.includes('Block '+id)||r.block==='All blocks').sort((a,x)=>new Date(x.date)-new Date(a.date)).slice(0,4);
+  const harvestH=D.harvest.filter(h=>h.block&&h.block.includes('Block '+id));
+
+  panel.innerHTML=`
+    <div class="bd-header">
+      <div>
+        <span style="font-size:15px;font-weight:600">${b.name} · ${b.nameAr}</span>
+        <span style="font-size:12px;color:var(--text3);margin-left:8px">${b.species} · ${b.count} trees</span>
+      </div>
+      <button class="btn btn-sm" onclick="openBlock('${id}',event)">✕ Close</button>
+    </div>
+    <div style="padding:12px 16px;background:var(--surface2);font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)">${b.desc}</div>
+    <div class="bd-body">
+      <div class="bd-section">
+        <div class="bd-section-title">Pending tasks (${pending.length})</div>
+        ${pending.length?pending.map(t=>`
+          <div class="task-row">
+            <div class="task-check ${t.done?'done':''}" onclick="toggleTask(${t.id})">
+              ${t.done?'✓':''}
+            </div>
+            <div style="flex:1">
+              <div class="task-text ${t.done?'done':''}">${t.title}</div>
+              <div class="task-date">${t.cat.split('·')[0].trim()} · ${t.date||''}</div>
+            </div>
+            <button onclick="deleteTask(${t.id})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:14px">×</button>
+          </div>`).join(''):'<div class="empty">No pending tasks</div>'}
+        <button class="btn btn-sm btn-primary" style="margin-top:10px;width:100%" onclick="goPage('tasks',null);document.getElementById('t-block').value='Block ${id} — ${b.species.split(' ').slice(0,3).join(' ')}';toggleEl('task-form')">+ Add task for this block</button>
+      </div>
+      <div class="bd-section">
+        <div class="bd-section-title">Irrigation history</div>
+        ${irHistory.length?irHistory.map(r=>`<div class="task-row"><span style="font-size:20px">💧</span><div><div style="font-size:13px;font-weight:500">${r.date}</div><div style="font-size:11px;color:var(--text3)">${r.method||'—'} · ${r.duration?r.duration+' min':'—'} · ${r.notes||''}</div></div></div>`).join(''):'<div class="empty">No irrigation logged yet</div>'}
+        <button class="btn btn-sm btn-primary" style="margin-top:10px;width:100%" onclick="goPage('irrigation',null)">+ Log irrigation</button>
+      </div>
+      <div class="bd-section">
+        <div class="bd-section-title">Harvest records</div>
+        ${harvestH.length?harvestH.map(h=>`<div class="task-row"><span style="font-size:20px">🍎</span><div><div style="font-size:13px;font-weight:500">${h.date} — ${parseFloat(h.kg||0).toLocaleString()} kg</div><div style="font-size:11px;color:var(--text3)">${h.species||''} · A:${h.gradeA||0}kg B:${h.gradeB||0}kg Rej:${h.rejected||0}kg</div></div></div>`).join(''):'<div class="empty">No harvest recorded yet</div>'}
+        <button class="btn btn-sm btn-primary" style="margin-top:10px;width:100%" onclick="goPage('harvest',null)">+ Log harvest</button>
+      </div>
+    </div>`;
+  panel.classList.add('open');
+  panel.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function filterBlocks(type,btn){
+  document.querySelectorAll('#block-filter-row .btn').forEach(b=>b.classList.remove('active-filter'));
+  btn.classList.add('active-filter');
+  document.querySelectorAll('.block-card').forEach(c=>{
+    const bid=c.id.replace('bc-','');
+    const b=BLOCKS.find(x=>x.id===bid);
+    let show=true;
+    if(type==='apple')show=b.species.includes('Apple');
+    if(type==='other')show=b.id==='B';
+    c.style.display=show?'':'none';
+  });
+}
+
+// ═══ IRRIGATION STATUS ═══
+function buildIrrigStatus(){
+  const m=new Date().getMonth();
+  const freq=m>=6&&m<=7?'3–5':'5–7';
+  const cont=document.getElementById('irrig-status-cards');
+  cont.innerHTML=BLOCKS.map(b=>{
+    const last=getLastIrrig(b.id);
+    const days=last?Math.round((Date.now()-new Date(last))/86400000):null;
+    const maxD=m>=6&&m<=7?4:6;
+    const pct=days!==null?Math.min(100,Math.round(days/maxD*100)):0;
+    const color=pct>90?'var(--red-mid)':pct>65?'var(--amber-mid)':'var(--green-mid)';
+    const label=pct>90?'Overdue':pct>65?'Due soon':'OK';
+    return `<div class="irrig-row">
+      <div class="irrig-name"><strong>${b.name}</strong><span>${b.species.split(' ').slice(0,2).join(' ')}</span></div>
+      <div style="flex:1;margin:0 12px">
+        <div class="prog"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div>
+        <div style="font-size:10px;color:var(--text3);margin-top:2px">${days!==null?days+'d since last session · every ${freq}d':'Not recorded yet'}</div>
+      </div>
+      <span class="badge ${pct>90?'b-red':pct>65?'b-amber':'b-green'}">${label}</span>
+    </div>`;
+  }).join('');
+}
+
+function getLastIrrig(blockId){
+  const m=D.irrigation.filter(r=>r.block.includes('Block '+blockId)||r.block==='All blocks');
+  if(!m.length)return null;
+  return m.sort((a,b)=>new Date(b.date)-new Date(a.date))[0].date;
+}
+
+// ═══ RENDER ALL ═══
+function renderAll(){
+  renderOverview();
+  renderTasks();
+  renderIrrigLog();
+  renderHarvest();
+  renderCosts();
+  buildBlockCards();
+  buildIrrigStatus();
+}
+
+function renderOverview(){
+  const pending=D.tasks.filter(t=>!t.done).length;
+  document.getElementById('ov-pending').textContent=pending;
+  const lastIr=[...D.irrigation].sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+  document.getElementById('ov-irrig').textContent=lastIr?Math.round((Date.now()-new Date(lastIr.date))/86400000)+'d ago':'—';
+  const totalKg=D.harvest.reduce((s,h)=>s+parseFloat(h.kg||0),0);
+  document.getElementById('ov-yield').textContent=totalKg?totalKg.toLocaleString()+' kg':'0 kg';
+  const totalCost=D.costs.reduce((s,c)=>s+parseFloat(c.qty||1)*parseFloat(c.price||0),0);
+  document.getElementById('ov-costs').textContent=Math.round(totalCost).toLocaleString();
+
+  const taskPrev=document.getElementById('ov-tasks');
+  const upcoming=D.tasks.filter(t=>!t.done).slice(0,5);
+  taskPrev.innerHTML=!upcoming.length?'<div class="empty">No pending tasks</div>':upcoming.map(t=>`
+    <div class="task-row">
+      <div class="task-check" onclick="toggleTask(${t.id})"></div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.title}</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.block||''} · ${t.date||''}</div>
+      </div>
+    </div>`).join('');
+
+  const irPrev=document.getElementById('ov-irrig-status');
+  irPrev.innerHTML=BLOCKS.map(b=>{
+    const last=getLastIrrig(b.id);
+    const days=last?Math.round((Date.now()-new Date(last))/86400000):null;
+    const pct=days!==null?Math.min(100,Math.round(days/6*100)):0;
+    const color=pct>90?'var(--red-mid)':pct>65?'var(--amber-mid)':'var(--green-mid)';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="width:10px;height:10px;border-radius:50%;background:${b.color};flex-shrink:0"></div>
+      <span style="font-size:13px;min-width:68px;font-weight:500">${b.name}</span>
+      <div style="flex:1"><div class="prog"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div></div>
+      <span style="font-size:11px;color:var(--text3);min-width:55px;text-align:right">${days!==null?days+'d ago':'—'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ═══ TASKS ═══
+function saveTask(){
+  const title=document.getElementById('t-title').value.trim();
+  if(!title)return alert('Please enter a task title');
+  D.tasks.push({id:Date.now(),title,date:document.getElementById('t-date').value,block:document.getElementById('t-block').value,cat:document.getElementById('t-cat').value,notes:document.getElementById('t-notes').value,done:false});
+  document.getElementById('t-title').value='';
+  document.getElementById('t-notes').value='';
+  toggleEl('task-form');
+  persist();
+}
+function toggleTask(id){const t=D.tasks.find(t=>t.id===id);if(t){t.done=!t.done;persist();}}
+function deleteTask(id){D.tasks=D.tasks.filter(t=>t.id!==id);persist();}
+function renderTasks(){
+  const pending=D.tasks.filter(t=>!t.done);
+  const done=D.tasks.filter(t=>t.done);
+  document.getElementById('task-counts').textContent=`${pending.length} pending · ${done.length} done`;
+  const body=document.getElementById('tasks-body');
+  if(!D.tasks.length){body.innerHTML='<div class="empty">No tasks yet. Use AI suggestions above or add manually.</div>';return;}
+  const row=t=>`<div class="task-row">
+    <div class="task-check ${t.done?'done':''}" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:500;color:var(--text);${t.done?'text-decoration:line-through;color:var(--text3)':''}">${t.title}</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap">
+        <span class="badge b-blue" style="font-size:10px">${t.cat.split('·')[0].trim()}</span>
+        <span>${t.block||''}</span>
+        <span>${t.date||''}</span>
+      </div>
+      ${t.notes&&t.notes!=='AI suggested'?`<div style="font-size:12px;color:var(--text3);margin-top:2px">${t.notes}</div>`:''}
+    </div>
+    <button onclick="deleteTask(${t.id})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px;padding:0 4px">×</button>
+  </div>`;
+  body.innerHTML=(pending.length?`<div style="font-size:11px;font-weight:600;color:var(--text3);padding:8px 0 4px;text-transform:uppercase;letter-spacing:.4px">Pending (${pending.length})</div>`+pending.map(row).join(''):'')
+    +(done.length?`<div class="divider"></div><div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px 0;text-transform:uppercase;letter-spacing:.4px">Done (${done.length})</div>`+done.map(row).join(''):'');
+}
+
+// ═══ IRRIGATION ═══
+function logIrrigation(){
+  const date=document.getElementById('ir-date').value;
+  if(!date)return alert('Please select a date');
+  D.irrigation.push({id:Date.now(),date,block:document.getElementById('ir-block').value,method:document.getElementById('ir-method').value,duration:document.getElementById('ir-dur').value,notes:document.getElementById('ir-notes').value});
+  document.getElementById('ir-dur').value='';document.getElementById('ir-notes').value='';
+  persist();
+}
+function deleteIrrig(id){D.irrigation=D.irrigation.filter(r=>r.id!==id);persist();}
+function renderIrrigLog(){
+  const body=document.getElementById('irrig-body');
+  if(!D.irrigation.length){body.innerHTML='<tr><td colspan="6" class="empty">No sessions logged yet</td></tr>';return;}
+  body.innerHTML=[...D.irrigation].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r=>`
+    <tr><td>${r.date}</td><td>${r.block}</td><td>${r.method||'—'}</td><td>${r.duration?r.duration+' min':'—'}</td>
+    <td style="color:var(--text2)">${r.notes||'—'}</td>
+    <td><button class="btn btn-sm" style="color:var(--red)" onclick="deleteIrrig(${r.id})">×</button></td></tr>`).join('');
+}
+
+// ═══ HARVEST ═══
+function logHarvest(){
+  const date=document.getElementById('hv-date').value,kg=document.getElementById('hv-kg').value;
+  if(!date||!kg)return alert('Please fill date and total kg');
+  D.harvest.push({id:Date.now(),date,species:document.getElementById('hv-species').value,block:document.getElementById('hv-block').value,variety:document.getElementById('hv-variety').value,kg,gradeA:document.getElementById('hv-a').value,gradeB:document.getElementById('hv-b').value,rejected:document.getElementById('hv-rej').value,pickers:document.getElementById('hv-pickers').value});
+  ['hv-block','hv-variety','hv-kg','hv-a','hv-b','hv-rej','hv-pickers'].forEach(id=>document.getElementById(id).value='');
+  persist();
+}
+function deleteHarvest(id){D.harvest=D.harvest.filter(h=>h.id!==id);persist();}
+function renderHarvest(){
+  const total=D.harvest.reduce((s,h)=>s+parseFloat(h.kg||0),0);
+  const apple=D.harvest.filter(h=>h.species&&h.species.includes('Apple')).reduce((s,h)=>s+parseFloat(h.kg||0),0);
+  const gradeA=D.harvest.reduce((s,h)=>s+parseFloat(h.gradeA||0),0);
+  document.getElementById('h-total').textContent=total.toLocaleString()+' kg';
+  document.getElementById('h-apple').textContent=apple.toLocaleString()+' kg';
+  document.getElementById('h-grade-a').textContent=gradeA.toLocaleString()+' kg';
+  document.getElementById('h-avg').textContent=apple?(apple/254).toFixed(1)+' kg':'—';
+  const body=document.getElementById('harvest-body');
+  if(!D.harvest.length){body.innerHTML='<tr><td colspan="9" class="empty">No harvest recorded yet</td></tr>';return;}
+  body.innerHTML=[...D.harvest].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(h=>`
+    <tr><td>${h.date}</td><td>${h.species||'—'}</td><td>${h.block||'—'}</td><td>${h.variety||'—'}</td>
+    <td><strong>${parseFloat(h.kg||0).toLocaleString()}</strong></td>
+    <td style="color:var(--green)">${parseFloat(h.gradeA||0).toLocaleString()}</td>
+    <td style="color:var(--amber)">${parseFloat(h.gradeB||0).toLocaleString()}</td>
+    <td style="color:var(--red)">${parseFloat(h.rejected||0).toLocaleString()}</td>
+    <td><button class="btn btn-sm" style="color:var(--red)" onclick="deleteHarvest(${h.id})">×</button></td></tr>`).join('');
+}
+
+// ═══ COSTS ═══
+function logCost(){
+  const date=document.getElementById('co-date').value;
+  if(!date)return alert('Please select a date');
+  D.costs.push({id:Date.now(),date,cat:document.getElementById('co-cat').value,applies:document.getElementById('co-applies').value,item:document.getElementById('co-item').value,supplier:document.getElementById('co-supplier').value,qty:document.getElementById('co-qty').value,unit:document.getElementById('co-unit').value,price:document.getElementById('co-price').value,receipt:document.getElementById('co-receipt').value});
+  ['co-item','co-supplier','co-qty','co-unit','co-price','co-receipt'].forEach(id=>document.getElementById(id).value='');
+  persist();
+}
+function deleteCost(id){D.costs=D.costs.filter(c=>c.id!==id);persist();}
+function renderCosts(){
+  const total=D.costs.reduce((s,c)=>s+parseFloat(c.qty||1)*parseFloat(c.price||0),0);
+  document.getElementById('c-total').textContent=Math.round(total).toLocaleString();
+  document.getElementById('c-tree').textContent=Math.round(total/394).toLocaleString();
+  document.getElementById('c-count').textContent=D.costs.length;
+  if(D.costs.length){
+    const cats={};D.costs.forEach(c=>{const k=c.cat.split('·')[0].trim();cats[k]=(cats[k]||0)+parseFloat(c.qty||1)*parseFloat(c.price||0);});
+    document.getElementById('c-top').textContent=Object.entries(cats).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+  }
+  const body=document.getElementById('costs-body');
+  if(!D.costs.length){body.innerHTML='<tr><td colspan="8" class="empty">No entries yet</td></tr>';return;}
+  body.innerHTML=[...D.costs].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(c=>{
+    const tot=parseFloat(c.qty||1)*parseFloat(c.price||0);
+    return `<tr><td>${c.date}</td><td><span class="badge b-blue" style="font-size:10px">${c.cat.split('·')[0].trim()}</span></td>
+    <td>${c.item||'—'}</td><td style="font-size:12px;color:var(--text2)">${c.applies||'—'}</td>
+    <td>${c.qty||'—'} ${c.unit||''}</td><td>${parseFloat(c.price||0).toLocaleString()}</td>
+    <td><strong>${Math.round(tot).toLocaleString()}</strong></td>
+    <td><button class="btn btn-sm" style="color:var(--red)" onclick="deleteCost(${c.id})">×</button></td></tr>`;
+  }).join('');
+}
+
+// ═══ NAV ═══
+function goPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  if(btn)btn.classList.add('active');
+  else document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});
+}
+
+// ═══ UTILS ═══
+function toggleEl(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
+function exportData(){const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='farm_yawmi_'+new Date().toISOString().split('T')[0]+'.json';a.click();}
+function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{D=JSON.parse(ev.target.result);save();renderAll();alert('Imported · تم الاستيراد');}catch(e){alert('Invalid file');}};r.readAsText(f);}
+
+init();
+</script>
+</body>
+</html>

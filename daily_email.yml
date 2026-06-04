@@ -1,0 +1,150 @@
+name: Farm Yawmi — Daily Morning Brief
+
+on:
+  schedule:
+    # 7:00 AM Algeria time = 6:00 AM UTC (Algeria is UTC+1)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # allows manual trigger from GitHub
+
+jobs:
+  send-daily-brief:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate and send daily farm brief
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          secure: false
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "🌿 Farm Yawmi — Daily Brief — ${{ env.TODAY }}"
+          to: benaicha07@gmail.com
+          from: "Farm Yawmi <benaicha07@gmail.com>"
+          content_type: text/html
+          body: ${{ steps.brief.outputs.body }}
+
+      - name: Set today's date
+        run: echo "TODAY=$(TZ='Africa/Algiers' date +'%A, %d %B %Y')" >> $GITHUB_ENV
+
+      - name: Generate brief
+        id: brief
+        run: |
+          MONTH=$(TZ='Africa/Algiers' date +'%-m')
+          DAY=$(TZ='Africa/Algiers' date +'%A')
+          TODAY=$(TZ='Africa/Algiers' date +'%d %B %Y')
+
+          # Determine season stage
+          case $MONTH in
+            1) STAGE="Dormancy · السكون" ; TASKS="Pruning apple trees, Tool prep, Soil sampling" ;;
+            2) STAGE="Late dormancy · السكون المتأخر" ; TASKS="Complete pruning, Dormant oil spray, Watch apricot bloom" ;;
+            3) STAGE="Bud swell · انتفاخ البراعم" ; TASKS="⚠️ Frost watch, First fungicide, Nitrogen fertiliser" ;;
+            4) STAGE="Bloom · التزهير" ; TASKS="Pollination management, Scab prevention, Remove flowers Block C" ;;
+            5) STAGE="Fruit set · عقد الثمار" ; TASKS="Fruit thinning G2, Start drip irrigation, Monitor aphids" ;;
+            6) STAGE="Cell division · انقسام الخلايا" ; TASKS="K+P fertiliser, Irrigate every 5–7 days, Monitor spider mites, Cherry harvest check" ;;
+            7) STAGE="Fruit development · تطور الثمار" ; TASKS="Peak irrigation 3–5 days, Codling moth traps, Harvest cherry, Harvest apricot" ;;
+            8) STAGE="Colour development · تطور اللون" ; TASKS="Reduce nitrogen, Monitor apple maturity, Fig harvest begins" ;;
+            9) STAGE="Harvest · الحصاد" ; TASKS="Harvest apple G2 (A+D), Starch-iodine test, Harvest fig + grapes, Post-harvest fertiliser" ;;
+            10) STAGE="Post-harvest · ما بعد الحصاد" ; TASKS="Leaf collection, Soil amendments, Pomegranate + pear harvest" ;;
+            11) STAGE="Early dormancy · بداية السكون" ; TASKS="Trunk whitewashing, Copper spray, Mulch Block C" ;;
+            12) STAGE="Dormancy · السكون" ; TASKS="Equipment maintenance, Season planning" ;;
+          esac
+
+          # Seasonal alerts
+          ALERTS=""
+          if [ "$MONTH" -eq 3 ] || [ "$MONTH" -eq 4 ]; then
+            ALERTS="<div style='background:#fff3cd;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:6px;margin-bottom:12px'>⚠️ <strong>Frost risk period</strong> — monitor night temperatures at 1,194m. Protect bloom if forecast drops below 0°C.</div>"
+          fi
+          if [ "$MONTH" -eq 6 ]; then
+            ALERTS="<div style='background:#d1fae5;border-left:4px solid #10b981;padding:12px 16px;border-radius:6px;margin-bottom:12px'>🍒 <strong>Cherry harvest approaching</strong> (late June – July). Check ripeness on red-marked trees in Block B.</div>"
+          fi
+          if [ "$MONTH" -eq 7 ] || [ "$MONTH" -eq 8 ]; then
+            ALERTS="<div style='background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:6px;margin-bottom:12px'>🌸 <strong>Apricot harvest in progress</strong> (July–August). Monitor daily — they ripen fast.</div>"
+          fi
+          if [ "$MONTH" -eq 9 ]; then
+            ALERTS="<div style='background:#d1fae5;border-left:4px solid #10b981;padding:12px 16px;border-radius:6px;margin-bottom:12px'>🍎 <strong>Apple harvest season</strong> — G2 trees (Block A + Block D). Perform starch-iodine test before picking.</div>"
+          fi
+
+          # Build task rows
+          IFS=',' read -ra TASK_LIST <<< "$TASKS"
+          TASK_ROWS=""
+          for task in "${TASK_LIST[@]}"; do
+            task=$(echo "$task" | sed 's/^ //')
+            TASK_ROWS="$TASK_ROWS<tr><td style='padding:8px 12px;border-bottom:1px solid #e5e7eb;font-size:14px'>☐ $task</td></tr>"
+          done
+
+          # Build full HTML email
+          BODY="<!DOCTYPE html><html><head><meta charset='UTF-8'/></head><body style='margin:0;padding:0;font-family:system-ui,sans-serif;background:#f4f6f0'>
+          <div style='max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;margin-top:20px;margin-bottom:20px;border:1px solid #d1d5db'>
+
+            <!-- Header -->
+            <div style='background:#2d6a0f;padding:20px 24px;display:flex;align-items:center;gap:12px'>
+              <span style='font-size:28px'>🌿</span>
+              <div>
+                <div style='color:#ffffff;font-size:20px;font-weight:700;letter-spacing:.5px'>Farm Yawmi · مزرعة يومي</div>
+                <div style='color:#a0d060;font-size:12px;margin-top:2px'>Khenchela, Algeria · 1,194m · 394 trees</div>
+              </div>
+            </div>
+
+            <!-- Date bar -->
+            <div style='background:#f0f9e6;padding:10px 24px;border-bottom:1px solid #d1fae5'>
+              <span style='font-size:13px;color:#3b6d11;font-weight:600'>📅 $DAY, $TODAY</span>
+              <span style='font-size:12px;color:#4a9a1a;margin-left:12px'>Season: $STAGE</span>
+            </div>
+
+            <div style='padding:20px 24px'>
+
+              <!-- Alerts -->
+              $ALERTS
+
+              <!-- Today's tasks -->
+              <div style='margin-bottom:20px'>
+                <div style='font-size:16px;font-weight:600;color:#1a1a18;margin-bottom:10px'>📋 Today's tasks · مهام اليوم</div>
+                <table style='width:100%;border-collapse:collapse;background:#f9fafb;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb'>
+                  $TASK_ROWS
+                </table>
+              </div>
+
+              <!-- Block irrigation reminder -->
+              <div style='margin-bottom:20px'>
+                <div style='font-size:16px;font-weight:600;color:#1a1a18;margin-bottom:10px'>💧 Irrigation reminder · تذكير الري</div>
+                <table style='width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden'>
+                  <tr style='background:#f0f9e6'>
+                    <th style='text-align:left;padding:8px 12px;font-size:12px;color:#4a7050;font-weight:600'>Block</th>
+                    <th style='text-align:left;padding:8px 12px;font-size:12px;color:#4a7050;font-weight:600'>Species</th>
+                    <th style='text-align:left;padding:8px 12px;font-size:12px;color:#4a7050;font-weight:600'>Schedule</th>
+                  </tr>
+                  <tr><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>Block A</td><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>🟠 Apple 4yr</td><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>Every 5–7 days</td></tr>
+                  <tr style='background:#fafafa'><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>Block B</td><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>🟣 Mixed</td><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>Every 5–7 days</td></tr>
+                  <tr><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>Block C</td><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>🔵 Apple 3yr</td><td style='padding:8px 12px;font-size:13px;border-bottom:1px solid #e5e7eb'>Every 5–7 days</td></tr>
+                  <tr style='background:#fafafa'><td style='padding:8px 12px;font-size:13px'>Block D</td><td style='padding:8px 12px;font-size:13px'>🟢 Apple 7yr</td><td style='padding:8px 12px;font-size:13px'>Every 5–7 days</td></tr>
+                </table>
+              </div>
+
+              <!-- Harvest windows -->
+              <div style='background:#f0f9e6;border-radius:8px;padding:14px 16px;margin-bottom:20px'>
+                <div style='font-size:14px;font-weight:600;color:#2d6a0f;margin-bottom:8px'>🍎 Upcoming harvests · مواسم الحصاد</div>
+                <div style='font-size:13px;color:#3b6d11;line-height:2'>
+                  🔴 Cherry: June–July &nbsp;|&nbsp; 🌸 Apricot: July–Aug &nbsp;|&nbsp; 🟡 Fig: Aug–Sept<br>
+                  🟢 Grapes: September &nbsp;|&nbsp; 🟠 Apple G2: Sept–Oct &nbsp;|&nbsp; ⚪ Pomegranate: October
+                </div>
+              </div>
+
+              <!-- Open dashboard link -->
+              <div style='text-align:center;margin-top:20px'>
+                <a href='https://benaicha07-rgb.github.io/farm-yawmi' style='display:inline-block;background:#2d6a0f;color:#ffffff;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600'>
+                  Open Farm Dashboard →
+                </a>
+              </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div style='background:#f4f6f0;padding:12px 24px;text-align:center;border-top:1px solid #d1d5db'>
+              <div style='font-size:11px;color:#6b7280'>Farm Yawmi · Automated daily brief · Khenchela, Algeria</div>
+            </div>
+
+          </div>
+          </body></html>"
+
+          echo "body=$BODY" >> $GITHUB_OUTPUT
