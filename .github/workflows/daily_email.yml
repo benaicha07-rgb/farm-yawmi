@@ -1,0 +1,89 @@
+name: Farm Yawmi — Daily Morning Brief
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+jobs:
+  send-daily-brief:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set today's date
+        run: echo "TODAY=$(TZ='Africa/Algiers' date +'%A, %d %B %Y')" >> $GITHUB_ENV
+
+      - name: Generate brief
+        id: brief
+        run: |
+          MONTH=$(TZ='Africa/Algiers' date +'%-m')
+          DAY=$(TZ='Africa/Algiers' date +'%A')
+          TODAY=$(TZ='Africa/Algiers' date +'%d %B %Y')
+          case $MONTH in
+            1) STAGE="Dormancy" ; TASKS="Prune apple trees, Tool prep, Soil sampling" ;;
+            2) STAGE="Late dormancy" ; TASKS="Complete pruning, Dormant oil spray, Watch apricot bloom" ;;
+            3) STAGE="Bud swell" ; TASKS="Frost watch, First fungicide, Nitrogen fertiliser" ;;
+            4) STAGE="Bloom" ; TASKS="Pollination management, Scab prevention, Remove flowers Block C" ;;
+            5) STAGE="Fruit set" ; TASKS="Fruit thinning G2, Start drip irrigation, Monitor aphids" ;;
+            6) STAGE="Cell division" ; TASKS="K+P fertiliser, Irrigate every 5-7 days, Monitor spider mites, Cherry harvest check" ;;
+            7) STAGE="Fruit development" ; TASKS="Peak irrigation 3-5 days, Codling moth traps, Harvest cherry, Harvest apricot" ;;
+            8) STAGE="Colour development" ; TASKS="Reduce nitrogen, Monitor apple maturity, Fig harvest begins" ;;
+            9) STAGE="Harvest" ; TASKS="Harvest apple G2 A+D, Starch-iodine test, Harvest fig and grapes, Post-harvest fertiliser" ;;
+            10) STAGE="Post-harvest" ; TASKS="Leaf collection, Soil amendments, Pomegranate and pear harvest" ;;
+            11) STAGE="Early dormancy" ; TASKS="Trunk whitewashing, Copper spray, Mulch Block C" ;;
+            12) STAGE="Dormancy" ; TASKS="Equipment maintenance, Season planning" ;;
+          esac
+          ALERTS=""
+          if [ "$MONTH" -eq 3 ] || [ "$MONTH" -eq 4 ]; then
+            ALERTS="<p style='background:#fff3cd;padding:10px;border-radius:6px'>Frost risk - monitor nights at 1194m</p>"
+          fi
+          if [ "$MONTH" -eq 6 ]; then
+            ALERTS="<p style='background:#d1fae5;padding:10px;border-radius:6px'>Cherry harvest approaching - check Block B</p>"
+          fi
+          if [ "$MONTH" -eq 7 ] || [ "$MONTH" -eq 8 ]; then
+            ALERTS="<p style='background:#fef3c7;padding:10px;border-radius:6px'>Apricot harvest in progress - monitor daily</p>"
+          fi
+          if [ "$MONTH" -eq 9 ]; then
+            ALERTS="<p style='background:#d1fae5;padding:10px;border-radius:6px'>Apple G2 harvest season - starch-iodine test before picking</p>"
+          fi
+          IFS=',' read -ra TASK_LIST <<< "$TASKS"
+          TASK_ROWS=""
+          for task in "${TASK_LIST[@]}"; do
+            task=$(echo "$task" | sed 's/^ //')
+            TASK_ROWS="$TASK_ROWS<tr><td style='padding:8px 12px;border-bottom:1px solid #e5e7eb'>- $task</td></tr>"
+          done
+          BODY="<html><body style='font-family:sans-serif;background:#f4f6f0'>
+          <div style='max-width:600px;margin:20px auto;background:#fff;border-radius:12px;border:1px solid #d1d5db;overflow:hidden'>
+          <div style='background:#2d6a0f;padding:20px 24px'><h2 style='color:#fff;margin:0'>Farm Yawmi - Daily Brief</h2><p style='color:#a0d060;margin:4px 0 0'>Khenchela, Algeria - 394 trees</p></div>
+          <div style='background:#f0f9e6;padding:10px 24px;border-bottom:1px solid #d1fae5'><strong style='color:#3b6d11'>$DAY, $TODAY</strong> &nbsp; Season: $STAGE</div>
+          <div style='padding:20px 24px'>
+          $ALERTS
+          <h3 style='color:#1a1a18'>Today's tasks</h3>
+          <table style='width:100%;border-collapse:collapse;border:1px solid #e5e7eb;border-radius:8px'>$TASK_ROWS</table>
+          <h3 style='color:#1a1a18;margin-top:20px'>Irrigation reminder</h3>
+          <table style='width:100%;border-collapse:collapse;border:1px solid #e5e7eb'>
+          <tr style='background:#f0f9e6'><th style='padding:8px 12px;text-align:left'>Block</th><th style='padding:8px 12px;text-align:left'>Species</th><th style='padding:8px 12px;text-align:left'>Schedule</th></tr>
+          <tr><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Block A</td><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Apple 4yr</td><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Every 5-7 days</td></tr>
+          <tr style='background:#fafafa'><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Block B</td><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Mixed</td><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Every 5-7 days</td></tr>
+          <tr><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Block C</td><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Apple 3yr</td><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Every 5-7 days</td></tr>
+          <tr style='background:#fafafa'><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Block D</td><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Apple 7yr</td><td style='padding:8px 12px;border-top:1px solid #e5e7eb'>Every 5-7 days</td></tr>
+          </table>
+          <div style='text-align:center;margin-top:24px'>
+          <a href='https://benaicha07-rgb.github.io/farm-yawmi' style='background:#2d6a0f;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:600'>Open Farm Dashboard</a>
+          </div></div>
+          <div style='background:#f4f6f0;padding:12px 24px;text-align:center;border-top:1px solid #d1d5db'><small style='color:#6b7280'>Farm Yawmi - Automated daily brief - Khenchela, Algeria</small></div>
+          </div></body></html>"
+          echo "body=$BODY" >> $GITHUB_OUTPUT
+
+      - name: Send email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          secure: false
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Farm Yawmi - Daily Brief - ${{ env.TODAY }}"
+          to: benaicha07@gmail.com
+          from: "Farm Yawmi <benaicha07@gmail.com>"
+          content_type: text/html
+          body: ${{ steps.brief.outputs.body }}
