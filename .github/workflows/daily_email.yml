@@ -9,126 +9,7 @@ jobs:
   send-daily-brief:
     runs-on: ubuntu-latest
     steps:
-      - name: Set date
-        run: echo "TODAY=$(TZ='Africa/Algiers' date +'%A %d %B %Y')" >> $GITHUB_ENV
-
-      - name: Build email
-        run: |
-          MONTH=$(TZ='Africa/Algiers' date +'%-m')
-          DAY=$(TZ='Africa/Algiers' date +'%A')
-          DATE=$(TZ='Africa/Algiers' date +'%d %B %Y')
-
-          case $MONTH in
-            1)  STAGE="Dormancy";          T1="Prune apple trees";          T2="Tool preparation";           T3="Soil sampling" ;;
-            2)  STAGE="Late dormancy";     T1="Complete pruning";           T2="Dormant oil spray";          T3="Watch apricot bloom" ;;
-            3)  STAGE="Bud swell";         T1="FROST WATCH - monitor nights"; T2="First fungicide spray";   T3="Nitrogen fertiliser" ;;
-            4)  STAGE="Bloom";             T1="Pollination management";     T2="Scab prevention spray";      T3="Remove flowers Block C" ;;
-            5)  STAGE="Fruit set";         T1="Fruit thinning G2";          T2="Start drip irrigation";      T3="Monitor aphids" ;;
-            6)  STAGE="Cell division";     T1="K+P fertiliser";             T2="Irrigate every 5-7 days";    T3="Monitor spider mites - Cherry harvest check" ;;
-            7)  STAGE="Fruit development"; T1="Peak irrigation 3-5 days";   T2="Codling moth traps";         T3="Harvest cherry - Harvest apricot" ;;
-            8)  STAGE="Colour dev";        T1="Reduce nitrogen";            T2="Monitor apple maturity";     T3="Fig harvest begins" ;;
-            9)  STAGE="Harvest";           T1="Harvest apple G2 - Block A and D"; T2="Starch-iodine test before picking"; T3="Post-harvest fertiliser" ;;
-            10) STAGE="Post-harvest";      T1="Leaf collection";            T2="Soil amendments";            T3="Pomegranate and pear harvest" ;;
-            11) STAGE="Early dormancy";    T1="Trunk whitewashing";         T2="Copper spray";               T3="Mulch Block C trees" ;;
-            12) STAGE="Dormancy";          T1="Equipment maintenance";      T2="Season planning";            T3="Order supplies for next year" ;;
-          esac
-
-          ALERT=""
-          if [ "$MONTH" -eq 3 ] || [ "$MONTH" -eq 4 ]; then
-            ALERT="<p style='background:#fff3cd;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:6px'>FROST RISK - monitor night temperatures at 1194m elevation</p>"
-          fi
-          if [ "$MONTH" -eq 6 ]; then
-            ALERT="<p style='background:#d1fae5;border-left:4px solid #10b981;padding:12px 16px;border-radius:6px'>Cherry harvest approaching - check ripeness on Block B trees</p>"
-          fi
-          if [ "$MONTH" -eq 7 ] || [ "$MONTH" -eq 8 ]; then
-            ALERT="<p style='background:#fef3c7;border-left:4px solid #f59e0b;padding:12px 16px;border-radius:6px'>Apricot harvest in progress - monitor daily</p>"
-          fi
-          if [ "$MONTH" -eq 9 ]; then
-            ALERT="<p style='background:#d1fae5;border-left:4px solid #10b981;padding:12px 16px;border-radius:6px'>Apple G2 harvest season - starch-iodine test before picking</p>"
-          fi
-
-          cat > /tmp/email.html << HTML
-<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;font-family:Arial,sans-serif;background:#f4f6f0">
-<div style="max-width:600px;margin:20px auto;background:#fff;border-radius:12px;border:1px solid #d1d5db;overflow:hidden">
-
-  <div style="background:#2d6a0f;padding:20px 24px">
-    <div style="color:#fff;font-size:22px;font-weight:700">Farm Yawmi - Daily Brief</div>
-    <div style="color:#a0d060;font-size:13px;margin-top:4px">Khenchela, Algeria - 394 trees - 1,194m</div>
-  </div>
-
-  <div style="background:#f0f9e6;padding:10px 24px;border-bottom:1px solid #d1fae5">
-    <strong style="color:#3b6d11;font-size:14px">$DAY, $DATE</strong>
-    <span style="color:#4a9a1a;font-size:13px;margin-left:12px">Season: $STAGE</span>
-  </div>
-
-  <div style="padding:20px 24px">
-    $ALERT
-
-    <div style="font-size:16px;font-weight:700;color:#1a1a18;margin-bottom:12px">Today's tasks</div>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;margin-bottom:24px">
-      <tr><td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:14px">&#9744; $T1</td></tr>
-      <tr><td style="padding:10px 14px;border-bottom:1px solid #e5e7eb;font-size:14px;background:#fafafa">&#9744; $T2</td></tr>
-      <tr><td style="padding:10px 14px;font-size:14px">&#9744; $T3</td></tr>
-    </table>
-
-    <div style="font-size:16px;font-weight:700;color:#1a1a18;margin-bottom:12px">Irrigation reminder</div>
-    <table style="width:100%;border-collapse:collapse;border:1px solid #e5e7eb;margin-bottom:24px">
-      <tr style="background:#f0f9e6">
-        <td style="padding:8px 12px;font-weight:700;font-size:12px;color:#4a7050">BLOCK</td>
-        <td style="padding:8px 12px;font-weight:700;font-size:12px;color:#4a7050">SPECIES</td>
-        <td style="padding:8px 12px;font-weight:700;font-size:12px;color:#4a7050">SCHEDULE</td>
-      </tr>
-      <tr>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Block A</td>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Apple 4yr</td>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Every 5-7 days</td>
-      </tr>
-      <tr style="background:#fafafa">
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Block B</td>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Mixed fruits</td>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Every 5-7 days</td>
-      </tr>
-      <tr>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Block C</td>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Apple 3yr</td>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Every 5-7 days</td>
-      </tr>
-      <tr style="background:#fafafa">
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Block D</td>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Apple 7yr</td>
-        <td style="padding:9px 12px;border-top:1px solid #e5e7eb">Every 5-7 days</td>
-      </tr>
-    </table>
-
-    <div style="background:#f0f9e6;border-radius:8px;padding:14px 16px;margin-bottom:24px">
-      <div style="font-size:14px;font-weight:700;color:#2d6a0f;margin-bottom:8px">Harvest calendar</div>
-      <div style="font-size:13px;color:#3b6d11;line-height:2.2">
-        Cherry: June-July | Apricot: July-Aug | Fig: Aug-Sept<br>
-        Grapes: September | Apple G2: Sept-Oct | Pomegranate: October | Olive: Oct-Nov
-      </div>
-    </div>
-
-    <div style="text-align:center">
-      <a href="https://benaicha07-rgb.github.io/farm-yawmi"
-         style="background:#2d6a0f;color:#fff;padding:13px 32px;border-radius:8px;text-decoration:none;font-size:15px;font-weight:700;display:inline-block">
-        Open Farm Dashboard
-      </a>
-    </div>
-  </div>
-
-  <div style="background:#f4f6f0;padding:12px 24px;text-align:center;border-top:1px solid #d1d5db">
-    <small style="color:#6b7280">Farm Yawmi - Automated daily brief - Khenchela, Algeria</small>
-  </div>
-
-</div>
-</body>
-</html>
-HTML
-
-      - name: Send email
+      - name: Send daily brief
         uses: dawidd6/action-send-mail@v3
         with:
           server_address: smtp.gmail.com
@@ -136,8 +17,40 @@ HTML
           secure: false
           username: ${{ secrets.MAIL_USERNAME }}
           password: ${{ secrets.MAIL_PASSWORD }}
-          subject: "Farm Yawmi - Daily Brief - ${{ env.TODAY }}"
+          subject: "Farm Yawmi - Daily Brief"
           to: benaicha07@gmail.com
           from: Farm Yawmi <benaicha07@gmail.com>
-          content_type: text/html
-          body: file:///tmp/email.html
+          content_type: text/plain
+          body: |
+            Farm Yawmi - Daily Brief
+            Khenchela, Algeria - 394 trees
+
+            Good morning Hani!
+
+            Open your farm dashboard here:
+            https://benaicha07-rgb.github.io/farm-yawmi
+
+            --- JUNE TASKS ---
+            - K+P fertiliser (potassium + phosphorus)
+            - Irrigate every 5-7 days
+            - Monitor spider mites
+            - Cherry harvest check (Block B)
+
+            --- IRRIGATION REMINDER ---
+            Block A (Apple 4yr): every 5-7 days
+            Block B (Mixed):     every 5-7 days
+            Block C (Apple 3yr): every 5-7 days
+            Block D (Apple 7yr): every 5-7 days
+
+            --- HARVEST CALENDAR ---
+            Cherry:      June-July
+            Apricot:     July-August
+            Fig:         August-September
+            Grapes:      September
+            Apple G2:    September-October
+            Pomegranate: October
+            Olive:       October-November
+
+            ---
+            Farm Yawmi - Automated daily brief
+            https://benaicha07-rgb.github.io/farm-yawmi
