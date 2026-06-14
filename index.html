@@ -233,7 +233,7 @@ textarea{resize:vertical;min-height:52px}
     <div class="brand-icon">🌿</div>
     <div>
       <div class="brand-name">Farm Yawmi <span style="font-size:12px;font-weight:400;color:var(--text3)">مزرعة يومي</span></div>
-      <div class="brand-sub">Khenchela · ~394 trees · 1.015 ha · 1,194 m</div>
+      <div class="brand-sub">Khenchela · ~494 trees · 1.015 ha · 1,194 m</div>
     </div>
   </div>
   <div class="header-right">
@@ -978,7 +978,7 @@ function deleteCost(id){D.costs=D.costs.filter(c=>c.id!==id);persist();}
 function renderCosts(){
   const total=D.costs.reduce((s,c)=>s+parseFloat(c.qty||1)*parseFloat(c.price||0),0);
   document.getElementById('c-total').textContent=Math.round(total).toLocaleString();
-  document.getElementById('c-tree').textContent=Math.round(total/394).toLocaleString();
+  document.getElementById('c-tree').textContent=Math.round(total/494).toLocaleString();
   document.getElementById('c-count').textContent=D.costs.length;
   if(D.costs.length){
     const cats={};D.costs.forEach(c=>{const k=c.cat.split('·')[0].trim();cats[k]=(cats[k]||0)+parseFloat(c.qty||1)*parseFloat(c.price||0);});
