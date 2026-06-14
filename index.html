@@ -171,6 +171,10 @@ textarea{resize:vertical;min-height:52px}
 .divider{border:none;border-top:1px solid var(--border);margin:12px 0}
 .empty{color:var(--text3);font-size:13px;padding:16px 0;text-align:center}
 @media(max-width:500px){.kpi-val{font-size:18px}.bc-title{font-size:14px}.nav-item{padding:10px 10px;font-size:12px}}
+@keyframes irrigPulse{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.4),0 0 8px rgba(34,197,94,.6)}50%{box-shadow:0 0 0 6px rgba(34,197,94,.2),0 0 14px rgba(34,197,94,.4)}}
+.mat-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.mat-row:last-child{border-bottom:none}
+.mat-alert{background:var(--amber-bg);border:1px solid var(--amber-mid);border-radius:var(--r-xs);padding:4px 8px;font-size:11px;color:var(--amber)}
 
 /* === CALENDAR === */
 .cal-wrap{padding:16px 20px}
@@ -254,6 +258,8 @@ textarea{resize:vertical;min-height:52px}
   <button class="nav-item" onclick="goPage('irrigation',this)">Irrigation · الري</button>
   <button class="nav-item" onclick="goPage('harvest',this)">Harvest · الحصاد</button>
   <button class="nav-item" onclick="goPage('costs',this)">Costs · التكاليف</button>
+  <button class="nav-item" onclick="goPage('materials',this)">Materials · المواد</button>
+  <button class="nav-item" onclick="goPage('growth',this)">Growth Stages · أطوار النمو</button>
 </div>
 
 <!-- ═══ OVERVIEW ═══ -->
@@ -294,6 +300,18 @@ textarea{resize:vertical;min-height:52px}
   <div class="ai-brief">
     <div class="ai-brief-head">✦ This month's brief · ملخص الشهر</div>
     <div class="ai-brief-body" id="ai-brief"></div>
+  </div>
+
+  <!-- Rain Log -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-head"><h3>🌧️ Rain log · سجل الأمطار</h3><span id="rain-today" style="font-size:12px;color:var(--text3)"></span></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="btn btn-sm" onclick="logRain('heavy')" style="background:#1d4ed8;color:#fff;border-color:#1d4ed8">⛈️ Heavy · غزير</button>
+      <button class="btn btn-sm" onclick="logRain('normal')" style="background:#2563eb;color:#fff;border-color:#2563eb">🌧️ Normal · عادي</button>
+      <button class="btn btn-sm" onclick="logRain('light')" style="background:#60a5fa;color:#fff;border-color:#60a5fa">🌦️ Light · خفيف</button>
+      <button class="btn btn-sm" onclick="logRain('none')" style="background:var(--surface2);color:var(--text2)">☀️ No rain · لا مطر</button>
+    </div>
+    <div id="rain-history" style="font-size:12px;color:var(--text3)"></div>
   </div>
 
   <!-- Quick previews -->
@@ -409,6 +427,7 @@ textarea{resize:vertical;min-height:52px}
         <div class="fg"><label>Category · الفئة</label>
           <select id="t-cat">
             <option>Spraying · رش</option>
+            <option>ادوية · Medication / Pesticide</option>
             <option>Pruning · تقليم</option>
             <option>Fertilising · تسميد</option>
             <option>Thinning · ترقيق</option>
@@ -536,8 +555,8 @@ textarea{resize:vertical;min-height:52px}
         <select id="co-cat">
           <option>Fertiliser · سماد</option><option>Pesticide · مبيد</option>
           <option>Irrigation · ري</option><option>Labour · عمالة</option>
-          <option>Equipment · معدات</option><option>Packaging · تعبئة</option>
-          <option>Transport · نقل</option><option>Other · أخرى</option>
+          <option>Equipment · معدات</option><option>Maintenance · صيانة</option>
+          <option>Packaging · تعبئة</option><option>Transport · نقل</option><option>Other · أخرى</option>
         </select>
       </div>
       <div class="fg"><label>Applies to · يخص</label>
@@ -553,18 +572,106 @@ textarea{resize:vertical;min-height:52px}
       <div class="fg"><label>Unit · الوحدة</label><input id="co-unit" placeholder="bag / L / day"/></div>
       <div class="fg"><label>Unit price DZD</label><input type="number" id="co-price" placeholder="0"/></div>
     </div>
-    <div class="fg" style="margin-bottom:10px"><label>Receipt ref · مرجع الإيصال</label><input id="co-receipt" placeholder="e.g. Blue folder #3"/></div>
+    <div class="form-grid">
+      <div class="fg" style="margin-bottom:10px"><label>Receipt ref · مرجع الإيصال</label><input id="co-receipt" placeholder="e.g. Blue folder #3"/></div>
+      <div class="fg" style="margin-bottom:10px"><label>📎 Receipt image · صورة الإيصال</label>
+        <input type="file" id="co-img" accept="image/*" style="font-size:12px;padding:5px" onchange="previewReceiptImg(this)"/>
+        <div id="co-img-preview" style="margin-top:4px"></div>
+      </div>
+    </div>
     <button class="btn btn-primary" style="width:100%" onclick="logCost()">Save entry · حفظ</button>
   </div>
   <div class="tbl-wrap">
-    <table class="tbl"><thead><tr><th>Date</th><th>Category</th><th>Item</th><th>Applies to</th><th>Qty</th><th>Unit price</th><th>Total DZD</th><th></th></tr></thead>
+    <table class="tbl"><thead><tr><th>Date</th><th>Category</th><th>Item</th><th>Applies to</th><th>Qty</th><th>Unit price</th><th>Total DZD</th><th>Receipt</th><th></th></tr></thead>
     <tbody id="costs-body"></tbody></table>
+  </div>
+</div>
+
+
+<!-- ═══ MATERIALS ═══ -->
+<div id="page-materials" class="page">
+  <div class="form-card">
+    <div class="card-head"><h3>Add material · إضافة مادة</h3><button class="btn btn-sm" onclick="toggleEl('mat-form')">+ New</button></div>
+    <div id="mat-form" style="display:none">
+      <div class="form-grid">
+        <div class="fg"><label>Name · الاسم</label><input id="ma-name" placeholder="e.g. NPK 20-20-20"/></div>
+        <div class="fg"><label>Category · الفئة</label>
+          <select id="ma-cat">
+            <option>Fertiliser · سماد</option><option>Pesticide · مبيد</option>
+            <option>ادوية · Medication</option><option>Tool · أداة</option>
+            <option>Irrigation supply · مستلزمات ري</option><option>Other · أخرى</option>
+          </select>
+        </div>
+        <div class="fg"><label>Quantity · الكمية</label><input type="number" id="ma-qty" placeholder="0"/></div>
+        <div class="fg"><label>Unit · الوحدة</label><input id="ma-unit" placeholder="kg / L / bag / piece"/></div>
+        <div class="fg"><label>Min stock alert · الحد الأدنى</label><input type="number" id="ma-min" placeholder="0"/></div>
+        <div class="fg"><label>Notes · ملاحظات</label><input id="ma-notes" placeholder="Optional"/></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="btn btn-primary btn-sm" onclick="saveMaterial()">Save</button>
+        <button class="btn btn-sm" onclick="toggleEl('mat-form')">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Materials list · قائمة المواد</h3><span id="mat-counts" style="font-size:12px;color:var(--text3)"></span></div>
+    <div id="materials-body"></div>
+  </div>
+</div>
+
+<!-- ═══ GROWTH STAGES ═══ -->
+<div id="page-growth" class="page">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-head"><h3>Apple growth stages · أطوار نمو التفاح</h3>
+      <span class="badge b-green" id="growth-cur-stage"></span>
+    </div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Based on Khenchela conditions (1,194m) · بناءً على ظروف خنشلة</div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Stage · الطور</th><th>Months · الأشهر</th><th>Description · الوصف</th><th>Key actions · الأعمال الرئيسية</th><th>Watch for · انتبه لـ</th></tr></thead>
+        <tbody id="apple-stages-body"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-head"><h3>Cherry stages · أطوار الكرز</h3></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Stage · الطور</th><th>Months · الأشهر</th><th>Key actions · الأعمال</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Dormancy</strong><br><span style="color:var(--text3);font-size:11px">السكون</span></td><td>Dec – Feb</td><td>Prune, dormant spray</td></tr>
+          <tr><td><strong>Bloom</strong><br><span style="color:var(--text3);font-size:11px">التزهير</span></td><td>Mar – Apr</td><td>Protect from frost, support pollination</td></tr>
+          <tr><td><strong>Fruit set</strong><br><span style="color:var(--text3);font-size:11px">عقد الثمار</span></td><td>Apr – May</td><td>Irrigate, watch for aphids</td></tr>
+          <tr><td><strong>Ripening 🍒</strong><br><span style="color:var(--text3);font-size:11px">النضج</span></td><td style="color:var(--red);font-weight:600">Late Jun – Jul</td><td>Check colour daily, harvest when deep red</td></tr>
+          <tr><td><strong>Post-harvest</strong><br><span style="color:var(--text3);font-size:11px">ما بعد الحصاد</span></td><td>Jul – Aug</td><td>Fertilise, water, prepare for next year</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-head"><h3>Other fruits · فواكه أخرى</h3></div>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>Fruit · الفاكهة</th><th>Harvest window · موسم الحصاد</th><th>Notes · ملاحظات</th></tr></thead>
+        <tbody>
+          <tr><td>Apricot · مشمش</td><td>July – August</td><td>Ripen fast — check daily</td></tr>
+          <tr><td>Fig · تين</td><td>Aug – Sep (2 crops)</td><td>Two crops per year possible</td></tr>
+          <tr><td>Pear · إجاص</td><td>Sep – Oct</td><td>Pick slightly underripe, ripen off tree</td></tr>
+          <tr><td>Pomegranate · رمان</td><td>Oct – Nov</td><td>Skin cracks = overripe</td></tr>
+          <tr><td>Grapes · عنب</td><td>Aug – Sep</td><td>Taste test for sweetness</td></tr>
+          <tr><td>Peach · خوخ</td><td>Jul – Aug</td><td>Soft to touch when ripe</td></tr>
+          <tr><td>Olive · زيتون</td><td>Oct – Nov</td><td>Pick green for oil, black for table</td></tr>
+          <tr><td>Walnut · جوز</td><td>Sep – Oct</td><td>Hull splits naturally when ready</td></tr>
+          <tr><td>Quince/Pear Sour · قارص</td><td>Sep – Oct</td><td>Cook before eating</td></tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script>
 // ═══ DATA ═══
-let D={tasks:[],irrigation:[],harvest:[],costs:[]};
+let D={tasks:[],irrigation:[],harvest:[],costs:[],weather:[],materials:[]};
 const saved=localStorage.getItem('farmYawmi3');
 if(saved)try{D=JSON.parse(saved);}catch(e){}
 
@@ -613,6 +720,7 @@ function init(){
   buildBlockCards();
   buildIrrigStatus();
   renderAll();
+  renderRainLog();
 }
 
 function setDefaults(){
@@ -847,6 +955,10 @@ function renderAll(){
   renderCosts();
   buildBlockCards();
   buildIrrigStatus();
+  renderRainLog();
+  renderMaterials();
+  buildGrowthTable();
+  if(leafMap) updateIrrigationGlow();
 }
 
 function renderOverview(){
@@ -970,8 +1082,12 @@ function renderHarvest(){
 function logCost(){
   const date=document.getElementById('co-date').value;
   if(!date)return alert('Please select a date');
-  D.costs.push({id:Date.now(),date,cat:document.getElementById('co-cat').value,applies:document.getElementById('co-applies').value,item:document.getElementById('co-item').value,supplier:document.getElementById('co-supplier').value,qty:document.getElementById('co-qty').value,unit:document.getElementById('co-unit').value,price:document.getElementById('co-price').value,receipt:document.getElementById('co-receipt').value});
+  var imgPrev = document.getElementById('co-img-preview');
+  var imgData = imgPrev ? imgPrev.dataset.imgData||'' : '';
+  D.costs.push({id:Date.now(),date,cat:document.getElementById('co-cat').value,applies:document.getElementById('co-applies').value,item:document.getElementById('co-item').value,supplier:document.getElementById('co-supplier').value,qty:document.getElementById('co-qty').value,unit:document.getElementById('co-unit').value,price:document.getElementById('co-price').value,receipt:document.getElementById('co-receipt').value,receiptImg:imgData});
   ['co-item','co-supplier','co-qty','co-unit','co-price','co-receipt'].forEach(id=>document.getElementById(id).value='');
+  if(imgPrev){imgPrev.innerHTML='';delete imgPrev.dataset.imgData;}
+  var imgInput=document.getElementById('co-img');if(imgInput)imgInput.value='';
   persist();
 }
 function deleteCost(id){D.costs=D.costs.filter(c=>c.id!==id);persist();}
@@ -992,6 +1108,7 @@ function renderCosts(){
     <td>${c.item||'—'}</td><td style="font-size:12px;color:var(--text2)">${c.applies||'—'}</td>
     <td>${c.qty||'—'} ${c.unit||''}</td><td>${parseFloat(c.price||0).toLocaleString()}</td>
     <td><strong>${Math.round(tot).toLocaleString()}</strong></td>
+    <td>${c.receiptImg?`<img src="${c.receiptImg}" style="height:32px;border-radius:4px;cursor:pointer;border:1px solid var(--border)" onclick="showReceiptImg('${c.id}')" title="View receipt"/>`:c.receipt||'—'}</td>
     <td><button class="btn btn-sm" style="color:var(--red)" onclick="deleteCost(${c.id})">×</button></td></tr>`;
   }).join('');
 }
@@ -1003,6 +1120,8 @@ function goPage(id,btn){
   document.getElementById('page-'+id).classList.add('active');
   if(id==='farm'){setTimeout(function(){initFarmMap();},150);}
   if(id==='calendar'){renderCalendar();}
+  if(id==='growth'){buildGrowthTable();}
+  if(id==='materials'){renderMaterials();}
   if(btn)btn.classList.add('active');
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});
 }
@@ -1065,6 +1184,69 @@ function initFarmMap() {
 
   renderTreeMarkers();
   buildMapLegend();
+  addBlockLabels();
+  updateIrrigationGlow();
+}
+
+// Block center coordinates for labels
+var BLOCK_CENTERS = {
+  'A': [35.4182, 6.60085],
+  'B': [35.4183, 6.60105],
+  'C': [35.4174, 6.60085],
+  'D': [35.4170, 6.60085]
+};
+
+var blockLabelMarkers = [];
+function addBlockLabels() {
+  blockLabelMarkers.forEach(function(m){ leafMap.removeLayer(m); });
+  blockLabelMarkers = [];
+  var blockInfo = {
+    'A': {name:'Block A', color:'#f97316', nameAr:'القطعة أ'},
+    'B': {name:'Block B', color:'#8b5cf6', nameAr:'القطعة ب'},
+    'C': {name:'Block C', color:'#06b6d4', nameAr:'القطعة ج'},
+    'D': {name:'Block D', color:'#84cc16', nameAr:'القطعة د'}
+  };
+  Object.keys(BLOCK_CENTERS).forEach(function(id) {
+    var info = blockInfo[id];
+    var center = BLOCK_CENTERS[id];
+    var icon = L.divIcon({
+      className: '',
+      html: '<div style="background:'+info.color+'dd;color:#fff;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.4)">'+info.name+'<br><span style='font-size:9px;opacity:.85'>'+info.nameAr+'</span></div>',
+      iconSize: [80, 36],
+      iconAnchor: [40, 18]
+    });
+    var m = L.marker(center, {icon:icon, interactive:false}).addTo(leafMap);
+    blockLabelMarkers.push(m);
+  });
+}
+
+var irrigGlowMarkers = [];
+function updateIrrigationGlow() {
+  irrigGlowMarkers.forEach(function(m){ leafMap.removeLayer(m); });
+  irrigGlowMarkers = [];
+  if (!leafMap) return;
+  var blockColor = {'A':'#f97316','B':'#8b5cf6','C':'#06b6d4','D':'#84cc16'};
+  BLOCKS.forEach(function(b) {
+    var last = getLastIrrig(b.id);
+    if (!last) return;
+    var days = Math.round((Date.now() - new Date(last)) / 86400000);
+    var m = new Date().getMonth();
+    var freq = (m>=6&&m<=7) ? 4 : 6;
+    var nextDate = new Date(new Date(last).getTime() + freq*86400000);
+    var nextStr = nextDate.toISOString().split('T')[0];
+    var center = BLOCK_CENTERS[b.id];
+    if (!center) return;
+    var color = days <= freq ? '#22c55e' : '#ef4444';
+    var icon = L.divIcon({
+      className: '',
+      html: '<div style="width:18px;height:18px;border-radius:50%;background:'+color+';border:2px solid #fff;box-shadow:0 0 0 3px '+color+'66,0 0 8px '+color+'88;animation:irrigPulse 2s infinite"></div>',
+      iconSize: [18,18], iconAnchor: [9,9]
+    });
+    var pos = [center[0]+0.00015, center[1]+0.00015];
+    var marker = L.marker(pos, {icon:icon}).addTo(leafMap);
+    marker.bindTooltip('💧 '+b.name+' — Last: '+last+'<br>Next: ~'+nextStr, {permanent:false, direction:'right'});
+    irrigGlowMarkers.push(marker);
+  });
 }
 
 function renderTreeMarkers() {
@@ -1160,10 +1342,11 @@ function getDateKey(y,m,d){ return y+'-'+String(m+1).padStart(2,'0')+'-'+String(
 
 function getEventsForDate(dateKey) {
   var evs = [];
-  (D.tasks||[]).forEach(function(t){ if(t.date===dateKey) evs.push({type:'task',label:t.title,block:t.block||''}); });
+  (D.tasks||[]).forEach(function(t){ if(t.date===dateKey) evs.push({type:'task',label:t.title,block:t.block||'',id:t.id}); });
   (D.irrigation||[]).forEach(function(r){ if(r.date===dateKey) evs.push({type:'irrigation',label:(r.block||'')+' '+(r.duration?r.duration+'min':''),block:''}); });
   (D.harvest||[]).forEach(function(h){ if(h.date===dateKey) evs.push({type:'harvest',label:(h.species||'')+(h.kg?' '+h.kg+'kg':''),block:''}); });
   (D.costs||[]).forEach(function(c){ if(c.date===dateKey) evs.push({type:'cost',label:(c.item||c.cat||'')+(c.price?' '+c.price+' DZD':''),block:''}); });
+  (D.weather||[]).forEach(function(w){ if(w.date===dateKey) evs.push({type:'task',label:'🌧️ Rain: '+w.rain,block:'',id:null}); });
   return evs;
 }
 
@@ -1261,7 +1444,11 @@ function openDayPanel(dateKey) {
   evGrid.innerHTML = Object.keys(sections).map(function(type){
     var items = sections[type];
     return '<div class="dev-sec"><h4 style="color:'+EVENT_COLORS[type]+'">'+secLabels[type]+'</h4>'
-      + (items.length ? items.map(function(e){ return '<div class="dev-item">'+e.label+(e.block?' <span style="color:var(--text3);font-size:10px">'+e.block+'</span>':'')+'</div>'; }).join('')
+      + (items.length ? items.map(function(e){
+          var editBtn = (type==='task' && e.id) ? '<button onclick="openEditTask('+e.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:10px;padding:0 4px">✏️</button>' : '';
+          return '<div class="dev-item" style="display:flex;align-items:center;justify-content:space-between">'+
+            '<span>'+e.label+(e.block?' <span style="color:var(--text3);font-size:10px">'+e.block+'</span>':'')+'</span>'+editBtn+'</div>';
+        }).join('')
         : '<div style="color:var(--text3);font-size:11px;font-style:italic">No entries</div>')
       + '</div>';
   }).join('');
@@ -1317,6 +1504,165 @@ function setCalView(v) {
   document.getElementById('cal-btn-month').classList.toggle('active', v==='month');
   document.getElementById('cal-btn-week').classList.toggle('active', v==='week');
   renderCalendar();
+}
+
+
+// ═══ RAIN LOG ═══
+function logRain(intensity) {
+  var today = new Date().toISOString().split('T')[0];
+  // Remove today entry if exists
+  D.weather = (D.weather||[]).filter(function(w){ return w.date !== today; });
+  if (intensity !== 'none') {
+    D.weather.push({id:Date.now(), date:today, rain:intensity});
+  }
+  persist();
+  renderRainLog();
+}
+
+function renderRainLog() {
+  var today = new Date().toISOString().split('T')[0];
+  var todayRain = (D.weather||[]).find(function(w){ return w.date===today; });
+  var pill = document.getElementById('rain-today');
+  if (pill) {
+    if (todayRain) {
+      var icons = {heavy:'⛈️ Heavy · غزير', normal:'🌧️ Normal · عادي', light:'🌦️ Light · خفيف'};
+      pill.textContent = 'Today: ' + (icons[todayRain.rain]||todayRain.rain);
+      pill.style.color = 'var(--blue)';
+    } else {
+      pill.textContent = 'Not logged today';
+    }
+  }
+  var hist = document.getElementById('rain-history');
+  if (hist) {
+    var recent = [...(D.weather||[])].sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,7);
+    if (!recent.length) { hist.innerHTML='<span>No rain logged yet</span>'; return; }
+    var rainIcons = {heavy:'⛈️',normal:'🌧️',light:'🌦️'};
+    hist.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap">'
+      + recent.map(function(w){ return '<div style="background:var(--blue-bg);border:1px solid var(--blue-mid);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--blue);text-align:center">'
+        +(rainIcons[w.rain]||'🌧️')+'<br>'+w.date.slice(5)+'<br><b>'+w.rain+'</b></div>'; }).join('')
+      + '</div>';
+  }
+}
+
+// ═══ MATERIALS ═══
+function saveMaterial() {
+  var name = document.getElementById('ma-name').value.trim();
+  if (!name) return alert('Please enter a material name');
+  D.materials = D.materials||[];
+  D.materials.push({
+    id:Date.now(),
+    name, cat:document.getElementById('ma-cat').value,
+    qty:document.getElementById('ma-qty').value,
+    unit:document.getElementById('ma-unit').value,
+    min:document.getElementById('ma-min').value,
+    notes:document.getElementById('ma-notes').value
+  });
+  ['ma-name','ma-qty','ma-unit','ma-min','ma-notes'].forEach(function(id){ document.getElementById(id).value=''; });
+  toggleEl('mat-form');
+  persist();
+}
+
+function deleteMaterial(id){ D.materials=(D.materials||[]).filter(function(m){return m.id!==id;}); persist(); }
+
+function updateMaterialQty(id, delta) {
+  var m = (D.materials||[]).find(function(x){return x.id===id;});
+  if(m){ m.qty = Math.max(0, parseFloat(m.qty||0)+delta); persist(); }
+}
+
+function renderMaterials() {
+  var mats = D.materials||[];
+  var el = document.getElementById('materials-body');
+  var cnt = document.getElementById('mat-counts');
+  if (!el) return;
+  if (cnt) cnt.textContent = mats.length + ' items · ' + mats.filter(function(m){return parseFloat(m.qty||0)<=parseFloat(m.min||0)&&m.min;}).length + ' low stock';
+  if (!mats.length) { el.innerHTML='<div class="empty">No materials yet. Add fertilisers, pesticides, tools…</div>'; return; }
+  el.innerHTML = mats.map(function(m){
+    var low = m.min && parseFloat(m.qty||0) <= parseFloat(m.min||0);
+    return '<div class="mat-row">'
+      +'<div style="flex:1">'
+      +'<div style="font-size:13px;font-weight:600;color:var(--text)">'+m.name+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+m.cat+' · '+m.notes+'</div>'
+      +'</div>'
+      +(low?'<span class="mat-alert">⚠️ Low stock</span>':'')
+      +'<div style="display:flex;align-items:center;gap:6px">'
+      +'<button class="btn btn-sm" onclick="updateMaterialQty('+m.id+',-1)">−</button>'
+      +'<span style="min-width:50px;text-align:center;font-weight:600">'+m.qty+' '+m.unit+'</span>'
+      +'<button class="btn btn-sm" onclick="updateMaterialQty('+m.id+',1)">+</button>'
+      +'</div>'
+      +'<button onclick="deleteMaterial('+m.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px">×</button>'
+      +'</div>';
+  }).join('');
+}
+
+// ═══ RECEIPT IMAGE ═══
+function previewReceiptImg(input) {
+  var preview = document.getElementById('co-img-preview');
+  if (!preview) return;
+  if (input.files && input.files[0]) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      preview.innerHTML = '<img src="'+e.target.result+'" style="max-height:80px;border-radius:6px;border:1px solid var(--border);margin-top:4px"/>';
+      preview.dataset.imgData = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+// ═══ GROWTH STAGES TABLE ═══
+var APPLE_STAGES = [
+  {stage:'Dormancy · السكون', months:'Dec – Feb', desc:'Tree fully rested, no growth. Buds tight.', actions:'Prune, apply dormant oil spray, soil test, prepare tools', watch:'Diseases entering wounds, rodent bark damage'},
+  {stage:'Bud swell · انتفاخ البراعم', months:'Feb – Mar', desc:'Buds begin to swell and turn green. Vulnerable to frost.', actions:'Apply nitrogen fertiliser, first fungicide spray, frost watch', watch:'⚠️ Late frost at 1,194m — protect with covers if <0°C'},
+  {stage:'Pink / Bloom · التزهير', months:'Mar – Apr', desc:'Flowers open. Critical pollination window.', actions:'Support bees, scab prevention spray, no insecticides during bloom', watch:'Frost damage to open flowers (most critical), fire blight'},
+  {stage:'Petal fall · سقوط البتلات', months:'Apr', desc:'Flowers drop, small fruitlets visible.', actions:'First insecticide (codling moth), copper spray, thin Block C flowers', watch:'Fruitlet drop, aphids starting'},
+  {stage:'Fruit set · عقد الثمار', months:'Apr – May', desc:'Small apple fruitlets developing fast.', actions:'Fruit thinning G2 (6–8 per cluster → 1–2), drip irrigation, K+P start', watch:'Aphids, mites, June drop'},
+  {stage:'Cell division · انقسام الخلايا', months:'May – Jun', desc:'Cells multiplying — determines final fruit size.', actions:'K+P fertiliser, irrigate every 5–7 days, spider mite monitoring', watch:'🕷️ Spider mites in heat, lack of water = small fruit'},
+  {stage:'Fruit development · تطور الثمار', months:'Jun – Aug', desc:'Fruit sizing rapidly. Peak water demand.', actions:'Peak irrigation every 3–5 days, codling moth traps, stop N fertiliser', watch:'Codling moth, sunburn on fruit, water stress'},
+  {stage:'Colour / Maturity · النضج', months:'Aug – Sep', desc:'Fruit changes colour and sweetens. Approach harvest.', actions:'Reduce watering, starch-iodine test, pressure test, harvest trial', watch:'Over-ripening, pre-harvest drop, wasps'},
+  {stage:'Harvest · الحصاد', months:'Sep – Oct', desc:'G2 trees (Block A+D) ready. G1 (Block C) 2–3 fruits max.', actions:'Pick early morning, grade A/B/rejected, record yield per block', watch:'Bruising during picking, post-harvest rots'},
+  {stage:'Post-harvest · ما بعد الحصاد', months:'Oct – Nov', desc:'Tree recovers and stores energy for next year.', actions:'Post-harvest fertiliser, copper spray, remove fallen fruit, mulch Block C', watch:'Canker, collar rot, late season pests'},
+];
+
+function buildGrowthTable() {
+  var body = document.getElementById('apple-stages-body');
+  if (!body) return;
+  var m = new Date().getMonth();
+  var monthRanges = [[11,1],[1,2],[2,3],[3,3],[3,4],[4,5],[5,7],[7,8],[8,9],[9,10]];
+  body.innerHTML = APPLE_STAGES.map(function(s, i) {
+    var isCur = (m >= (monthRanges[i]?.[0]||0) && m <= (monthRanges[i]?.[1]||11));
+    var bg = isCur ? 'background:var(--green-light);' : '';
+    return '<tr style="'+bg+'"><td><strong>'+(isCur?'▶ ':'')+s.stage+'</strong>'+(isCur?'<br><span class="badge b-green" style="font-size:10px">Current · الحالي</span>':'')+' </td>'
+      +'<td style="font-size:12px;color:var(--text3)">'+s.months+'</td>'
+      +'<td style="font-size:12px">'+s.desc+'</td>'
+      +'<td style="font-size:12px;color:var(--green)">'+s.actions+'</td>'
+      +'<td style="font-size:12px;color:var(--amber)">'+s.watch+'</td></tr>';
+  }).join('');
+  var curStage = document.getElementById('growth-cur-stage');
+  if (curStage) {
+    var idx = monthRanges.findIndex(function(r){ return m>=r[0]&&m<=r[1]; });
+    if (idx>=0) curStage.textContent = APPLE_STAGES[idx].stage;
+  }
+}
+
+// ═══ EDIT TASK IN CALENDAR ═══
+function openEditTask(id) {
+  var t = D.tasks.find(function(x){return x.id===id;});
+  if (!t) return;
+  var title = prompt('Edit task title · تعديل المهمة:', t.title);
+  if (title===null) return;
+  var notes = prompt('Notes · ملاحظات:', t.notes||'');
+  t.title = title.trim() || t.title;
+  t.notes = notes||'';
+  persist();
+  if (selectedDate) openDayPanel(selectedDate);
+}
+
+
+
+function showReceiptImg(costId) {
+  var c = D.costs.find(function(x){return String(x.id)===String(costId);});
+  if (!c || !c.receiptImg) return;
+  var w = window.open('','_blank','width=600,height=500');
+  w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+c.receiptImg+'" style="max-width:100%;max-height:100vh"/></body></html>');
 }
 
 // ── Start app ──
