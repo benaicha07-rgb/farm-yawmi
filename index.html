@@ -1,4 +1,20 @@
 <!DOCTYPE html>
+<!-- 
+  Farm Yawmi Dashboard · مزرعة يومي
+  Version: 4.3
+  Date: 2026-06-14
+  Changelog:
+    v1.0 - Initial dashboard (Overview, Farm Map, Tasks, Irrigation, Harvest, Costs)
+    v1.1 - Added Calendar tab
+    v1.2 - Added 494 trees to Farm Map
+    v1.3 - Fixed header 394→494 trees
+    v1.4 - Rain log, Block labels, Growth Stages tab, Materials tab
+    v1.5 - Fixed JS syntax error (block label quotes)
+    v1.6 - 6 blocks (A-F), updated all dropdowns
+    v1.7 - Red circle markers per block with irrigation tooltip
+    v1.8 - Full width layout, larger fonts, larger month pills
+    v1.9 - Rain calendar grid in Overview, rain toggle in Irrigation log, interactive months
+-->
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
@@ -29,7 +45,7 @@
   --blue:#80b8f0;--blue-bg:#081828;--blue-mid:#2278c4;
   --teal:#60d0a8;--teal-bg:#081e16;--teal-mid:#1a9e72;
 }}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;font-size:16px}
 
 /* ── HEADER ── */
 .header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:100}
@@ -39,7 +55,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .brand-sub{font-size:11px;color:var(--text3);margin-top:1px}
 .header-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .season-pill{background:var(--green-bg);color:var(--green);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600}
-.btn{padding:6px 12px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-size:12px;font-family:var(--font);font-weight:500;transition:all .15s}
+.btn{padding:7px 14px;border-radius:var(--r-sm);border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-size:14px;font-family:var(--font);font-weight:500;transition:all .15s}
 .btn:hover{background:var(--surface2);color:var(--text)}
 .btn-primary{background:var(--green-mid);border-color:var(--green-mid);color:#fff}
 .btn-primary:hover{opacity:.9}
@@ -47,14 +63,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 /* ── NAV ── */
 .nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto}
-.nav-item{padding:11px 14px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font)}
+.nav-item{padding:12px 18px;font-size:15px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font)}
 .nav-item:hover{color:var(--text2)}
 .nav-item.active{color:var(--green);border-bottom-color:var(--green)}
 
 /* ── LAYOUT ── */
-.page{display:none;padding:16px;max-width:1000px;margin:0 auto}
+.page{display:none;padding:20px 28px}
 .page.active{display:block}
-.section-title{font-size:13px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
+.section-title{font-size:14px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px}
 
 /* ── KPI STRIP ── */
 .kpi-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px}
@@ -65,7 +81,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .kpi-delta{font-size:11px;margin-top:4px}
 
 /* ── ALERT BAR ── */
-.alert{padding:10px 14px;border-radius:var(--r-sm);margin-bottom:12px;font-size:13px;display:flex;gap:10px;align-items:flex-start;border:1px solid}
+.alert{padding:10px 14px;border-radius:var(--r-sm);margin-bottom:12px;font-size:14px;display:flex;gap:10px;align-items:flex-start;border:1px solid}
 .alert-amber{background:var(--amber-bg);color:var(--amber);border-color:var(--amber-mid)}
 .alert-green{background:var(--green-bg);color:var(--green);border-color:var(--green-mid)}
 .alert-red{background:var(--red-bg);color:var(--red);border-color:var(--red-mid)}
@@ -81,10 +97,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .block-card.selected{border-color:var(--green-mid);border-width:2px}
 .bc-header{padding:14px 16px 10px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
 .bc-title{font-size:15px;font-weight:600;color:var(--text)}
-.bc-subtitle{font-size:12px;color:var(--text3);margin-top:2px;direction:rtl}
+.bc-subtitle{font-size:14px;color:var(--text3);margin-top:2px;direction:rtl}
 .bc-badge{padding:3px 9px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap}
 .bc-species-row{padding:0 16px 10px;display:flex;flex-wrap:wrap;gap:6px}
-.species-chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border-radius:20px;padding:3px 9px;font-size:12px;color:var(--text2)}
+.species-chip{display:flex;align-items:center;gap:5px;background:var(--surface2);border-radius:20px;padding:3px 9px;font-size:14px;color:var(--text2)}
 .sp-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 .bc-metrics{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--border)}
 .bc-metric{padding:10px 12px;text-align:center;border-right:1px solid var(--border)}
@@ -92,7 +108,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .bc-metric-val{font-size:16px;font-weight:700;color:var(--text)}
 .bc-metric-label{font-size:10px;color:var(--text3);margin-top:2px}
 .bc-footer{padding:10px 16px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;gap:8px}
-.bc-footer-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+.bc-footer-item{display:flex;align-items:center;gap:5px;font-size:14px;color:var(--text2)}
 .status-dot{width:7px;height:7px;border-radius:50%}
 .status-green{background:var(--green-mid)}
 .status-amber{background:var(--amber-mid)}
@@ -110,7 +126,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .task-row:last-child{border-bottom:none}
 .task-check{width:16px;height:16px;border:1.5px solid var(--border);border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;transition:all .15s}
 .task-check.done{background:var(--green-mid);border-color:var(--green-mid);color:#fff;font-size:10px}
-.task-text{font-size:13px;color:var(--text);flex:1}
+.task-text{font-size:15px;color:var(--text);flex:1}
 .task-text.done{text-decoration:line-through;color:var(--text3)}
 .task-date{font-size:11px;color:var(--text3);margin-top:2px}
 
@@ -119,7 +135,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .prog-fill{height:100%;border-radius:3px;transition:width .4s}
 
 /* ── TABLES ── */
-.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl{width:100%;border-collapse:collapse;font-size:14px}
 .tbl th{text-align:left;padding:8px 10px;background:var(--surface2);color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.3px}
 .tbl td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle}
 .tbl tr:last-child td{border-bottom:none}
@@ -131,7 +147,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:8px}
 .fg{display:flex;flex-direction:column;gap:3px}
 label{font-size:11px;color:var(--text3);font-weight:500}
-input,select,textarea{padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:var(--font);font-size:13px;outline:none;width:100%}
+input,select,textarea{padding:8px 12px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);color:var(--text);font-family:var(--font);font-size:15px;outline:none;width:100%}
 input:focus,select:focus,textarea:focus{border-color:var(--green-mid);box-shadow:0 0 0 3px rgba(74,154,26,.12)}
 textarea{resize:vertical;min-height:52px}
 
@@ -145,20 +161,20 @@ textarea{resize:vertical;min-height:52px}
 
 /* ── SEASON TIMELINE ── */
 .timeline{display:flex;gap:3px;margin-bottom:8px}
-.tl-month{flex:1;padding:5px 2px;border-radius:4px;text-align:center;font-size:9px;font-weight:500;cursor:default;transition:all .2s}
+.tl-month{flex:1;padding:10px 4px;border-radius:6px;text-align:center;font-size:13px;font-weight:600;cursor:default;transition:all .2s}
 .tl-month.cur{outline:2px solid var(--green-mid);font-weight:700}
 
 /* ── AI BRIEF ── */
 .ai-brief{background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
-.ai-brief-head{font-size:12px;font-weight:600;color:var(--green);margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.ai-brief-body{font-size:13px;color:var(--green);line-height:1.7}
+.ai-brief-head{font-size:14px;font-weight:600;color:var(--green);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.ai-brief-body{font-size:15px;color:var(--green);line-height:1.7}
 
 /* ── IRRIG STATUS ── */
 .irrig-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
 .irrig-row{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--border)}
 .irrig-row:last-child{border-bottom:none}
 .irrig-name{min-width:90px}
-.irrig-name strong{font-size:13px;color:var(--text)}
+.irrig-name strong{font-size:14px;color:var(--text)}
 .irrig-name span{font-size:11px;color:var(--text3);display:block}
 
 /* ── GRID 2 ── */
@@ -167,10 +183,12 @@ textarea{resize:vertical;min-height:52px}
 /* ── MISC ── */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;margin-bottom:14px}
 .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.card-head h3{font-size:14px;font-weight:600;color:var(--text)}
+.card-head h3{font-size:16px;font-weight:600;color:var(--text)}
 .divider{border:none;border-top:1px solid var(--border);margin:12px 0}
-.empty{color:var(--text3);font-size:13px;padding:16px 0;text-align:center}
-@media(max-width:500px){.kpi-val{font-size:18px}.bc-title{font-size:14px}.nav-item{padding:10px 10px;font-size:12px}}
+.empty{color:var(--text3);font-size:14px;padding:16px 0;text-align:center}
+@media(max-width:500px){.kpi-val{font-size:18px}.bc-title{font-size:14px}.nav-item{padding:10px 10px;font-size:14px}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes blockGlow{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.4);opacity:.15}}
 @keyframes irrigPulse{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.4),0 0 8px rgba(34,197,94,.6)}50%{box-shadow:0 0 0 6px rgba(34,197,94,.2),0 0 14px rgba(34,197,94,.4)}}
 .mat-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
 .mat-row:last-child{border-bottom:none}
@@ -180,9 +198,9 @@ textarea{resize:vertical;min-height:52px}
 .cal-wrap{padding:16px 20px}
 .cal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .cal-title{font-size:16px;font-weight:600;color:var(--text);min-width:180px;text-align:center}
-.cnbtn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;color:var(--text2);transition:all .15s;margin:0 2px}
+.cnbtn{padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);cursor:pointer;font-size:14px;font-weight:500;color:var(--text2);transition:all .15s;margin:0 2px}
 .cnbtn:hover{background:var(--surface2)}
-.cvbtn{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:12px;font-weight:500;color:var(--text3);transition:all .15s}
+.cvbtn{padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;cursor:pointer;font-size:14px;font-weight:500;color:var(--text3);transition:all .15s}
 .cvbtn.active{background:var(--green-bg);border-color:var(--green-mid);color:var(--green)}
 .cal-grid-7{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
 .cal-dh{text-align:center;font-size:10px;font-weight:600;color:var(--text3);padding:5px 0;text-transform:uppercase;letter-spacing:.5px}
@@ -192,7 +210,7 @@ textarea{resize:vertical;min-height:52px}
 .cday.today .cdn{color:var(--green);font-weight:700}
 .cday.othermon{background:var(--surface2);opacity:.4}
 .cday.selected{border-color:var(--green);border-width:2px}
-.cdn{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:3px}
+.cdn{font-size:14px;font-weight:500;color:var(--text2);margin-bottom:3px}
 .cdots{display:flex;gap:2px;flex-wrap:wrap;margin-top:2px}
 .cdot{width:6px;height:6px;border-radius:50%}
 .wk-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px}
@@ -208,16 +226,16 @@ textarea{resize:vertical;min-height:52px}
 .dev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:14px}
 .dev-sec{background:var(--surface2);border-radius:8px;padding:10px 12px}
 .dev-sec h4{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:7px}
-.dev-item{font-size:12px;color:var(--text);padding:4px 0;border-bottom:1px solid var(--border)}
+.dev-item{font-size:14px;color:var(--text);padding:4px 0;border-bottom:1px solid var(--border)}
 .dev-item:last-child{border-bottom:none}
 .day-add{background:var(--green-light);border:1px solid var(--green-mid);border-radius:8px;padding:12px;margin-top:10px}
-.day-add h4{font-size:12px;font-weight:600;color:var(--green);margin-bottom:8px}
+.day-add h4{font-size:14px;font-weight:600;color:var(--green);margin-bottom:8px}
 /* === FARM MAP === */
 .map-layout{display:grid;grid-template-columns:1fr 270px;height:calc(100vh - 92px);overflow:hidden}
 @media(max-width:768px){.map-layout{grid-template-columns:1fr;height:auto}}
 #farmLeafMap{width:100%;height:100%;min-height:400px}
 .map-sp{background:var(--surface);border-left:1px solid var(--border);overflow-y:auto;padding:12px 14px}
-.mleg-item{display:flex;align-items:center;gap:7px;padding:4px 6px;font-size:12px;color:var(--text2);cursor:pointer;border-radius:4px;transition:background .1s}
+.mleg-item{display:flex;align-items:center;gap:7px;padding:4px 6px;font-size:14px;color:var(--text2);cursor:pointer;border-radius:4px;transition:background .1s}
 .mleg-item:hover,.mleg-item.hl{background:var(--surface2)}
 .mleg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
 .mleg-cnt{margin-left:auto;font-size:10px;color:var(--text3);font-weight:600}
@@ -228,6 +246,129 @@ textarea{resize:vertical;min-height:52px}
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css"/>
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAU7xM6yCvUJgHRXKYSz6cdgN2-4GrXsLo",
+      authDomain: "farm-yawmi-f3b64.firebaseapp.com",
+      projectId: "farm-yawmi-f3b64",
+      storageBucket: "farm-yawmi-f3b64.firebasestorage.app",
+      messagingSenderId: "1075651877975",
+      appId: "1:1075651877975:web:7ca7b4cb36e9eebcca1712"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const farmDoc = doc(db, 'farms', 'yawmi');
+
+    // Expose to global scope for use in main script
+    window._fb = {
+      save: async function(data) {
+        try {
+          await setDoc(farmDoc, { data: JSON.stringify(data), updatedAt: Date.now() });
+          window._fbSetStatus('synced');
+        } catch(e) {
+          console.warn('Firebase save failed:', e);
+          window._fbSetStatus('offline');
+        }
+      },
+      load: async function() {
+        try {
+          const snap = await getDoc(farmDoc);
+          if (snap.exists()) {
+            const remote = snap.data();
+            window._fbSetStatus('synced');
+            return { data: JSON.parse(remote.data), updatedAt: remote.updatedAt };
+          }
+          return null;
+        } catch(e) {
+          console.warn('Firebase load failed:', e);
+          window._fbSetStatus('offline');
+          return null;
+        }
+      },
+      listen: function(callback) {
+        onSnapshot(farmDoc, (snap) => {
+          if (snap.exists()) {
+            try {
+              const remote = JSON.parse(snap.data().data);
+              callback(remote, snap.data().updatedAt);
+            } catch(e) {}
+          }
+        }, (err) => {
+          console.warn('Firebase listener error:', err);
+          window._fbSetStatus('offline');
+        });
+      }
+    };
+
+    // Load on startup — always prefer Firestore if it has more data
+    window.addEventListener('DOMContentLoaded', async () => {
+      window._fbSetStatus('syncing');
+      const remote = await window._fb.load();
+
+      const localRaw = localStorage.getItem('farmYawmi3');
+      const localUpdated = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
+
+      // Parse both data sources
+      var localData = null;
+      try { localData = localRaw ? JSON.parse(localRaw) : null; } catch(e) {}
+
+      var remoteData = (remote && remote.data) ? remote.data : null;
+
+      // Count entries to decide which is richer
+      function countEntries(d) {
+        if (!d) return 0;
+        return (d.tasks||[]).length + (d.irrigation||[]).length + 
+               (d.harvest||[]).length + (d.costs||[]).length;
+      }
+
+      var localCount = countEntries(localData);
+      var remoteCount = countEntries(remoteData);
+      var remoteTs = (remote && remote.updatedAt) ? remote.updatedAt : 0;
+
+      console.log('Firebase sync — local entries:', localCount, 'remote entries:', remoteCount, 'localTs:', localUpdated, 'remoteTs:', remoteTs);
+
+      if (remoteCount === 0 && localCount > 0) {
+        // Firestore empty — push local up
+        await window._fb.save(localData);
+        console.log('Pushed local data to Firestore (' + localCount + ' entries)');
+      } else if (remoteCount > 0 && remoteCount >= localCount) {
+        // Firestore has equal or more data — always use it
+        localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
+        localStorage.setItem('farmYawmi3_ts', remoteTs);
+        if (window._reloadData) window._reloadData();
+        console.log('Loaded from Firestore (' + remoteCount + ' entries)');
+      } else if (localCount > remoteCount) {
+        // Local has more data — push up to Firestore
+        await window._fb.save(localData);
+        console.log('Local has more data — pushed to Firestore (' + localCount + ' entries)');
+      }
+
+      window._fbSetStatus('synced');
+
+      // Real-time listener — update if another device saves newer/richer data
+      window._fb.listen(function(newRemoteData, newRemoteTs) {
+        var currentTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
+        var currentRaw = localStorage.getItem('farmYawmi3');
+        var currentData = null;
+        try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
+        var currentCount = countEntries(currentData);
+        var newCount = countEntries(newRemoteData);
+
+        // Accept if newer timestamp OR more entries
+        if (newRemoteTs > currentTs + 2000 || newCount > currentCount) {
+          localStorage.setItem('farmYawmi3', JSON.stringify(newRemoteData));
+          localStorage.setItem('farmYawmi3_ts', newRemoteTs);
+          if (window._reloadData) window._reloadData();
+          console.log('Real-time sync from another device (' + newCount + ' entries)');
+        }
+      });
+    });
+  </script>
 </head>
 <body>
 
@@ -236,13 +377,17 @@ textarea{resize:vertical;min-height:52px}
   <div class="header-brand">
     <div class="brand-icon">🌿</div>
     <div>
-      <div class="brand-name">Farm Yawmi <span style="font-size:12px;font-weight:400;color:var(--text3)">مزرعة يومي</span></div>
-      <div class="brand-sub">Khenchela · ~494 trees · 1.015 ha · 1,194 m</div>
+      <div class="brand-name">Farm Yawmi <span style="font-size:14px;font-weight:400;color:var(--text3)">مزرعة يومي</span></div>
+      <div class="brand-sub">Khenchela · 494 trees · 6 blocks · 1.015 ha · 1,194 m · <span style="color:var(--green);font-weight:600">v4.3</span></div>
     </div>
   </div>
   <div class="header-right">
+    <div id="sync-status" title="Firebase sync status" style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text3);padding:4px 10px;border-radius:12px;background:var(--surface2);border:1px solid var(--border)">
+      <span id="sync-dot" style="width:8px;height:8px;border-radius:50%;background:#94a3b8;display:inline-block;transition:background .3s"></span>
+      <span id="sync-label">Connecting…</span>
+    </div>
     <span class="season-pill" id="season-pill">Loading…</span>
-    <span style="font-size:12px;color:var(--text3)" id="date-pill"></span>
+    <span style="font-size:14px;color:var(--text3)" id="date-pill"></span>
     <button class="btn btn-sm" onclick="exportData()">↓ Export</button>
     <button class="btn btn-sm" onclick="document.getElementById('imp').click()">↑ Import</button>
     <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)"/>
@@ -293,7 +438,7 @@ textarea{resize:vertical;min-height:52px}
   <div class="card">
     <div class="card-head"><h3>2026 season · الموسم</h3><span id="stage-label" class="badge b-green"></span></div>
     <div class="timeline" id="timeline"></div>
-    <div style="font-size:12px;color:var(--text3)" id="stage-tasks"></div>
+    <div style="font-size:14px;color:var(--text3)" id="stage-tasks"></div>
   </div>
 
   <!-- AI Brief -->
@@ -302,16 +447,29 @@ textarea{resize:vertical;min-height:52px}
     <div class="ai-brief-body" id="ai-brief"></div>
   </div>
 
-  <!-- Rain Log -->
+  <!-- Rain Calendar Grid -->
   <div class="card" style="margin-bottom:14px">
-    <div class="card-head"><h3>🌧️ Rain log · سجل الأمطار</h3><span id="rain-today" style="font-size:12px;color:var(--text3)"></span></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-      <button class="btn btn-sm" onclick="logRain('heavy')" style="background:#1d4ed8;color:#fff;border-color:#1d4ed8">⛈️ Heavy · غزير</button>
-      <button class="btn btn-sm" onclick="logRain('normal')" style="background:#2563eb;color:#fff;border-color:#2563eb">🌧️ Normal · عادي</button>
-      <button class="btn btn-sm" onclick="logRain('light')" style="background:#60a5fa;color:#fff;border-color:#60a5fa">🌦️ Light · خفيف</button>
-      <button class="btn btn-sm" onclick="logRain('none')" style="background:var(--surface2);color:var(--text2)">☀️ No rain · لا مطر</button>
+    <div class="card-head">
+      <h3>🌧️ Rain calendar · تقويم الأمطار</h3>
+      <span id="rain-today" style="font-size:13px;color:var(--text3)"></span>
     </div>
-    <div id="rain-history" style="font-size:12px;color:var(--text3)"></div>
+    <div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px" id="rain-month-label"></div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:4px">
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0">Sun</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0">Mon</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0">Tue</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0">Wed</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0">Thu</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0">Fri</div>
+      <div style="font-size:12px;font-weight:600;color:var(--text3);text-align:center;padding:4px 0">Sat</div>
+    </div>
+    <div id="rain-month-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:10px"></div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:4px;font-size:12px;color:var(--text2)">
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:13px;height:13px;border-radius:3px;background:#1d4ed8;display:inline-block"></span>Heavy · غزير</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:13px;height:13px;border-radius:3px;background:#60a5fa;display:inline-block"></span>Normal · عادي</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:13px;height:13px;border-radius:3px;background:#bfdbfe;display:inline-block"></span>Light · خفيف</span>
+      <span style="display:flex;align-items:center;gap:5px"><span style="width:13px;height:13px;border-radius:3px;background:#f1f5f9;border:1px solid #dde;display:inline-block"></span>No rain / not logged</span>
+    </div>
   </div>
 
   <!-- Quick previews -->
@@ -329,21 +487,40 @@ textarea{resize:vertical;min-height:52px}
 
 <!-- ═══ FARM MAP (BLOCK CARDS) ═══ -->
 <div id="page-farm" class="page">
+<!-- Status strip OUTSIDE map so zoom doesn't hide it -->
+<div style="margin-bottom:10px">
+  <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:8px">
+    💧 Irrigation status · حالة الري
+    <span style="font-size:11px;font-weight:400;color:var(--text3)">🟢 OK · 🟡 Due soon · 🔴 Overdue</span>
+  </div>
+  <div id="irrig-status-strip" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+</div>
 <div class="map-layout">
-  <div style="position:relative"><div id="farmLeafMap"></div></div>
+  <div style="position:relative">
+    <div id="farmLeafMap"></div>
+  </div>
   <div class="map-sp">
     <div class="section-title">Filter · تصفية</div>
-    <div class="mfbtns">
+    <div class="mfbtns" style="flex-wrap:wrap;gap:4px">
       <button class="mfbtn active" onclick="mapFilter('all',this)">All</button>
       <button class="mfbtn" onclick="mapFilter('apple',this)">Apple</button>
       <button class="mfbtn" onclick="mapFilter('other',this)">Other</button>
     </div>
+    <div class="section-title" style="margin-top:8px">Blocks · القطع</div>
+    <div class="mfbtns" style="flex-wrap:wrap;gap:4px">
+      <button class="mfbtn" onclick="mapFilterBlock('A',this)">A</button>
+      <button class="mfbtn" onclick="mapFilterBlock('B',this)">B</button>
+      <button class="mfbtn" onclick="mapFilterBlock('C',this)">C</button>
+      <button class="mfbtn" onclick="mapFilterBlock('D',this)">D</button>
+      <button class="mfbtn" onclick="mapFilterBlock('E',this)">E</button>
+      <button class="mfbtn" onclick="mapFilterBlock('F',this)">F</button>
+    </div>
     <div class="section-title" style="margin-top:8px">Legend · المفتاح</div>
     <div id="map-legend"></div>
     <div class="section-title" style="margin-top:10px">Selected · محدد</div>
-    <div id="map-sel" style="font-size:12px;color:var(--text3);padding:6px 0">Click any tree dot</div>
+    <div id="map-sel" style="font-size:14px;color:var(--text3);padding:6px 0">Click any tree dot</div>
     <div class="section-title" style="margin-top:10px">Farm · المزرعة</div>
-    <div style="font-size:12px;color:var(--text2);line-height:2.2">
+    <div style="font-size:14px;color:var(--text2);line-height:2.2">
       <div>📍 Khenchela, Algeria</div>
       <div>🌿 <b>494</b> total trees</div>
       <div>🍎 357 apple · تفاح</div>
@@ -352,6 +529,7 @@ textarea{resize:vertical;min-height:52px}
     </div>
   </div>
 </div>
+
 </div>
 
 <div id="page-calendar" class="page">
@@ -396,7 +574,8 @@ textarea{resize:vertical;min-height:52px}
         <div class="fg"><label>Block</label>
           <select id="da-block">
             <option>Block A</option><option>Block B</option>
-            <option>Block C</option><option>Block D</option><option>All blocks</option>
+            <option>Block C</option><option>Block D</option>
+            <option>Block E</option><option>Block F</option><option>All blocks</option>
           </select>
         </div>
         <div class="fg"><label>Value / Notes</label><input id="da-value" placeholder="60 min / 120 kg / 5000 DZD"/></div>
@@ -408,6 +587,55 @@ textarea{resize:vertical;min-height:52px}
 </div>
 
 <div id="page-tasks" class="page">
+  <!-- Generate Annual Tasks -->
+  <div class="card" style="margin-bottom:14px;border:1.5px solid var(--green-mid);background:var(--green-light)">
+    <div style="font-size:15px;font-weight:700;color:var(--green);margin-bottom:4px">📅 Generate annual tasks · توليد مهام سنوية</div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Create tasks for a future year automatically</div>
+
+    <!-- Source selector -->
+    <div style="display:flex;gap:16px;margin-bottom:14px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text)">
+        <input type="radio" name="gen-source" id="gs-calendar" value="calendar" checked onchange="updateGenUI()" style="accent-color:var(--green);width:16px;height:16px">
+        From seasonal calendar · من التقويم الموسمي
+      </label>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;font-weight:500;color:var(--text)">
+        <input type="radio" name="gen-source" id="gs-copy" value="copy" onchange="updateGenUI()" style="accent-color:var(--green);width:16px;height:16px">
+        Copy from year · نسخ من سنة
+      </label>
+    </div>
+
+    <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap">
+      <!-- Target year -->
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">Target year · السنة المستهدفة</label>
+        <select id="gen-year" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--surface);min-width:100px"></select>
+      </div>
+
+      <!-- Calendar option: day of month -->
+      <div id="gen-cal-opts" style="display:flex;flex-direction:column;gap:4px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">Schedule on · جدولة في</label>
+        <select id="gen-day" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--surface)">
+          <option value="1">1st of month</option>
+          <option value="5">5th of month</option>
+          <option value="10" selected>10th of month</option>
+          <option value="15">15th of month</option>
+        </select>
+      </div>
+
+      <!-- Copy option: source year -->
+      <div id="gen-copy-opts" style="display:none;flex-direction:column;gap:4px">
+        <label style="font-size:12px;font-weight:600;color:var(--text2)">Copy tasks from · نسخ من سنة</label>
+        <select id="gen-src-year" style="padding:7px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;background:var(--surface);min-width:100px"></select>
+      </div>
+
+      <button class="btn btn-primary" onclick="generateAnnualTasks()" style="padding:8px 20px;font-size:14px;margin-bottom:1px">
+        ✨ Generate · توليد
+      </button>
+    </div>
+
+    <div id="gen-preview" style="margin-top:12px"></div>
+  </div>
+
   <div class="form-card">
     <div class="card-head"><h3>Add task · إضافة مهمة</h3><button class="btn btn-sm" onclick="toggleEl('task-form')">+ New</button></div>
     <div id="task-form" style="display:none">
@@ -416,10 +644,12 @@ textarea{resize:vertical;min-height:52px}
         <div class="fg"><label>Date · التاريخ</label><input type="date" id="t-date"/></div>
         <div class="fg"><label>Block · القطعة</label>
           <select id="t-block">
-            <option>Block A — Apple orange 4yr</option>
-            <option>Block B — Mixed</option>
-            <option>Block C — Apple cyan 3yr</option>
-            <option>Block D — Apple green 7yr</option>
+            <option>Block A — Trees Mix</option>
+            <option>Block B — Apple 4yr</option>
+            <option>Block C — Around house</option>
+            <option>Block D — Apple Mix</option>
+            <option>Block E — Apple 3yr</option>
+            <option>Block F — Apple 7yr</option>
             <option>All blocks</option>
             <option>Other fruits</option>
           </select>
@@ -453,7 +683,17 @@ textarea{resize:vertical;min-height:52px}
   </div>
 
   <div class="card">
-    <div class="card-head"><h3>All tasks · جميع المهام</h3><span id="task-counts" style="font-size:12px;color:var(--text3)"></span></div>
+    <div class="card-head">
+      <div>
+        <h3>All tasks · جميع المهام</h3>
+        <span id="task-counts" style="font-size:13px;color:var(--text3)"></span>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-sm active" id="tv-month" onclick="setTaskView('month',this)">📅 Month</button>
+        <button class="btn btn-sm" id="tv-week" onclick="setTaskView('week',this)">📆 Week</button>
+        <button class="btn btn-sm" id="tv-all" onclick="setTaskView('all',this)">☰ All</button>
+      </div>
+    </div>
     <div id="tasks-body"></div>
   </div>
 </div>
@@ -472,10 +712,12 @@ textarea{resize:vertical;min-height:52px}
           <div class="fg"><label>Date · التاريخ</label><input type="date" id="ir-date"/></div>
           <div class="fg"><label>Block · القطعة</label>
             <select id="ir-block">
-              <option>Block A — Apple orange</option>
-              <option>Block B — Mixed</option>
-              <option>Block C — Apple cyan</option>
-              <option>Block D — Apple green</option>
+              <option>Block A — Trees Mix</option>
+              <option>Block B — Apple 4yr</option>
+              <option>Block C — Around house</option>
+              <option>Block D — Apple Mix</option>
+              <option>Block E — Apple 3yr</option>
+              <option>Block F — Apple 7yr</option>
               <option>All blocks</option>
             </select>
           </div>
@@ -489,6 +731,16 @@ textarea{resize:vertical;min-height:52px}
           <div class="fg"><label>Duration min · المدة</label><input type="number" id="ir-dur" placeholder="60"/></div>
         </div>
         <div class="fg" style="margin-bottom:10px"><label>Notes · ملاحظات</label><input id="ir-notes" placeholder="e.g. soil was dry"/></div>
+        <div class="fg" style="margin-bottom:10px">
+          <label>🌧️ Rain today? · هل كان يمطر؟</label>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
+            <button id="rt-none" onclick="setRainTog('none')" style="padding:6px 14px;border-radius:6px;border:2px solid var(--green);background:var(--green);color:#fff;cursor:pointer;font-size:13px;font-weight:600">☀️ No rain</button>
+            <button id="rt-light" onclick="setRainTog('light')" style="padding:6px 14px;border-radius:6px;border:1px solid #bfdbfe;background:#eff6ff;cursor:pointer;font-size:13px">🌦️ Light</button>
+            <button id="rt-normal" onclick="setRainTog('normal')" style="padding:6px 14px;border-radius:6px;border:1px solid #93c5fd;background:#dbeafe;cursor:pointer;font-size:13px">🌧️ Normal</button>
+            <button id="rt-heavy" onclick="setRainTog('heavy')" style="padding:6px 14px;border-radius:6px;border:1px solid #1d4ed8;background:#eff6ff;cursor:pointer;font-size:13px">⛈️ Heavy</button>
+          </div>
+          <input type="hidden" id="ir-rain" value="none"/>
+        </div>
         <button class="btn btn-primary" style="width:100%" onclick="logIrrigation()">Log irrigation · تسجيل الري</button>
       </div>
     </div>
@@ -506,18 +758,18 @@ textarea{resize:vertical;min-height:52px}
     <div class="kpi"><div class="kpi-val" id="h-total">0 kg</div><div class="kpi-label">Total yield · الإجمالي</div></div>
     <div class="kpi"><div class="kpi-val" id="h-apple">0 kg</div><div class="kpi-label">Apple · تفاح</div></div>
     <div class="kpi"><div class="kpi-val" id="h-grade-a">0 kg</div><div class="kpi-label">Grade A · الدرجة أ</div></div>
-    <div class="kpi"><div class="kpi-val" id="h-avg">—</div><div class="kpi-label">Avg/tree G2 · متوسط</div></div>
+    <div class="kpi"><div class="kpi-val" id="h-avg">—</div><div class="kpi-label">Avg/tree · متوسط/شجرة</div></div>
   </div>
-  <div class="alert alert-amber"><div class="alert-icon">📅</div><div class="alert-body">Apple G2 harvest: September – early October. Check starch-iodine + pressure test before picking. G1 cyan: 2–3 fruits max.<div class="alert-ar">حصاد التفاح: سبتمبر–أكتوبر. اختبار النشا قبل القطف.</div></div></div>
+  <div class="alert alert-amber"><div class="alert-icon">📅</div><div class="alert-body">Apple harvest (Block B+F): September – early October. Check starch-iodine + pressure test before picking. Block E (3yr): 2–3 fruits max.<div class="alert-ar">حصاد التفاح: سبتمبر–أكتوبر. اختبار النشا قبل القطف.</div></div></div>
   <div class="form-card">
     <div class="card-head"><h3>Log harvest · تسجيل الحصاد</h3></div>
     <div class="form-grid">
       <div class="fg"><label>Date</label><input type="date" id="hv-date"/></div>
       <div class="fg"><label>Species · النوع</label>
         <select id="hv-species">
-          <option>Apple G2 orange (4yr)</option>
-          <option>Apple G2 lime green (7yr)</option>
-          <option>Apple G1 cyan (3yr)</option>
+          <option>Apple 4yr (Block B)</option>
+          <option>Apple 7yr (Block F)</option>
+          <option>Apple 3yr (Block E)</option>
           <option>Cherry · كرز</option><option>Apricot · مشمش</option>
           <option>Pear · إجاص</option><option>Fig · تين</option>
           <option>Pomegranate · رمان</option><option>Grapes · عنب</option><option>Olive · زيتون</option>
@@ -562,7 +814,8 @@ textarea{resize:vertical;min-height:52px}
       <div class="fg"><label>Applies to · يخص</label>
         <select id="co-applies">
           <option>All trees</option><option>Apple only</option>
-          <option>Block A</option><option>Block B</option><option>Block C</option><option>Block D</option>
+          <option>Block A</option><option>Block B</option><option>Block C</option>
+          <option>Block D</option><option>Block E</option><option>Block F</option>
           <option>Other fruits</option>
         </select>
       </div>
@@ -575,7 +828,7 @@ textarea{resize:vertical;min-height:52px}
     <div class="form-grid">
       <div class="fg" style="margin-bottom:10px"><label>Receipt ref · مرجع الإيصال</label><input id="co-receipt" placeholder="e.g. Blue folder #3"/></div>
       <div class="fg" style="margin-bottom:10px"><label>📎 Receipt image · صورة الإيصال</label>
-        <input type="file" id="co-img" accept="image/*" style="font-size:12px;padding:5px" onchange="previewReceiptImg(this)"/>
+        <input type="file" id="co-img" accept="image/*" style="font-size:14px;padding:5px" onchange="previewReceiptImg(this)"/>
         <div id="co-img-preview" style="margin-top:4px"></div>
       </div>
     </div>
@@ -614,7 +867,7 @@ textarea{resize:vertical;min-height:52px}
     </div>
   </div>
   <div class="card">
-    <div class="card-head"><h3>Materials list · قائمة المواد</h3><span id="mat-counts" style="font-size:12px;color:var(--text3)"></span></div>
+    <div class="card-head"><h3>Materials list · قائمة المواد</h3><span id="mat-counts" style="font-size:14px;color:var(--text3)"></span></div>
     <div id="materials-body"></div>
   </div>
 </div>
@@ -625,7 +878,7 @@ textarea{resize:vertical;min-height:52px}
     <div class="card-head"><h3>Apple growth stages · أطوار نمو التفاح</h3>
       <span class="badge b-green" id="growth-cur-stage"></span>
     </div>
-    <div style="font-size:12px;color:var(--text3);margin-bottom:12px">Based on Khenchela conditions (1,194m) · بناءً على ظروف خنشلة</div>
+    <div style="font-size:14px;color:var(--text3);margin-bottom:12px">Based on Khenchela conditions (1,194m) · بناءً على ظروف خنشلة</div>
     <div class="tbl-wrap">
       <table class="tbl">
         <thead><tr><th>Stage · الطور</th><th>Months · الأشهر</th><th>Description · الوصف</th><th>Key actions · الأعمال الرئيسية</th><th>Watch for · انتبه لـ</th></tr></thead>
@@ -675,36 +928,76 @@ let D={tasks:[],irrigation:[],harvest:[],costs:[],weather:[],materials:[]};
 const saved=localStorage.getItem('farmYawmi3');
 if(saved)try{D=JSON.parse(saved);}catch(e){}
 
-function save(){localStorage.setItem('farmYawmi3',JSON.stringify(D));}
+function save(){
+  localStorage.setItem('farmYawmi3', JSON.stringify(D));
+  localStorage.setItem('farmYawmi3_ts', Date.now());
+  // Push to Firebase if available
+  if (window._fb) {
+    window._fbSetStatus('syncing');
+    window._fb.save(D);
+  }
+  // Refresh map markers if map is open
+  if(typeof refreshMapMarkers === 'function') refreshMapMarkers();
+}
 function persist(){save();renderAll();}
 
+// Firebase status helper - available globally before module loads
+window._fbSetStatus = function(status) {
+  var dot = document.getElementById('sync-dot');
+  var lbl = document.getElementById('sync-label');
+  if (!dot || !lbl) return;
+  var states = {
+    synced:  { color:'#22c55e', text:'Synced ✓' },
+    syncing: { color:'#f59e0b', text:'Syncing…' },
+    offline: { color:'#ef4444', text:'Offline' },
+    connecting: { color:'#94a3b8', text:'Connecting…' }
+  };
+  var s = states[status] || states.connecting;
+  dot.style.background = s.color;
+  lbl.textContent = s.text;
+};
+
+// Reload data from localStorage after Firebase pushes new data
+window._reloadData = function() {
+  var raw = localStorage.getItem('farmYawmi3');
+  if (raw) {
+    try {
+      D = JSON.parse(raw);
+      renderAll();
+      console.log('Data reloaded from Firebase sync');
+    } catch(e) {}
+  }
+};
+
 // ═══ BLOCKS CONFIG ═══
-const BLOCKS=[
-  {id:'A',name:'Block A',nameAr:'القطعة أ',species:'Apple 4yr',speciesAr:'تفاح 4 سنوات',color:'#f97316',bg:'#fff7ed',count:95,group:'G2',zone:'Upper section',irrigation:'Drip + Flood',tasks_key:'Block A',desc:'Established apple trees, 4 years old, main upper section of the farm.'},
-  {id:'B',name:'Block B',nameAr:'القطعة ب',species:'Mixed + other fruits',speciesAr:'أصناف متعددة',color:'#8b5cf6',bg:'#f5f3ff',count:95,group:'Mixed',zone:'Mid section near buildings',irrigation:'Mixed',tasks_key:'Block B',desc:'Transition zone around the farm house. Orange apple trees mixed with cherry, apricot, fig, pear, olive, pomegranate and grapes.'},
-  {id:'C',name:'Block C',nameAr:'القطعة ج',species:'Apple 3yr',speciesAr:'تفاح 3 سنوات',color:'#06b6d4',bg:'#ecfeff',count:95,group:'G1',zone:'Lower-mid section',irrigation:'Drip',tasks_key:'Block C',desc:'Young apple trees, 3 years old. Still establishing. No harvest — remove flowers to direct energy to root growth.'},
-  {id:'D',name:'Block D',nameAr:'القطعة د',species:'Apple 7yr',speciesAr:'تفاح 7 سنوات',color:'#84cc16',bg:'#f7fee7',count:159,group:'G2',zone:'Lower section (largest)',irrigation:'Drip + Flood',tasks_key:'Block D',desc:'Most productive block. 159 lime green trees, 7 years old, approaching full production of 30–50 kg/tree.'},
+var BLOCKS=[
+  {id:'A',name:'Block A',nameAr:'القطعة أ',species:'Trees Mix',speciesAr:'أشجار متنوعة',color:'#7c3aed',bg:'#f5f3ff',count:80,group:'Mixed',zone:'Top section',irrigation:'Mixed',tasks_key:'Block A',desc:'Upper mixed section — variety of fruit trees at the top of the farm.'},
+  {id:'B',name:'Block B',nameAr:'القطعة ب',species:'Apple 4yr',speciesAr:'تفاح 4 سنوات',color:'#f97316',bg:'#fff7ed',count:95,group:'Producing',zone:'Mid-left section',irrigation:'Drip + Flood',tasks_key:'Block B',desc:'Apple trees 4 years old. Producing block, fruit sizing well this season.'},
+  {id:'C',name:'Block C',nameAr:'القطعة ج',species:'Trees around house',speciesAr:'أشجار حول المنزل',color:'#d97706',bg:'#fef3d6',count:40,group:'Mixed',zone:'Around the farm house',irrigation:'Mixed',tasks_key:'Block C',desc:'Mixed fruit trees surrounding the farm house — cherry, fig, pear, olive, pomegranate, grapes and more.'},
+  {id:'D',name:'Block D',nameAr:'القطعة د',species:'Apple Mix',speciesAr:'تفاح متنوع',color:'#ec4899',bg:'#fdf2f8',count:60,group:'Mixed',zone:'Below house',irrigation:'Drip',tasks_key:'Block D',desc:'Mixed apple varieties below the house area.'},
+  {id:'E',name:'Block E',nameAr:'القطعة هـ',species:'Apple 3yr',speciesAr:'تفاح 3 سنوات',color:'#06b6d4',bg:'#ecfeff',count:90,group:'Young',zone:'Lower-mid section',irrigation:'Drip',tasks_key:'Block E',desc:'Young apple trees, 3 years old. Still establishing — remove flowers to direct energy to root growth.'},
+  {id:'F',name:'Block F',nameAr:'القطعة و',species:'Apple 7yr',speciesAr:'تفاح 7 سنوات',color:'#84cc16',bg:'#f7fee7',count:129,group:'Producing',zone:'Bottom section (largest)',irrigation:'Drip + Flood',tasks_key:'Block F',desc:'Most productive block. Lime green apple trees, 7 years old, approaching full production of 30–50 kg/tree.'},
 ];
 
 // ═══ SEASON DATA ═══
-const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const SEASON={
+var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var SEASON={
   0:{en:'Dormancy',ar:'السكون',color:'#b4b2a9',tasks:['Pruning apple trees · تقليم أشجار التفاح','Tool preparation · تحضير الأدوات','Soil sampling · أخذ عينات التربة']},
   1:{en:'Late dormancy',ar:'السكون المتأخر',color:'#b4b2a9',tasks:['Complete pruning · إنهاء التقليم','Dormant oil spray · رش زيت السكون','Watch apricot bloom · مراقبة تفتح المشمش']},
   2:{en:'Bud swell',ar:'انتفاخ البراعم',color:'#c0dd97',tasks:['⚠️ Frost watch · مراقبة الصقيع','First fungicide · أول مبيد فطري','Nitrogen fertiliser · تسميد آزوتي']},
   3:{en:'Bloom',ar:'التزهير',color:'#fac775',tasks:['Pollination management · إدارة التلقيح','Scab prevention spray · رش منع الجرب','Remove flowers Block C · إزالة أزهار القطعة ج']},
-  4:{en:'Fruit set',ar:'عقد الثمار',color:'#fac775',tasks:['Fruit thinning G2 · ترقيق ثمار مجموعة 2','Start drip irrigation · بدء الري بالتنقيط','Monitor aphids · مراقبة حشرة المن']},
+  4:{en:'Fruit set',ar:'عقد الثمار',color:'#fac775',tasks:['Fruit thinning B+F · ترقيق ثمار القطعة ب و و','Start drip irrigation · بدء الري بالتنقيط','Monitor aphids · مراقبة حشرة المن']},
   5:{en:'Cell division',ar:'انقسام الخلايا',color:'#5dcaa5',tasks:['K+P fertiliser · تسميد البوتاسيوم والفوسفور','Irrigate every 5–7 days · ري كل 5–7 أيام','Monitor spider mites · مراقبة العناكب الحمراء','Cherry harvest check · فحص نضج الكرز']},
   6:{en:'Fruit development',ar:'تطور الثمار',color:'#5dcaa5',tasks:['Peak irrigation 3–5 days · ري مكثف','Codling moth traps · فخاخ دودة التفاح','Harvest cherry · حصاد الكرز','Harvest apricot · حصاد المشمش']},
   7:{en:'Colour development',ar:'تطور اللون',color:'#fac775',tasks:['Reduce nitrogen · تقليل الآزوت','Monitor apple maturity · مراقبة نضج التفاح','Harvest fig (start) · بداية حصاد التين']},
-  8:{en:'Harvest',ar:'الحصاد',color:'#97c459',tasks:['Harvest apple G2 A+D · حصاد تفاح المجموعة 2','Starch-iodine test · اختبار النشا','Harvest fig + grapes · حصاد التين والعنب','Post-harvest fertiliser · تسميد ما بعد الحصاد']},
+  8:{en:'Harvest',ar:'الحصاد',color:'#97c459',tasks:['Harvest apple Block B+F · حصاد تفاح القطعة ب و و','Starch-iodine test · اختبار النشا','Harvest fig + grapes · حصاد التين والعنب','Post-harvest fertiliser · تسميد ما بعد الحصاد']},
   9:{en:'Post-harvest',ar:'ما بعد الحصاد',color:'#fac775',tasks:['Leaf collection · جمع الأوراق','Soil amendments · تعديلات التربة','Pomegranate + pear harvest · حصاد الرمان والإجاص']},
   10:{en:'Early dormancy',ar:'بداية السكون',color:'#b4b2a9',tasks:['Trunk whitewashing · طلاء الجذوع','Copper spray · رش النحاس','Mulch Block C trees · تغطية أشجار القطعة ج']},
   11:{en:'Dormancy',ar:'السكون',color:'#b4b2a9',tasks:['Equipment maintenance · صيانة المعدات','Next season planning · تخطيط الموسم القادم']},
 };
 
-const BRIEFS={
-  5:`<strong>Early summer — cell division phase.</strong> Fruit on your <strong>Block D (159 trees, 7yr)</strong> and <strong>Block A (95 trees, 4yr)</strong> is sizing rapidly. Irrigate every 5–7 days and apply potassium + phosphorus fertiliser this month. Monitor spider mites across all apple blocks in the heat. <strong>Block C (3yr cyan)</strong> needs consistent water for root establishment — no fruit intervention. Your cherry trees in Block B are approaching harvest — check ripeness in late June.<br><span dir="rtl" style="display:block;margin-top:4px;font-size:12px">بداية الصيف: ري كل 5–7 أيام، تسميد البوتاسيوم، مراقبة العناكب. الكرز في القطعة ب يقترب من الحصاد.</span>`,
+var BRIEFS={
+  5:`<strong>Early summer — cell division phase.</strong> Fruit on your <strong>Block F (Apple 7yr)</strong> and <strong>Block B (Apple 4yr)</strong> is sizing rapidly. Irrigate every 5–7 days and apply potassium + phosphorus fertiliser this month. Monitor spider mites across all apple blocks in the heat. <strong>Block E (Apple 3yr)</strong> needs consistent water for root establishment — no fruit intervention. Your cherry trees in Block C (around house) are approaching harvest — check ripeness in late June.<br><span dir="rtl" style="display:block;margin-top:4px;font-size:14px">بداية الصيف: ري كل 5–7 أيام، تسميد البوتاسيوم، مراقبة العناكب. الكرز في القطعة ج (حول المنزل) يقترب من الحصاد.</span>`,
 };
 
 // ═══ INIT ═══
@@ -720,7 +1013,8 @@ function init(){
   buildBlockCards();
   buildIrrigStatus();
   renderAll();
-  renderRainLog();
+  setTimeout(renderRainLog, 200);
+  initGenYear();
 }
 
 function setDefaults(){
@@ -729,6 +1023,8 @@ function setDefaults(){
 }
 
 // ═══ TIMELINE ═══
+var selectedMonth = new Date().getMonth();
+
 function buildTimeline(){
   const m=new Date().getMonth();
   const tl=document.getElementById('timeline');
@@ -738,13 +1034,100 @@ function buildTimeline(){
     d.className='tl-month'+(i===m?' cur':'');
     d.style.background=SEASON[i].color+(i===m?'':'aa');
     d.style.color='#1a1a18';
-    d.title=SEASON[i].en;
+    d.style.cursor='pointer';
+    d.title=SEASON[i].en+' — click for details';
     d.textContent=mo;
+    d.onclick=(function(idx){ return function(){ openMonthPanel(idx); }; })(i);
     tl.appendChild(d);
   });
   const s=SEASON[m];
   document.getElementById('stage-label').textContent=s.en+' · '+s.ar;
   document.getElementById('stage-tasks').textContent='This month: '+s.tasks.slice(0,2).join(' · ');
+}
+
+function closeMonthPanel() {
+  var p = document.getElementById('month-panel');
+  if (p) p.remove();
+  selectedMonth = -1;
+}
+
+function openMonthPanel(idx) {
+  var existing = document.getElementById('month-panel');
+  if (existing && selectedMonth === idx) {
+    existing.remove();
+    selectedMonth = -1;
+    return;
+  }
+  selectedMonth = idx;
+  var now = new Date();
+  var curMonth = now.getMonth();
+  var year = now.getFullYear();
+  var s = SEASON[idx];
+  var monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][idx];
+  var isPast = idx < curMonth;
+  var isCur = idx === curMonth;
+  var isFuture = idx > curMonth;
+
+  // Gather logged data for this month
+  var prefix = year+'-'+String(idx+1).padStart(2,'0');
+  var tasks = (D.tasks||[]).filter(function(t){ return (t.date||'').startsWith(prefix); });
+  var irrigs = (D.irrigation||[]).filter(function(r){ return (r.date||'').startsWith(prefix); });
+  var harvests = (D.harvest||[]).filter(function(h){ return (h.date||'').startsWith(prefix); });
+  var costs = (D.costs||[]).filter(function(c){ return (c.date||'').startsWith(prefix); });
+  var rains = (D.weather||[]).filter(function(w){ return (w.date||'').startsWith(prefix); });
+
+  var html = '<div id="month-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 20px;margin-top:10px;animation:fadeIn .2s ease">';
+  html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+  html += '<div><span style="font-size:16px;font-weight:700;color:var(--text)">'+monthName+'</span> <span style="font-size:13px;color:var(--text3)">'+year+' · '+s.en+' · '+s.ar+'</span></div>';
+  html += '<button onclick="closeMonthPanel()" style="border:none;background:none;cursor:pointer;font-size:20px;color:var(--text3);line-height:1">×</button></div>';
+
+  if (isFuture) {
+    // Future: show planned tasks
+    html += '<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:8px">📋 Planned tasks · المهام المخططة</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">';
+    s.tasks.forEach(function(t){
+      html += '<div style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text)"><span style="color:var(--green)">→</span>'+t+'</div>';
+    });
+    html += '</div>';
+    html += '<div style="font-size:13px;color:var(--text3);background:var(--surface2);border-radius:8px;padding:10px">🌱 Growth stage: <b>'+s.en+'</b> · No data yet for this month</div>';
+  } else {
+    // Past or current: show logged data
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:14px">';
+    html += '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--green)">'+tasks.length+'</div><div style="font-size:12px;color:var(--text3)">Tasks logged</div></div>';
+    html += '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--blue)">'+irrigs.length+'</div><div style="font-size:12px;color:var(--text3)">Irrigation sessions</div></div>';
+    html += '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:#1d4ed8">'+rains.length+'</div><div style="font-size:12px;color:var(--text3)">Rain days logged</div></div>';
+    var totalKg = harvests.reduce(function(s,h){return s+parseFloat(h.kg||0);},0);
+    html += '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--amber)">'+totalKg+'kg</div><div style="font-size:12px;color:var(--text3)">Harvest yield</div></div>';
+    var totalCost = costs.reduce(function(s,c){return s+parseFloat(c.price||0)*parseFloat(c.qty||1);},0);
+    html += '<div style="background:var(--surface2);border-radius:8px;padding:10px;text-align:center"><div style="font-size:22px;font-weight:700;color:var(--red)">'+Math.round(totalCost).toLocaleString()+' DZD</div><div style="font-size:12px;color:var(--text3)">Costs</div></div>';
+    html += '</div>';
+
+    if (tasks.length) {
+      html += '<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">✅ Tasks</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+      tasks.forEach(function(t){ html += '<span style="background:var(--green-light);border:1px solid var(--green-mid);border-radius:6px;padding:3px 10px;font-size:13px;color:var(--green)">'+t.title+'</span>'; });
+      html += '</div>';
+    }
+    if (irrigs.length) {
+      html += '<div style="font-size:13px;font-weight:600;color:var(--text2);margin-bottom:6px">💧 Irrigation sessions</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+      irrigs.forEach(function(r){ html += '<span style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:3px 10px;font-size:13px;color:#1d4ed8">'+r.date+' · '+r.block+'</span>'; });
+      html += '</div>';
+    }
+    if (!tasks.length && !irrigs.length && !rains.length) {
+      html += '<div style="font-size:14px;color:var(--text3);font-style:italic;padding:8px 0">No data logged for this month yet.</div>';
+      html += '<div style="font-size:13px;color:var(--text2);margin-top:8px">📋 Suggested tasks:<br>';
+      s.tasks.forEach(function(t){ html += '→ '+t+'<br>'; });
+      html += '</div>';
+    }
+  }
+  html += '</div>';
+
+  // Insert panel after timeline card
+  var tlCard = document.getElementById('timeline').closest('.card');
+  if (tlCard) {
+    var existing2 = document.getElementById('month-panel');
+    if (existing2) existing2.remove();
+    tlCard.insertAdjacentHTML('afterend', html);
+  }
 }
 
 // ═══ ALERTS ═══
@@ -754,9 +1137,9 @@ function buildAlerts(){
   z.innerHTML='';
   const add=(type,icon,msg,ar)=>z.innerHTML+=`<div class="alert alert-${type}"><div class="alert-icon">${icon}</div><div class="alert-body">${msg}<div class="alert-ar">${ar}</div></div></div>`;
   if(m===2||m===3)add('red','⚠️','<strong>Frost risk period</strong> — at 1,194m elevation, monitor night temperatures closely. Protect bloom if forecast drops below 0°C. Apricot blooms earliest and is most vulnerable.','خطر الصقيع على ارتفاع 1194م — المشمش الأكثر عرضة');
-  if(m===5)add('green','🍒','<strong>Cherry harvest approaching</strong> (late June – July). Check ripeness on your red-marked trees in Block B.','اقتراب موسم الكرز في القطعة ب');
+  if(m===5)add('green','🍒','<strong>Cherry harvest approaching</strong> (late June – July). Check ripeness on your cherry trees in Block C (around house).','اقتراب موسم الكرز في القطعة ج (حول المنزل)');
   if(m===6||m===7)add('amber','🌸','<strong>Apricot harvest</strong> in progress (July – August). Monitor daily — they ripen fast.','حصاد المشمش جارٍ — مراقبة يومية');
-  if(m===8)add('green','🍎','<strong>Apple harvest season.</strong> Block D (7yr) and Block A (4yr) ready for G2 harvest. Perform starch-iodine test before picking.','موسم حصاد التفاح — إجراء اختبار النشا');
+  if(m===8)add('green','🍎','<strong>Apple harvest season.</strong> Block F (7yr) and Block B (4yr) ready for harvest. Perform starch-iodine test before picking.','موسم حصاد التفاح — إجراء اختبار النشا');
 }
 
 // ═══ AI BRIEF ═══
@@ -770,7 +1153,7 @@ function buildAISuggestions(){
   const m=new Date().getMonth();
   const el=document.getElementById('ai-suggestions');
   el.innerHTML=SEASON[m].tasks.map(t=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;color:var(--green)">
+    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px;color:var(--green)">
       <span style="opacity:.5">→</span><span style="flex:1">${t}</span>
       <button class="btn btn-sm" style="font-size:11px;border-color:var(--green-mid);color:var(--green)" onclick="quickAddTask('${t.replace(/'/g,"\\'")}')">+ Add</button>
     </div>`).join('')+`<div style="font-size:11px;color:var(--green);opacity:.6;margin-top:6px">Based on Khenchela seasonal calendar · بناءً على تقويم خنشلة الموسمي</div>`;
@@ -799,7 +1182,7 @@ function buildBlockCards(){
     const yieldKg=D.harvest.filter(h=>h.block&&h.block.includes('Block '+b.id)).reduce((s,h)=>s+parseFloat(h.kg||0),0);
     const pendingTasks=D.tasks.filter(t=>t.block&&(t.block.includes(b.id)||t.block==='All blocks')&&!t.done);
 
-    const groupBadge=b.group==='G1'?'<span class="badge b-blue">G1 — Young</span>':b.group==='G2'?'<span class="badge b-green">G2 — Producing</span>':'<span class="badge b-teal">Mixed</span>';
+    const groupBadge=b.group==='G1'?'<span class="badge b-blue">Young · ناشئ</span>':b.group==='G2'?'<span class="badge b-green">Producing · منتج</span>':'<span class="badge b-teal">Mixed · متنوع</span>';
 
     const card=document.createElement('div');
     card.className='block-card';
@@ -807,8 +1190,8 @@ function buildBlockCards(){
     card.innerHTML=`
       <div class="bc-header">
         <div>
-          <div class="bc-title">${b.name} <span style="font-size:12px;font-weight:400;color:var(--text3)">· ${b.nameAr}</span></div>
-          <div style="font-size:12px;color:var(--text3);margin-top:2px">${b.zone}</div>
+          <div class="bc-title">${b.name} <span style="font-size:14px;font-weight:400;color:var(--text3)">· ${b.nameAr}</span></div>
+          <div style="font-size:14px;color:var(--text3);margin-top:2px">${b.zone}</div>
         </div>
         ${groupBadge}
       </div>
@@ -834,7 +1217,7 @@ function buildBlockCards(){
           <div class="bc-metric-label">Season yield</div>
         </div>
         <div class="bc-metric">
-          <div class="bc-metric-val" style="font-size:12px">${b.irrigation}</div>
+          <div class="bc-metric-val" style="font-size:14px">${b.irrigation}</div>
           <div class="bc-metric-label">Irrigation type</div>
         </div>
       </div>
@@ -868,11 +1251,11 @@ function openBlock(id,e){
     <div class="bd-header">
       <div>
         <span style="font-size:15px;font-weight:600">${b.name} · ${b.nameAr}</span>
-        <span style="font-size:12px;color:var(--text3);margin-left:8px">${b.species} · ${b.count} trees</span>
+        <span style="font-size:14px;color:var(--text3);margin-left:8px">${b.species} · ${b.count} trees</span>
       </div>
       <button class="btn btn-sm" onclick="openBlock('${id}',event)">✕ Close</button>
     </div>
-    <div style="padding:12px 16px;background:var(--surface2);font-size:13px;color:var(--text2);border-bottom:1px solid var(--border)">${b.desc}</div>
+    <div style="padding:12px 16px;background:var(--surface2);font-size:14px;color:var(--text2);border-bottom:1px solid var(--border)">${b.desc}</div>
     <div class="bd-body">
       <div class="bd-section">
         <div class="bd-section-title">Pending tasks (${pending.length})</div>
@@ -891,12 +1274,12 @@ function openBlock(id,e){
       </div>
       <div class="bd-section">
         <div class="bd-section-title">Irrigation history</div>
-        ${irHistory.length?irHistory.map(r=>`<div class="task-row"><span style="font-size:20px">💧</span><div><div style="font-size:13px;font-weight:500">${r.date}</div><div style="font-size:11px;color:var(--text3)">${r.method||'—'} · ${r.duration?r.duration+' min':'—'} · ${r.notes||''}</div></div></div>`).join(''):'<div class="empty">No irrigation logged yet</div>'}
+        ${irHistory.length?irHistory.map(r=>`<div class="task-row"><span style="font-size:20px">💧</span><div><div style="font-size:14px;font-weight:500">${r.date}</div><div style="font-size:11px;color:var(--text3)">${r.method||'—'} · ${r.duration?r.duration+' min':'—'} · ${r.notes||''}</div></div></div>`).join(''):'<div class="empty">No irrigation logged yet</div>'}
         <button class="btn btn-sm btn-primary" style="margin-top:10px;width:100%" onclick="goPage('irrigation',null)">+ Log irrigation</button>
       </div>
       <div class="bd-section">
         <div class="bd-section-title">Harvest records</div>
-        ${harvestH.length?harvestH.map(h=>`<div class="task-row"><span style="font-size:20px">🍎</span><div><div style="font-size:13px;font-weight:500">${h.date} — ${parseFloat(h.kg||0).toLocaleString()} kg</div><div style="font-size:11px;color:var(--text3)">${h.species||''} · A:${h.gradeA||0}kg B:${h.gradeB||0}kg Rej:${h.rejected||0}kg</div></div></div>`).join(''):'<div class="empty">No harvest recorded yet</div>'}
+        ${harvestH.length?harvestH.map(h=>`<div class="task-row"><span style="font-size:20px">🍎</span><div><div style="font-size:14px;font-weight:500">${h.date} — ${parseFloat(h.kg||0).toLocaleString()} kg</div><div style="font-size:11px;color:var(--text3)">${h.species||''} · A:${h.gradeA||0}kg B:${h.gradeB||0}kg Rej:${h.rejected||0}kg</div></div></div>`).join(''):'<div class="empty">No harvest recorded yet</div>'}
         <button class="btn btn-sm btn-primary" style="margin-top:10px;width:100%" onclick="goPage('harvest',null)">+ Log harvest</button>
       </div>
     </div>`;
@@ -958,7 +1341,8 @@ function renderAll(){
   renderRainLog();
   renderMaterials();
   buildGrowthTable();
-  if(leafMap) updateIrrigationGlow();
+  renderIrrigStatusStrip();
+  // irrigation glow handled in block labels tooltip
 }
 
 function renderOverview(){
@@ -977,7 +1361,7 @@ function renderOverview(){
     <div class="task-row">
       <div class="task-check" onclick="toggleTask(${t.id})"></div>
       <div style="flex:1">
-        <div style="font-size:13px;font-weight:500;color:var(--text)">${t.title}</div>
+        <div style="font-size:14px;font-weight:500;color:var(--text)">${t.title}</div>
         <div style="font-size:11px;color:var(--text3);margin-top:2px">${t.block||''} · ${t.date||''}</div>
       </div>
     </div>`).join('');
@@ -990,7 +1374,7 @@ function renderOverview(){
     const color=pct>90?'var(--red-mid)':pct>65?'var(--amber-mid)':'var(--green-mid)';
     return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
       <div style="width:10px;height:10px;border-radius:50%;background:${b.color};flex-shrink:0"></div>
-      <span style="font-size:13px;min-width:68px;font-weight:500">${b.name}</span>
+      <span style="font-size:14px;min-width:68px;font-weight:500">${b.name}</span>
       <div style="flex:1"><div class="prog"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div></div>
       <span style="font-size:11px;color:var(--text3);min-width:55px;text-align:right">${days!==null?days+'d ago':'—'}</span>
     </div>`;
@@ -1009,35 +1393,140 @@ function saveTask(){
 }
 function toggleTask(id){const t=D.tasks.find(t=>t.id===id);if(t){t.done=!t.done;persist();}}
 function deleteTask(id){D.tasks=D.tasks.filter(t=>t.id!==id);persist();}
-function renderTasks(){
-  const pending=D.tasks.filter(t=>!t.done);
-  const done=D.tasks.filter(t=>t.done);
-  document.getElementById('task-counts').textContent=`${pending.length} pending · ${done.length} done`;
-  const body=document.getElementById('tasks-body');
-  if(!D.tasks.length){body.innerHTML='<div class="empty">No tasks yet. Use AI suggestions above or add manually.</div>';return;}
-  const row=t=>`<div class="task-row">
-    <div class="task-check ${t.done?'done':''}" onclick="toggleTask(${t.id})">${t.done?'✓':''}</div>
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:500;color:var(--text);${t.done?'text-decoration:line-through;color:var(--text3)':''}">${t.title}</div>
-      <div style="font-size:11px;color:var(--text3);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap">
-        <span class="badge b-blue" style="font-size:10px">${t.cat.split('·')[0].trim()}</span>
-        <span>${t.block||''}</span>
-        <span>${t.date||''}</span>
-      </div>
-      ${t.notes&&t.notes!=='AI suggested'?`<div style="font-size:12px;color:var(--text3);margin-top:2px">${t.notes}</div>`:''}
-    </div>
-    <button onclick="deleteTask(${t.id})" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px;padding:0 4px">×</button>
-  </div>`;
-  body.innerHTML=(pending.length?`<div style="font-size:11px;font-weight:600;color:var(--text3);padding:8px 0 4px;text-transform:uppercase;letter-spacing:.4px">Pending (${pending.length})</div>`+pending.map(row).join(''):'')
-    +(done.length?`<div class="divider"></div><div style="font-size:11px;font-weight:600;color:var(--text3);padding:4px 0;text-transform:uppercase;letter-spacing:.4px">Done (${done.length})</div>`+done.map(row).join(''):'');
+var taskView = 'month';
+
+function setTaskView(v, btn) {
+  taskView = v;
+  document.querySelectorAll('#tv-month,#tv-week,#tv-all').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  renderTasks();
 }
+
+function renderTasks(){
+  var pending = D.tasks.filter(function(t){return !t.done;});
+  var done = D.tasks.filter(function(t){return t.done;});
+  document.getElementById('task-counts').textContent = pending.length + ' pending · ' + done.length + ' done';
+  var body = document.getElementById('tasks-body');
+  if(!D.tasks.length){ body.innerHTML='<div class="empty">No tasks yet. Add manually or generate from seasonal calendar.</div>'; return; }
+
+  var today = new Date(); today.setHours(0,0,0,0);
+
+  function taskRow(t) {
+    var isOverdue = !t.done && t.date && new Date(t.date) < today;
+    var dateLabel = t.date ? new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
+    return '<div class="task-row" style="'+(isOverdue?'border-left:3px solid var(--red);padding-left:10px;':'')+'">'
+      +'<div class="task-check '+(t.done?'done':'')+'" onclick="toggleTask('+t.id+')">'+(t.done?'✓':'')+'</div>'
+      +'<div style="flex:1">'
+        +'<div style="font-size:15px;font-weight:500;'+(t.done?'text-decoration:line-through;opacity:.5;':'')+(isOverdue?'color:var(--red);':'color:var(--text);')+'">'+t.title+'</div>'
+        +'<div style="font-size:12px;color:var(--text3);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap">'
+          +'<span class="badge b-blue" style="font-size:11px">'+t.cat.split("·")[0].trim()+'</span>'
+          +(t.block?'<span>'+t.block+'</span>':'')
+          +(dateLabel?'<span>'+(isOverdue?'⚠️ ':'')+dateLabel+'</span>':'')
+        +'</div>'
+        +(t.notes&&t.notes!=='AI suggested'?'<div style="font-size:13px;color:var(--text3);margin-top:3px">'+t.notes+'</div>':'')
+      +'</div>'
+      +'<div style="display:flex;gap:4px">'
+        +'<button onclick="editTask('+t.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 4px">✏️</button>'
+        +'<button onclick="deleteTask('+t.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px;padding:0 4px">×</button>'
+      +'</div>'
+    +'</div>';
+  }
+
+  function groupHeader(label, count, pendingCnt, doneCount, id, defaultOpen) {
+    var stored = localStorage.getItem('tg_'+id);
+    var isOpen = stored !== null ? stored === '1' : defaultOpen;
+    return '<div onclick="toggleTaskGroup(\''+id+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:8px;cursor:pointer;margin-bottom:4px;border:1px solid var(--border);user-select:none">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<span id="tg-arrow-'+id+'" style="font-size:12px;color:var(--text3)">'+(isOpen?'▾':'▸')+'</span>'
+        +'<span style="font-weight:700;font-size:15px;color:var(--text)">'+label+'</span>'
+      +'</div>'
+      +'<div style="display:flex;gap:6px">'
+        +(pendingCnt>0?'<span class="badge b-green" style="font-size:12px">'+pendingCnt+' pending</span>':'')
+        +(doneCount>0?'<span class="badge" style="font-size:12px;background:var(--surface);color:var(--text3)">'+doneCount+' done</span>':'')
+      +'</div>'
+    +'</div>'
+    +'<div id="tg-body-'+id+'" style="display:'+(isOpen?'block':'none')+';margin-bottom:10px;padding-left:4px">';
+  }
+
+  if (taskView === 'all') {
+    body.innerHTML =
+      (pending.length ? '<div style="font-size:12px;font-weight:600;color:var(--text3);padding:8px 0 4px;text-transform:uppercase;letter-spacing:.4px">Pending ('+pending.length+')</div>'
+        + [...pending].sort(function(a,b){return new Date(a.date||'9999')-new Date(b.date||'9999');}).map(taskRow).join('') : '')
+      +(done.length ? '<div style="font-size:12px;font-weight:600;color:var(--text3);padding:12px 0 4px;text-transform:uppercase;letter-spacing:.4px">Done ('+done.length+')</div>'
+        + [...done].sort(function(a,b){return new Date(b.date||'0')-new Date(a.date||'0');}).map(taskRow).join('') : '');
+    return;
+  }
+
+  var MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var allTasks = [...D.tasks].sort(function(a,b){return (a.date||'9999').localeCompare(b.date||'9999');});
+  var groups = {};
+  var curKey = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
+
+  if (taskView === 'month') {
+    allTasks.forEach(function(t) {
+      var d = t.date ? new Date(t.date) : null;
+      var key = d ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0') : 'zz-no-date';
+      var label = d ? MONTH_NAMES[d.getMonth()]+' '+d.getFullYear() : 'No date';
+      if(!groups[key]) groups[key] = {label:label, tasks:[]};
+      groups[key].tasks.push(t);
+    });
+  } else { // week
+    allTasks.forEach(function(t) {
+      var d = t.date ? new Date(t.date) : null;
+      if (!d) { if(!groups['zz-no-date'])groups['zz-no-date']={label:'No date',tasks:[]};groups['zz-no-date'].tasks.push(t);return;}
+      var dayOfWeek = d.getDay();
+      var diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      var weekStart = new Date(d); weekStart.setDate(d.getDate()+diff);
+      var weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
+      var key = weekStart.getFullYear()+'-'+String(weekStart.getMonth()+1).padStart(2,'0')+'-'+String(weekStart.getDate()).padStart(2,'0');
+      var fmt = function(dt){ return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
+      var label = 'Week '+fmt(weekStart)+' → '+fmt(weekEnd);
+      if(!groups[key])groups[key]={label:label,tasks:[]};
+      groups[key].tasks.push(t);
+    });
+  }
+
+  var html = '';
+  Object.keys(groups).sort().forEach(function(key) {
+    var g = groups[key];
+    var gPending = g.tasks.filter(function(t){return !t.done;}).length;
+    var gDone = g.tasks.length - gPending;
+    var isCurrentMonth = taskView==='month' && key===curKey;
+    var isPast = key < curKey;
+    var defaultOpen = isCurrentMonth || !isPast;
+    html += groupHeader(g.label, g.tasks.length, gPending, gDone, key, defaultOpen);
+    html += g.tasks.map(taskRow).join('');
+    html += '</div>';
+  });
+
+  body.innerHTML = html || '<div class="empty">No tasks found.</div>';
+}
+
+function toggleTaskGroup(id) {
+  var b = document.getElementById('tg-body-'+id);
+  var a = document.getElementById('tg-arrow-'+id);
+  if(!b) return;
+  var open = b.style.display !== 'none';
+  b.style.display = open ? 'none' : 'block';
+  if(a) a.textContent = open ? '▸' : '▾';
+  localStorage.setItem('tg_'+id, open ? '0' : '1');
+}
+
 
 // ═══ IRRIGATION ═══
 function logIrrigation(){
   const date=document.getElementById('ir-date').value;
   if(!date)return alert('Please select a date');
-  D.irrigation.push({id:Date.now(),date,block:document.getElementById('ir-block').value,method:document.getElementById('ir-method').value,duration:document.getElementById('ir-dur').value,notes:document.getElementById('ir-notes').value});
+  var rainVal = document.getElementById('ir-rain') ? document.getElementById('ir-rain').value : 'none';
+  var irDate = date;
+  D.irrigation.push({id:Date.now(),date,block:document.getElementById('ir-block').value,method:document.getElementById('ir-method').value,duration:document.getElementById('ir-dur').value,notes:document.getElementById('ir-notes').value,rain:rainVal});
+  // Also log rain for that date if not none
+  if (rainVal && rainVal !== 'none') {
+    D.weather = (D.weather||[]).filter(function(w){ return w.date !== irDate; });
+    D.weather.push({id:Date.now()+1, date:irDate, rain:rainVal});
+  }
   document.getElementById('ir-dur').value='';document.getElementById('ir-notes').value='';
+  setRainTog('none');
   persist();
 }
 function deleteIrrig(id){D.irrigation=D.irrigation.filter(r=>r.id!==id);persist();}
@@ -1047,7 +1536,7 @@ function renderIrrigLog(){
   body.innerHTML=[...D.irrigation].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(r=>`
     <tr><td>${r.date}</td><td>${r.block}</td><td>${r.method||'—'}</td><td>${r.duration?r.duration+' min':'—'}</td>
     <td style="color:var(--text2)">${r.notes||'—'}</td>
-    <td><button class="btn btn-sm" style="color:var(--red)" onclick="deleteIrrig(${r.id})">×</button></td></tr>`).join('');
+    <td style="display:flex;gap:4px"><button class="btn btn-sm" onclick="editIrrig(${r.id})" title="Edit">✏️</button><button class="btn btn-sm" style="color:var(--red)" onclick="deleteIrrig(${r.id})" title="Delete">×</button></td></tr>`).join('');
 }
 
 // ═══ HARVEST ═══
@@ -1075,7 +1564,7 @@ function renderHarvest(){
     <td style="color:var(--green)">${parseFloat(h.gradeA||0).toLocaleString()}</td>
     <td style="color:var(--amber)">${parseFloat(h.gradeB||0).toLocaleString()}</td>
     <td style="color:var(--red)">${parseFloat(h.rejected||0).toLocaleString()}</td>
-    <td><button class="btn btn-sm" style="color:var(--red)" onclick="deleteHarvest(${h.id})">×</button></td></tr>`).join('');
+    <td style="display:flex;gap:4px"><button class="btn btn-sm" onclick="editHarvest(${h.id})" title="Edit">✏️</button><button class="btn btn-sm" style="color:var(--red)" onclick="deleteHarvest(${h.id})" title="Delete">×</button></td></tr>`).join('');
 }
 
 // ═══ COSTS ═══
@@ -1105,11 +1594,11 @@ function renderCosts(){
   body.innerHTML=[...D.costs].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(c=>{
     const tot=parseFloat(c.qty||1)*parseFloat(c.price||0);
     return `<tr><td>${c.date}</td><td><span class="badge b-blue" style="font-size:10px">${c.cat.split('·')[0].trim()}</span></td>
-    <td>${c.item||'—'}</td><td style="font-size:12px;color:var(--text2)">${c.applies||'—'}</td>
+    <td>${c.item||'—'}</td><td style="font-size:14px;color:var(--text2)">${c.applies||'—'}</td>
     <td>${c.qty||'—'} ${c.unit||''}</td><td>${parseFloat(c.price||0).toLocaleString()}</td>
     <td><strong>${Math.round(tot).toLocaleString()}</strong></td>
     <td>${c.receiptImg?`<img src="${c.receiptImg}" style="height:32px;border-radius:4px;cursor:pointer;border:1px solid var(--border)" onclick="showReceiptImg('${c.id}')" title="View receipt"/>`:c.receipt||'—'}</td>
-    <td><button class="btn btn-sm" style="color:var(--red)" onclick="deleteCost(${c.id})">×</button></td></tr>`;
+    <td style="display:flex;gap:4px"><button class="btn btn-sm" onclick="editCost(${c.id})" title="Edit">✏️</button><button class="btn btn-sm" style="color:var(--red)" onclick="deleteCost(${c.id})" title="Delete">×</button></td></tr>`;
   }).join('');
 }
 
@@ -1118,10 +1607,12 @@ function goPage(id,btn){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
-  if(id==='farm'){setTimeout(function(){initFarmMap();},150);}
+  if(id==='farm'){setTimeout(function(){initFarmMap();},150);setTimeout(function(){renderIrrigStatusStrip();},300);}
   if(id==='calendar'){renderCalendar();}
   if(id==='growth'){buildGrowthTable();}
+  if(id==='tasks'){initGenYear();}
   if(id==='materials'){renderMaterials();}
+  if(id==='overview'){renderRainLog();}
   if(btn)btn.classList.add('active');
   else document.querySelectorAll('.nav-item').forEach(n=>{if(n.getAttribute('onclick')&&n.getAttribute('onclick').includes("'"+id+"'"))n.classList.add('active');});
 }
@@ -1129,10 +1620,46 @@ function goPage(id,btn){
 // ═══ UTILS ═══
 function toggleEl(id){const el=document.getElementById(id);el.style.display=el.style.display==='none'?'block':'none';}
 function exportData(){const b=new Blob([JSON.stringify(D,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='farm_yawmi_'+new Date().toISOString().split('T')[0]+'.json';a.click();}
-function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=ev=>{try{D=JSON.parse(ev.target.result);save();renderAll();alert('Imported · تم الاستيراد');}catch(e){alert('Invalid file');}};r.readAsText(f);}
+function importData(e){
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    try{
+      var parsed=JSON.parse(ev.target.result);
+      // Accept both direct data object and wrapped {data:...} format
+      var importedData = parsed;
+      if (parsed && parsed.data && typeof parsed.data === 'string') {
+        importedData = JSON.parse(parsed.data);
+      } else if (parsed && parsed.data && typeof parsed.data === 'object') {
+        importedData = parsed.data;
+      }
+      // Validate it has at least one expected key
+      if (!importedData || (!importedData.tasks && !importedData.irrigation && !importedData.harvest && !importedData.costs)) {
+        throw new Error('Unrecognized format');
+      }
+      // Merge with defaults to ensure all keys exist
+      D = {
+        tasks: importedData.tasks || [],
+        irrigation: importedData.irrigation || [],
+        harvest: importedData.harvest || [],
+        costs: importedData.costs || [],
+        weather: importedData.weather || [],
+        materials: importedData.materials || []
+      };
+      save();
+      try { renderAll(); } catch(re) { console.warn('renderAll partial error:', re); }
+      try { renderRainLog(); } catch(re) {}
+      try { renderMaterials(); } catch(re) {}
+      alert('Imported ✅ ' + D.tasks.length + ' tasks, ' + D.irrigation.length + ' irrigation, ' + D.weather.length + ' rain entries');
+    }catch(err){
+      alert('Import failed: ' + err.message + '\nPlease check the file format.');
+    }
+  };
+  r.readAsText(f);
+}
 
 // ════ FARM MAP ════
-var TREE_DATA = [[35.418548, 6.601001, "apple-orange"], [35.41854, 6.600963, "apple-orange"], [35.41854, 6.600919, "apple-orange"], [35.418536, 6.600887, "apple-orange"], [35.418529, 6.600851, "apple-orange"], [35.418524, 6.600812, "apple-orange"], [35.418518, 6.600774, "apple-orange"], [35.418515, 6.601005, "apple-orange"], [35.418513, 6.600969, "apple-orange"], [35.418506, 6.600928, "apple-orange"], [35.418502, 6.600894, "apple-orange"], [35.418498, 6.600852, "apple-orange"], [35.418493, 6.600812, "apple-orange"], [35.418489, 6.600778, "apple-orange"], [35.418481, 6.600735, "apple-orange"], [35.418477, 6.600695, "apple-orange"], [35.418481, 6.601009, "apple-orange"], [35.418479, 6.600973, "apple-orange"], [35.41847, 6.600935, "apple-orange"], [35.418465, 6.600902, "apple-orange"], [35.418459, 6.600861, "apple-orange"], [35.418453, 6.600818, "apple-orange"], [35.418451, 6.600784, "apple-orange"], [35.418447, 6.600742, "apple-orange"], [35.418443, 6.600702, "apple-orange"], [35.4184, 6.600707, "apple-orange"], [35.418406, 6.600747, "apple-orange"], [35.418414, 6.600788, "apple-orange"], [35.418418, 6.600827, "apple-orange"], [35.418421, 6.600867, "apple-orange"], [35.418429, 6.600904, "apple-orange"], [35.418433, 6.600942, "apple-orange"], [35.418439, 6.600981, "apple-orange"], [35.418444, 6.601016, "apple-orange"], [35.418407, 6.601026, "apple-orange"], [35.418402, 6.600989, "apple-orange"], [35.418397, 6.600946, "apple-orange"], [35.418394, 6.600906, "apple-orange"], [35.418389, 6.600871, "apple-orange"], [35.418384, 6.600832, "apple-orange"], [35.41838, 6.600793, "apple-orange"], [35.418375, 6.600752, "apple-orange"], [35.418371, 6.600713, "apple-orange"], [35.418375, 6.60103, "apple-orange"], [35.41837, 6.600993, "apple-orange"], [35.418366, 6.600953, "apple-orange"], [35.418361, 6.600913, "apple-orange"], [35.418357, 6.600877, "apple-orange"], [35.418351, 6.600839, "apple-orange"], [35.418344, 6.600798, "apple-orange"], [35.41834, 6.600759, "apple-orange"], [35.418333, 6.60072, "apple-orange"], [35.41834, 6.601034, "apple-orange"], [35.418335, 6.600998, "apple-orange"], [35.418332, 6.600961, "apple-orange"], [35.418326, 6.600918, "apple-orange"], [35.41832, 6.600881, "apple-orange"], [35.418317, 6.600844, "apple-orange"], [35.418312, 6.600802, "apple-orange"], [35.418305, 6.600764, "apple-orange"], [35.418301, 6.600725, "apple-orange"], [35.418135, 6.600652, "apple-orange"], [35.418134, 6.600686, "apple-orange"], [35.418134, 6.60072, "apple-orange"], [35.41811, 6.600638, "apple-orange"], [35.418099, 6.600666, "apple-orange"], [35.418101, 6.600715, "apple-orange"], [35.4181, 6.600755, "apple-orange"], [35.418092, 6.600783, "apple-orange"], [35.418068, 6.600774, "apple-orange"], [35.418067, 6.600735, "apple-orange"], [35.418405, 6.601151, "apple-orange"], [35.418065, 6.600675, "apple-orange"], [35.418072, 6.600641, "apple-orange"], [35.418375, 6.601252, "cherry"], [35.418024, 6.600717, "cherry"], [35.418032, 6.600766, "cherry"], [35.417994, 6.600726, "cherry"], [35.417999, 6.600777, "cherry"], [35.418006, 6.60082, "cherry"], [35.418004, 6.600864, "cherry"], [35.418006, 6.600908, "cherry"], [35.418007, 6.60095, "cherry"], [35.416947, 6.601202, "apple-green"], [35.416941, 6.601158, "apple-green"], [35.416936, 6.601116, "apple-green"], [35.41693, 6.601077, "apple-green"], [35.416924, 6.60104, "apple-green"], [35.416917, 6.600998, "apple-green"], [35.416911, 6.600957, "apple-green"], [35.416904, 6.600916, "apple-green"], [35.416897, 6.600878, "apple-green"], [35.416891, 6.600837, "apple-green"], [35.416983, 6.601191, "apple-green"], [35.416977, 6.60115, "apple-green"], [35.416972, 6.601107, "apple-green"], [35.416966, 6.601071, "apple-green"], [35.416959, 6.601033, "apple-green"], [35.416951, 6.600993, "apple-green"], [35.416946, 6.600953, "apple-green"], [35.416942, 6.600912, "apple-green"], [35.416934, 6.600871, "apple-green"], [35.416928, 6.600832, "apple-green"], [35.416965, 6.600823, "apple-green"], [35.416972, 6.600866, "apple-green"], [35.416976, 6.600902, "apple-green"], [35.416982, 6.600948, "apple-green"], [35.416987, 6.600983, "apple-green"], [35.416994, 6.601023, "apple-green"], [35.417003, 6.601064, "apple-green"], [35.417008, 6.601099, "apple-green"], [35.417014, 6.601142, "apple-green"], [35.417019, 6.601182, "apple-green"], [35.417051, 6.601174, "apple-green"], [35.417042, 6.601099, "apple-green"], [35.417036, 6.601056, "apple-green"], [35.417034, 6.601017, "apple-green"], [35.417026, 6.600979, "apple-green"], [35.41702, 6.600938, "apple-green"], [35.417012, 6.600897, "apple-green"], [35.417008, 6.600857, "apple-green"], [35.417002, 6.600817, "apple-green"], [35.417045, 6.600812, "apple-green"], [35.417053, 6.600847, "apple-green"], [35.41706, 6.600889, "apple-green"], [35.417065, 6.600929, "apple-green"], [35.417073, 6.600967, "apple-green"], [35.417081, 6.601002, "apple-green"], [35.417087, 6.601048, "apple-green"], [35.417093, 6.601085, "apple-green"], [35.4171, 6.601128, "apple-green"], [35.417104, 6.601167, "apple-green"], [35.417135, 6.601155, "apple-green"], [35.417127, 6.601116, "apple-green"], [35.417123, 6.60108, "apple-green"], [35.417118, 6.601036, "apple-green"], [35.417112, 6.600998, "apple-green"], [35.417105, 6.600961, "apple-green"], [35.4171, 6.600924, "apple-green"], [35.417088, 6.60084, "apple-green"], [35.417092, 6.600883, "apple-green"], [35.417078, 6.6008, "apple-green"], [35.417116, 6.600793, "apple-green"], [35.41712, 6.600829, "apple-green"], [35.417132, 6.600872, "apple-green"], [35.41714, 6.60091, "apple-green"], [35.417142, 6.600953, "apple-green"], [35.41715, 6.600987, "apple-green"], [35.417154, 6.601029, "apple-green"], [35.417163, 6.601073, "apple-green"], [35.417167, 6.601109, "apple-green"], [35.417173, 6.601147, "apple-green"], [35.417212, 6.601144, "apple-green"], [35.417205, 6.601103, "apple-green"], [35.417197, 6.601064, "apple-green"], [35.417191, 6.601018, "apple-green"], [35.417185, 6.600981, "apple-green"], [35.417179, 6.600943, "apple-green"], [35.417172, 6.600907, "apple-green"], [35.417166, 6.60087, "apple-green"], [35.41716, 6.600826, "apple-green"], [35.417152, 6.600784, "apple-green"], [35.417185, 6.600782, "apple-green"], [35.417194, 6.600818, "apple-green"], [35.417201, 6.600855, "apple-green"], [35.417207, 6.600899, "apple-green"], [35.417213, 6.600938, "apple-green"], [35.417218, 6.600973, "apple-green"], [35.417224, 6.601012, "apple-green"], [35.41723, 6.601056, "apple-green"], [35.417237, 6.601095, "apple-green"], [35.417242, 6.60114, "apple-green"], [35.417272, 6.601091, "apple-green"], [35.417267, 6.601052, "apple-green"], [35.417259, 6.601009, "apple-green"], [35.417252, 6.600969, "apple-green"], [35.417247, 6.600928, "apple-green"], [35.417242, 6.600895, "apple-green"], [35.417234, 6.600853, "apple-green"], [35.41723, 6.600818, "apple-green"], [35.417228, 6.600777, "apple-green"], [35.417261, 6.60077, "apple-green"], [35.417266, 6.600805, "apple-green"], [35.417276, 6.600849, "apple-green"], [35.417283, 6.60089, "apple-green"], [35.417287, 6.600923, "apple-green"], [35.417294, 6.600965, "apple-green"], [35.417297, 6.600999, "apple-green"], [35.417303, 6.601046, "apple-green"], [35.417313, 6.601086, "apple-green"], [35.417347, 6.601083, "apple-green"], [35.417337, 6.601037, "apple-green"], [35.417335, 6.600998, "apple-green"], [35.417327, 6.600955, "apple-green"], [35.417321, 6.600918, "apple-green"], [35.417314, 6.600885, "apple-green"], [35.41731, 6.600842, "apple-green"], [35.417302, 6.6008, "apple-green"], [35.417294, 6.600761, "apple-green"], [35.417372, 6.601075, "apple-green"], [35.417374, 6.601033, "apple-green"], [35.41737, 6.60099, "apple-green"], [35.41736, 6.600945, "apple-green"], [35.417357, 6.600911, "apple-green"], [35.417353, 6.600873, "apple-green"], [35.417342, 6.600831, "apple-green"], [35.417339, 6.600794, "apple-green"], [35.41733, 6.600759, "apple-green"], [35.417363, 6.60075, "apple-green"], [35.417372, 6.600792, "apple-green"], [35.417381, 6.600825, "apple-green"], [35.417383, 6.600868, "apple-green"], [35.417391, 6.600903, "apple-green"], [35.417395, 6.600949, "apple-green"], [35.4174, 6.600983, "apple-green"], [35.417406, 6.601024, "apple-green"], [35.41741, 6.601065, "apple-green"], [35.417445, 6.601063, "apple-green"], [35.417441, 6.601021, "apple-green"], [35.417433, 6.600978, "apple-green"], [35.417428, 6.600939, "apple-green"], [35.417423, 6.600899, "apple-green"], [35.417417, 6.60086, "apple-green"], [35.41741, 6.600823, "apple-green"], [35.417405, 6.600786, "apple-green"], [35.417401, 6.600747, "apple-green"], [35.417472, 6.601065, "apple-cyan"], [35.417467, 6.601018, "apple-cyan"], [35.417463, 6.600981, "apple-cyan"], [35.417456, 6.600938, "apple-cyan"], [35.417453, 6.600896, "apple-cyan"], [35.417447, 6.600861, "apple-cyan"], [35.417443, 6.600821, "apple-cyan"], [35.417435, 6.600785, "apple-cyan"], [35.417432, 6.600746, "apple-cyan"], [35.41751, 6.601061, "apple-cyan"], [35.417506, 6.601018, "apple-cyan"], [35.417498, 6.60097, "apple-cyan"], [35.41749, 6.600932, "apple-cyan"], [35.417485, 6.60089, "apple-cyan"], [35.41748, 6.600857, "apple-cyan"], [35.417472, 6.600818, "apple-cyan"], [35.41747, 6.600785, "apple-cyan"], [35.417465, 6.600741, "apple-cyan"], [35.417541, 6.601055, "apple-cyan"], [35.417536, 6.601009, "apple-cyan"], [35.41753, 6.600965, "apple-cyan"], [35.417525, 6.600927, "apple-cyan"], [35.417518, 6.60089, "apple-cyan"], [35.417512, 6.600847, "apple-cyan"], [35.417506, 6.600814, "apple-cyan"], [35.417504, 6.600774, "apple-cyan"], [35.417496, 6.600735, "apple-cyan"], [35.417534, 6.60073, "apple-cyan"], [35.417539, 6.600763, "apple-cyan"], [35.417543, 6.60081, "apple-cyan"], [35.417549, 6.600849, "apple-cyan"], [35.417553, 6.600883, "apple-cyan"], [35.417557, 6.600924, "apple-cyan"], [35.417565, 6.600959, "apple-cyan"], [35.417571, 6.601002, "apple-cyan"], [35.417579, 6.601053, "apple-cyan"], [35.417616, 6.601042, "apple-cyan"], [35.417608, 6.600994, "apple-cyan"], [35.417602, 6.600953, "apple-cyan"], [35.417596, 6.600916, "apple-cyan"], [35.417589, 6.600879, "apple-cyan"], [35.417586, 6.600841, "apple-cyan"], [35.417577, 6.600801, "apple-cyan"], [35.417571, 6.600761, "apple-cyan"], [35.417569, 6.600721, "apple-cyan"], [35.417604, 6.600715, "apple-cyan"], [35.417609, 6.600753, "apple-cyan"], [35.417612, 6.600793, "apple-cyan"], [35.417618, 6.600828, "apple-cyan"], [35.417622, 6.600873, "apple-cyan"], [35.41763, 6.600911, "apple-cyan"], [35.417636, 6.600949, "apple-cyan"], [35.417642, 6.600986, "apple-cyan"], [35.417648, 6.601037, "apple-cyan"], [35.417681, 6.601026, "apple-cyan"], [35.417678, 6.600979, "apple-cyan"], [35.41767, 6.600941, "apple-cyan"], [35.417665, 6.600907, "apple-cyan"], [35.41766, 6.600864, "apple-cyan"], [35.417656, 6.600831, "apple-cyan"], [35.417647, 6.600793, "apple-cyan"], [35.417644, 6.600754, "apple-cyan"], [35.417636, 6.600714, "apple-cyan"], [35.417666, 6.600706, "apple-cyan"], [35.417669, 6.600745, "apple-cyan"], [35.417676, 6.600782, "apple-cyan"], [35.417682, 6.600823, "apple-cyan"], [35.417689, 6.600863, "apple-cyan"], [35.41769, 6.600896, "apple-cyan"], [35.417705, 6.600981, "apple-cyan"], [35.417698, 6.600937, "apple-cyan"], [35.417712, 6.60102, "apple-cyan"], [35.417743, 6.601022, "apple-cyan"], [35.417734, 6.600973, "apple-cyan"], [35.41773, 6.60093, "apple-cyan"], [35.417722, 6.600894, "apple-cyan"], [35.417716, 6.600857, "apple-cyan"], [35.417712, 6.600817, "apple-cyan"], [35.417705, 6.600784, "apple-cyan"], [35.417701, 6.600734, "apple-cyan"], [35.417698, 6.6007, "apple-cyan"], [35.417728, 6.600692, "apple-cyan"], [35.41773, 6.60073, "apple-cyan"], [35.417738, 6.600776, "apple-cyan"], [35.417745, 6.600814, "apple-cyan"], [35.417752, 6.600851, "apple-cyan"], [35.417761, 6.60089, "apple-cyan"], [35.417765, 6.600927, "apple-cyan"], [35.41777, 6.600967, "apple-cyan"], [35.417775, 6.601012, "apple-cyan"], [35.417807, 6.60101, "apple-green"], [35.417801, 6.600974, "apple-green"], [35.417796, 6.600919, "apple-green"], [35.41779, 6.600883, "apple-green"], [35.417784, 6.600844, "apple-green"], [35.417778, 6.600805, "apple-green"], [35.417774, 6.600765, "apple-green"], [35.417764, 6.600726, "apple-green"], [35.417799, 6.600715, "apple-green"], [35.417807, 6.600759, "apple-green"], [35.417813, 6.600801, "apple-green"], [35.417818, 6.600837, "apple-green"], [35.417825, 6.600882, "apple-green"], [35.417829, 6.600915, "apple-green"], [35.417835, 6.600967, "apple-green"], [35.417842, 6.601002, "apple-green"], [35.417835, 6.60071, "apple-orange"], [35.417841, 6.600755, "apple-orange"], [35.417848, 6.600794, "apple-orange"], [35.417851, 6.600831, "apple-orange"], [35.417857, 6.600868, "apple-orange"], [35.417865, 6.600914, "apple-orange"], [35.417871, 6.600965, "apple-orange"], [35.417899, 6.600912, "apple-orange"], [35.417892, 6.600871, "apple-orange"], [35.41789, 6.600832, "apple-orange"], [35.417882, 6.600786, "apple-orange"], [35.417878, 6.600747, "apple-orange"], [35.417872, 6.600707, "apple-orange"], [35.417757, 6.600694, "apple-orange"], [35.417794, 6.600682, "apple-orange"], [35.417828, 6.600678, "apple-orange"], [35.417867, 6.60067, "apple-orange"], [35.417918, 6.600742, "apple-orange"], [35.41792, 6.600794, "apple-orange"], [35.417927, 6.600833, "apple-orange"], [35.417929, 6.600873, "apple-orange"], [35.417934, 6.600922, "apple-orange"], [35.417971, 6.600912, "apple-orange"], [35.417967, 6.600869, "apple-orange"], [35.417964, 6.600829, "apple-orange"], [35.41796, 6.60078, "apple-orange"], [35.417955, 6.600737, "apple-orange"], [35.417905, 6.60097, "pear"], [35.41791, 6.60101, "pear"], [35.417941, 6.601012, "pear"], [35.417941, 6.600967, "pear"], [35.417976, 6.600966, "cherry"], [35.418133, 6.600766, "fig"], [35.418251, 6.600675, "fig"], [35.418665, 6.600722, "fig"], [35.418667, 6.600762, "fig"], [35.418634, 6.600769, "fig"], [35.418559, 6.600772, "fig"], [35.418566, 6.60082, "fig"], [35.418581, 6.600943, "fig"], [35.418577, 6.60123, "pomegranate"], [35.418563, 6.601236, "pomegranate"], [35.418551, 6.601239, "pomegranate"], [35.418537, 6.601245, "pomegranate"], [35.418526, 6.601248, "pomegranate"], [35.418512, 6.601254, "pomegranate"], [35.418496, 6.601258, "pomegranate"], [35.418484, 6.601264, "pomegranate"], [35.418469, 6.60127, "pomegranate"], [35.418446, 6.601277, "pomegranate"], [35.418426, 6.601285, "pomegranate"], [35.418622, 6.600967, "pomegranate"], [35.41862, 6.600943, "pomegranate"], [35.418616, 6.600912, "pomegranate"], [35.418605, 6.600818, "pomegranate"], [35.41867, 6.600816, "fig"], [35.418672, 6.600857, "fig"], [35.418382, 6.601301, "fig"], [35.41846, 6.601215, "fig"], [35.418261, 6.601002, "grapes"], [35.418268, 6.60102, "grapes"], [35.418275, 6.601038, "grapes"], [35.418277, 6.601057, "grapes"], [35.418283, 6.601077, "grapes"], [35.418402, 6.600607, "grapes"], [35.418384, 6.600612, "grapes"], [35.418088, 6.600977, "grapes"], [35.418101, 6.601219, "apricot"], [35.418562, 6.601119, "apricot"], [35.417987, 6.600684, "apricot"], [35.418021, 6.600676, "peach"], [35.418019, 6.600645, "apricot"], [35.417983, 6.600651, "apricot"], [35.418093, 6.600951, "fig"], [35.41866, 6.600621, "fig"], [35.41866, 6.600561, "olive"], [35.418678, 6.600621, "olive"], [35.418687, 6.600675, "olive"], [35.418708, 6.600758, "olive"], [35.418707, 6.600813, "olive"], [35.4187, 6.600864, "olive"], [35.418716, 6.600919, "olive"], [35.418625, 6.601038, "olive"], [35.418606, 6.600993, "olive"], [35.41868, 6.600941, "olive"], [35.418651, 6.60113, "olive"], [35.418727, 6.601175, "olive"], [35.418691, 6.601127, "olive"], [35.418735, 6.601118, "olive"], [35.418602, 6.601146, "olive"], [35.418561, 6.601053, "olive"], [35.418454, 6.601181, "pear"], [35.418506, 6.601206, "pear"], [35.4185, 6.601162, "pear"], [35.418489, 6.601128, "pear"], [35.418545, 6.601191, "pear"], [35.418537, 6.60116, "pear"], [35.418331, 6.601217, "cherry"], [35.418421, 6.601225, "pear"], [35.418411, 6.60119, "pear"], [35.418103, 6.600918, "cherry"], [35.418453, 6.600526, "fig"], [35.418618, 6.60049, "fig"], [35.418077, 6.600824, "grapes"], [35.418067, 6.600841, "grapes"], [35.418061, 6.60086, "grapes"], [35.418056, 6.600882, "grapes"], [35.418051, 6.600904, "grapes"], [35.418042, 6.600935, "grapes"], [35.418036, 6.600959, "grapes"], [35.418033, 6.600981, "grapes"], [35.418593, 6.601224, "pomegranate"], [35.418609, 6.601219, "pomegranate"], [35.418482, 6.601084, "peach"], [35.418436, 6.601095, "peach"], [35.418518, 6.601081, "peach"], [35.418529, 6.601122, "peach"], [35.417978, 6.601005, "peach"], [35.418167, 6.600723, "peach"], [35.418043, 6.600818, "hawthorn"], [35.418303, 6.601073, "hawthorn"], [35.418174, 6.600699, "sour-cherry"], [35.418293, 6.601214, "sour-cherry"], [35.418061, 6.601114, "mint"], [35.418249, 6.600695, "rose"], [35.418245, 6.600719, "rose"], [35.418245, 6.600746, "rose"], [35.418251, 6.600777, "rose"], [35.418207, 6.600979, "rose"], [35.41819, 6.600985, "rose"], [35.418166, 6.600994, "rose"], [35.418142, 6.601006, "rose"], [35.418113, 6.601038, "rose"], [35.418134, 6.600812, "mulberry"], [35.418443, 6.601136, "persimmon"], [35.418111, 6.600857, "walnut"], [35.418082, 6.601002, "walnut"], [35.418059, 6.601038, "walnut"], [35.41807, 6.601159, "walnut"], [35.418084, 6.601191, "walnut"], [35.418614, 6.600871, "walnut"], [35.41816, 6.600747, "apricot"], [35.418157, 6.60077, "apricot"], [35.418115, 6.601248, "cherry"], [35.418574, 6.600861, "persimmon"], [35.418572, 6.601174, "peach"], [35.418397, 6.601115, "peach"], [35.418518, 6.601042, "peach"], [35.418483, 6.601048, "apple-orange"], [35.418449, 6.601056, "apple-orange"], [35.418419, 6.601059, "apple-orange"], [35.418384, 6.601064, "apple-orange"], [35.418348, 6.601068, "apple-orange"], [35.418349, 6.601119, "pear"], [35.418367, 6.601206, "cherry"], [35.417877, 6.601009, "persimmon"], [35.418318, 6.60116, "sour-cherry"], [35.418611, 6.600841, "pomegranate"], [35.418639, 6.600825, "fig"], [35.418698, 6.600715, "olive"], [35.417942, 6.600652, "apple-orange"], [35.417908, 6.600659, "apple-orange"]];
+var TREE_DATA = [[35.418548, 6.601001, "apple-orange", "B"],[35.41854, 6.600963, "apple-orange", "B"],[35.41854, 6.600919, "apple-orange", "B"],[35.418536, 6.600887, "apple-orange", "B"],[35.418529, 6.600851, "apple-orange", "B"],[35.418524, 6.600812, "apple-orange", "B"],[35.418518, 6.600774, "apple-orange", "B"],[35.418515, 6.601005, "apple-orange", "B"],[35.418513, 6.600969, "apple-orange", "B"],[35.418506, 6.600928, "apple-orange", "B"],[35.418502, 6.600894, "apple-orange", "B"],[35.418498, 6.600852, "apple-orange", "B"],[35.418493, 6.600812, "apple-orange", "B"],[35.418489, 6.600778, "apple-orange", "B"],[35.418481, 6.600735, "apple-orange", "B"],[35.418477, 6.600695, "apple-orange", "B"],[35.418481, 6.601009, "apple-orange", "B"],[35.418479, 6.600973, "apple-orange", "B"],[35.41847, 6.600935, "apple-orange", "B"],[35.418465, 6.600902, "apple-orange", "B"],[35.418459, 6.600861, "apple-orange", "B"],[35.418453, 6.600818, "apple-orange", "B"],[35.418451, 6.600784, "apple-orange", "B"],[35.418447, 6.600742, "apple-orange", "B"],[35.418443, 6.600702, "apple-orange", "B"],[35.4184, 6.600707, "apple-orange", "B"],[35.418406, 6.600747, "apple-orange", "B"],[35.418414, 6.600788, "apple-orange", "B"],[35.418418, 6.600827, "apple-orange", "B"],[35.418421, 6.600867, "apple-orange", "B"],[35.418429, 6.600904, "apple-orange", "B"],[35.418433, 6.600942, "apple-orange", "B"],[35.418439, 6.600981, "apple-orange", "B"],[35.418444, 6.601016, "apple-orange", "B"],[35.418407, 6.601026, "apple-orange", "B"],[35.418402, 6.600989, "apple-orange", "B"],[35.418397, 6.600946, "apple-orange", "B"],[35.418394, 6.600906, "apple-orange", "B"],[35.418389, 6.600871, "apple-orange", "B"],[35.418384, 6.600832, "apple-orange", "B"],[35.41838, 6.600793, "apple-orange", "B"],[35.418375, 6.600752, "apple-orange", "B"],[35.418371, 6.600713, "apple-orange", "B"],[35.418375, 6.60103, "apple-orange", "B"],[35.41837, 6.600993, "apple-orange", "B"],[35.418366, 6.600953, "apple-orange", "B"],[35.418361, 6.600913, "apple-orange", "B"],[35.418357, 6.600877, "apple-orange", "B"],[35.418351, 6.600839, "apple-orange", "B"],[35.418344, 6.600798, "apple-orange", "B"],[35.41834, 6.600759, "apple-orange", "B"],[35.418333, 6.60072, "apple-orange", "B"],[35.41834, 6.601034, "apple-orange", "B"],[35.418335, 6.600998, "apple-orange", "B"],[35.418332, 6.600961, "apple-orange", "B"],[35.418326, 6.600918, "apple-orange", "B"],[35.41832, 6.600881, "apple-orange", "B"],[35.418317, 6.600844, "apple-orange", "B"],[35.418312, 6.600802, "apple-orange", "B"],[35.418305, 6.600764, "apple-orange", "B"],[35.418301, 6.600725, "apple-orange", "B"],[35.418135, 6.600652, "apple-orange", "D"],[35.418134, 6.600686, "apple-orange", "D"],[35.418134, 6.60072, "apple-orange", "D"],[35.41811, 6.600638, "apple-orange", "D"],[35.418099, 6.600666, "apple-orange", "D"],[35.418101, 6.600715, "apple-orange", "D"],[35.4181, 6.600755, "apple-orange", "D"],[35.418092, 6.600783, "apple-orange", "D"],[35.418068, 6.600774, "apple-orange", "D"],[35.418067, 6.600735, "apple-orange", "D"],[35.418405, 6.601151, "apple-orange", "A"],[35.418065, 6.600675, "apple-orange", "D"],[35.418072, 6.600641, "apple-orange", "D"],[35.418375, 6.601252, "cherry", "C"],[35.418024, 6.600717, "cherry", "D"],[35.418032, 6.600766, "cherry", "D"],[35.417994, 6.600726, "cherry", "D"],[35.417999, 6.600777, "cherry", "D"],[35.418006, 6.60082, "cherry", "D"],[35.418004, 6.600864, "cherry", "D"],[35.418006, 6.600908, "cherry", "D"],[35.418007, 6.60095, "cherry", "D"],[35.416947, 6.601202, "apple-green", "F"],[35.416941, 6.601158, "apple-green", "F"],[35.416936, 6.601116, "apple-green", "F"],[35.41693, 6.601077, "apple-green", "F"],[35.416924, 6.60104, "apple-green", "F"],[35.416917, 6.600998, "apple-green", "F"],[35.416911, 6.600957, "apple-green", "F"],[35.416904, 6.600916, "apple-green", "F"],[35.416897, 6.600878, "apple-green", "F"],[35.416891, 6.600837, "apple-green", "F"],[35.416983, 6.601191, "apple-green", "F"],[35.416977, 6.60115, "apple-green", "F"],[35.416972, 6.601107, "apple-green", "F"],[35.416966, 6.601071, "apple-green", "F"],[35.416959, 6.601033, "apple-green", "F"],[35.416951, 6.600993, "apple-green", "F"],[35.416946, 6.600953, "apple-green", "F"],[35.416942, 6.600912, "apple-green", "F"],[35.416934, 6.600871, "apple-green", "F"],[35.416928, 6.600832, "apple-green", "F"],[35.416965, 6.600823, "apple-green", "F"],[35.416972, 6.600866, "apple-green", "F"],[35.416976, 6.600902, "apple-green", "F"],[35.416982, 6.600948, "apple-green", "F"],[35.416987, 6.600983, "apple-green", "F"],[35.416994, 6.601023, "apple-green", "F"],[35.417003, 6.601064, "apple-green", "F"],[35.417008, 6.601099, "apple-green", "F"],[35.417014, 6.601142, "apple-green", "F"],[35.417019, 6.601182, "apple-green", "F"],[35.417051, 6.601174, "apple-green", "F"],[35.417042, 6.601099, "apple-green", "F"],[35.417036, 6.601056, "apple-green", "F"],[35.417034, 6.601017, "apple-green", "F"],[35.417026, 6.600979, "apple-green", "F"],[35.41702, 6.600938, "apple-green", "F"],[35.417012, 6.600897, "apple-green", "F"],[35.417008, 6.600857, "apple-green", "F"],[35.417002, 6.600817, "apple-green", "F"],[35.417045, 6.600812, "apple-green", "F"],[35.417053, 6.600847, "apple-green", "F"],[35.41706, 6.600889, "apple-green", "F"],[35.417065, 6.600929, "apple-green", "F"],[35.417073, 6.600967, "apple-green", "F"],[35.417081, 6.601002, "apple-green", "F"],[35.417087, 6.601048, "apple-green", "F"],[35.417093, 6.601085, "apple-green", "F"],[35.4171, 6.601128, "apple-green", "F"],[35.417104, 6.601167, "apple-green", "F"],[35.417135, 6.601155, "apple-green", "F"],[35.417127, 6.601116, "apple-green", "F"],[35.417123, 6.60108, "apple-green", "F"],[35.417118, 6.601036, "apple-green", "F"],[35.417112, 6.600998, "apple-green", "F"],[35.417105, 6.600961, "apple-green", "F"],[35.4171, 6.600924, "apple-green", "F"],[35.417088, 6.60084, "apple-green", "F"],[35.417092, 6.600883, "apple-green", "F"],[35.417078, 6.6008, "apple-green", "F"],[35.417116, 6.600793, "apple-green", "F"],[35.41712, 6.600829, "apple-green", "F"],[35.417132, 6.600872, "apple-green", "F"],[35.41714, 6.60091, "apple-green", "F"],[35.417142, 6.600953, "apple-green", "F"],[35.41715, 6.600987, "apple-green", "F"],[35.417154, 6.601029, "apple-green", "F"],[35.417163, 6.601073, "apple-green", "F"],[35.417167, 6.601109, "apple-green", "F"],[35.417173, 6.601147, "apple-green", "F"],[35.417212, 6.601144, "apple-green", "F"],[35.417205, 6.601103, "apple-green", "F"],[35.417197, 6.601064, "apple-green", "F"],[35.417191, 6.601018, "apple-green", "F"],[35.417185, 6.600981, "apple-green", "F"],[35.417179, 6.600943, "apple-green", "F"],[35.417172, 6.600907, "apple-green", "F"],[35.417166, 6.60087, "apple-green", "F"],[35.41716, 6.600826, "apple-green", "F"],[35.417152, 6.600784, "apple-green", "F"],[35.417185, 6.600782, "apple-green", "F"],[35.417194, 6.600818, "apple-green", "F"],[35.417201, 6.600855, "apple-green", "F"],[35.417207, 6.600899, "apple-green", "F"],[35.417213, 6.600938, "apple-green", "F"],[35.417218, 6.600973, "apple-green", "F"],[35.417224, 6.601012, "apple-green", "F"],[35.41723, 6.601056, "apple-green", "F"],[35.417237, 6.601095, "apple-green", "F"],[35.417242, 6.60114, "apple-green", "F"],[35.417272, 6.601091, "apple-green", "F"],[35.417267, 6.601052, "apple-green", "F"],[35.417259, 6.601009, "apple-green", "F"],[35.417252, 6.600969, "apple-green", "F"],[35.417247, 6.600928, "apple-green", "F"],[35.417242, 6.600895, "apple-green", "F"],[35.417234, 6.600853, "apple-green", "F"],[35.41723, 6.600818, "apple-green", "F"],[35.417228, 6.600777, "apple-green", "F"],[35.417261, 6.60077, "apple-green", "F"],[35.417266, 6.600805, "apple-green", "F"],[35.417276, 6.600849, "apple-green", "F"],[35.417283, 6.60089, "apple-green", "F"],[35.417287, 6.600923, "apple-green", "F"],[35.417294, 6.600965, "apple-green", "F"],[35.417297, 6.600999, "apple-green", "F"],[35.417303, 6.601046, "apple-green", "F"],[35.417313, 6.601086, "apple-green", "F"],[35.417347, 6.601083, "apple-green", "F"],[35.417337, 6.601037, "apple-green", "F"],[35.417335, 6.600998, "apple-green", "F"],[35.417327, 6.600955, "apple-green", "F"],[35.417321, 6.600918, "apple-green", "F"],[35.417314, 6.600885, "apple-green", "F"],[35.41731, 6.600842, "apple-green", "F"],[35.417302, 6.6008, "apple-green", "F"],[35.417294, 6.600761, "apple-green", "F"],[35.417372, 6.601075, "apple-green", "F"],[35.417374, 6.601033, "apple-green", "F"],[35.41737, 6.60099, "apple-green", "F"],[35.41736, 6.600945, "apple-green", "F"],[35.417357, 6.600911, "apple-green", "F"],[35.417353, 6.600873, "apple-green", "F"],[35.417342, 6.600831, "apple-green", "F"],[35.417339, 6.600794, "apple-green", "F"],[35.41733, 6.600759, "apple-green", "F"],[35.417363, 6.60075, "apple-green", "F"],[35.417372, 6.600792, "apple-green", "F"],[35.417381, 6.600825, "apple-green", "F"],[35.417383, 6.600868, "apple-green", "F"],[35.417391, 6.600903, "apple-green", "F"],[35.417395, 6.600949, "apple-green", "F"],[35.4174, 6.600983, "apple-green", "F"],[35.417406, 6.601024, "apple-green", "F"],[35.41741, 6.601065, "apple-green", "F"],[35.417445, 6.601063, "apple-green", "F"],[35.417441, 6.601021, "apple-green", "F"],[35.417433, 6.600978, "apple-green", "F"],[35.417428, 6.600939, "apple-green", "F"],[35.417423, 6.600899, "apple-green", "F"],[35.417417, 6.60086, "apple-green", "F"],[35.41741, 6.600823, "apple-green", "F"],[35.417405, 6.600786, "apple-green", "F"],[35.417401, 6.600747, "apple-green", "F"],[35.417472, 6.601065, "apple-cyan", "E"],[35.417467, 6.601018, "apple-cyan", "E"],[35.417463, 6.600981, "apple-cyan", "E"],[35.417456, 6.600938, "apple-cyan", "E"],[35.417453, 6.600896, "apple-cyan", "E"],[35.417447, 6.600861, "apple-cyan", "E"],[35.417443, 6.600821, "apple-cyan", "E"],[35.417435, 6.600785, "apple-cyan", "E"],[35.417432, 6.600746, "apple-cyan", "E"],[35.41751, 6.601061, "apple-cyan", "E"],[35.417506, 6.601018, "apple-cyan", "E"],[35.417498, 6.60097, "apple-cyan", "E"],[35.41749, 6.600932, "apple-cyan", "E"],[35.417485, 6.60089, "apple-cyan", "E"],[35.41748, 6.600857, "apple-cyan", "E"],[35.417472, 6.600818, "apple-cyan", "E"],[35.41747, 6.600785, "apple-cyan", "E"],[35.417465, 6.600741, "apple-cyan", "E"],[35.417541, 6.601055, "apple-cyan", "E"],[35.417536, 6.601009, "apple-cyan", "E"],[35.41753, 6.600965, "apple-cyan", "E"],[35.417525, 6.600927, "apple-cyan", "E"],[35.417518, 6.60089, "apple-cyan", "E"],[35.417512, 6.600847, "apple-cyan", "E"],[35.417506, 6.600814, "apple-cyan", "E"],[35.417504, 6.600774, "apple-cyan", "E"],[35.417496, 6.600735, "apple-cyan", "E"],[35.417534, 6.60073, "apple-cyan", "E"],[35.417539, 6.600763, "apple-cyan", "E"],[35.417543, 6.60081, "apple-cyan", "E"],[35.417549, 6.600849, "apple-cyan", "E"],[35.417553, 6.600883, "apple-cyan", "E"],[35.417557, 6.600924, "apple-cyan", "E"],[35.417565, 6.600959, "apple-cyan", "E"],[35.417571, 6.601002, "apple-cyan", "E"],[35.417579, 6.601053, "apple-cyan", "E"],[35.417616, 6.601042, "apple-cyan", "E"],[35.417608, 6.600994, "apple-cyan", "E"],[35.417602, 6.600953, "apple-cyan", "E"],[35.417596, 6.600916, "apple-cyan", "E"],[35.417589, 6.600879, "apple-cyan", "E"],[35.417586, 6.600841, "apple-cyan", "E"],[35.417577, 6.600801, "apple-cyan", "E"],[35.417571, 6.600761, "apple-cyan", "E"],[35.417569, 6.600721, "apple-cyan", "E"],[35.417604, 6.600715, "apple-cyan", "E"],[35.417609, 6.600753, "apple-cyan", "E"],[35.417612, 6.600793, "apple-cyan", "E"],[35.417618, 6.600828, "apple-cyan", "E"],[35.417622, 6.600873, "apple-cyan", "E"],[35.41763, 6.600911, "apple-cyan", "E"],[35.417636, 6.600949, "apple-cyan", "E"],[35.417642, 6.600986, "apple-cyan", "E"],[35.417648, 6.601037, "apple-cyan", "E"],[35.417681, 6.601026, "apple-cyan", "E"],[35.417678, 6.600979, "apple-cyan", "E"],[35.41767, 6.600941, "apple-cyan", "E"],[35.417665, 6.600907, "apple-cyan", "E"],[35.41766, 6.600864, "apple-cyan", "E"],[35.417656, 6.600831, "apple-cyan", "E"],[35.417647, 6.600793, "apple-cyan", "E"],[35.417644, 6.600754, "apple-cyan", "E"],[35.417636, 6.600714, "apple-cyan", "E"],[35.417666, 6.600706, "apple-cyan", "E"],[35.417669, 6.600745, "apple-cyan", "E"],[35.417676, 6.600782, "apple-cyan", "E"],[35.417682, 6.600823, "apple-cyan", "E"],[35.417689, 6.600863, "apple-cyan", "E"],[35.41769, 6.600896, "apple-cyan", "E"],[35.417705, 6.600981, "apple-cyan", "E"],[35.417698, 6.600937, "apple-cyan", "E"],[35.417712, 6.60102, "apple-cyan", "E"],[35.417743, 6.601022, "apple-cyan", "E"],[35.417734, 6.600973, "apple-cyan", "E"],[35.41773, 6.60093, "apple-cyan", "E"],[35.417722, 6.600894, "apple-cyan", "E"],[35.417716, 6.600857, "apple-cyan", "E"],[35.417712, 6.600817, "apple-cyan", "E"],[35.417705, 6.600784, "apple-cyan", "E"],[35.417701, 6.600734, "apple-cyan", "E"],[35.417698, 6.6007, "apple-cyan", "E"],[35.417728, 6.600692, "apple-cyan", "E"],[35.41773, 6.60073, "apple-cyan", "E"],[35.417738, 6.600776, "apple-cyan", "E"],[35.417745, 6.600814, "apple-cyan", "E"],[35.417752, 6.600851, "apple-cyan", "E"],[35.417761, 6.60089, "apple-cyan", "E"],[35.417765, 6.600927, "apple-cyan", "E"],[35.41777, 6.600967, "apple-cyan", "E"],[35.417775, 6.601012, "apple-cyan", "E"],[35.417807, 6.60101, "apple-green", "D"],[35.417801, 6.600974, "apple-green", "D"],[35.417796, 6.600919, "apple-green", "D"],[35.41779, 6.600883, "apple-green", "D"],[35.417784, 6.600844, "apple-green", "D"],[35.417778, 6.600805, "apple-green", "D"],[35.417774, 6.600765, "apple-green", "D"],[35.417764, 6.600726, "apple-green", "D"],[35.417799, 6.600715, "apple-green", "D"],[35.417807, 6.600759, "apple-green", "D"],[35.417813, 6.600801, "apple-green", "D"],[35.417818, 6.600837, "apple-green", "D"],[35.417825, 6.600882, "apple-green", "D"],[35.417829, 6.600915, "apple-green", "D"],[35.417835, 6.600967, "apple-green", "D"],[35.417842, 6.601002, "apple-green", "D"],[35.417835, 6.60071, "apple-orange", "D"],[35.417841, 6.600755, "apple-orange", "D"],[35.417848, 6.600794, "apple-orange", "D"],[35.417851, 6.600831, "apple-orange", "D"],[35.417857, 6.600868, "apple-orange", "D"],[35.417865, 6.600914, "apple-orange", "D"],[35.417871, 6.600965, "apple-orange", "D"],[35.417899, 6.600912, "apple-orange", "D"],[35.417892, 6.600871, "apple-orange", "D"],[35.41789, 6.600832, "apple-orange", "D"],[35.417882, 6.600786, "apple-orange", "D"],[35.417878, 6.600747, "apple-orange", "D"],[35.417872, 6.600707, "apple-orange", "D"],[35.417757, 6.600694, "apple-orange", "D"],[35.417794, 6.600682, "apple-orange", "D"],[35.417828, 6.600678, "apple-orange", "D"],[35.417867, 6.60067, "apple-orange", "D"],[35.417918, 6.600742, "apple-orange", "D"],[35.41792, 6.600794, "apple-orange", "D"],[35.417927, 6.600833, "apple-orange", "D"],[35.417929, 6.600873, "apple-orange", "D"],[35.417934, 6.600922, "apple-orange", "D"],[35.417971, 6.600912, "apple-orange", "D"],[35.417967, 6.600869, "apple-orange", "D"],[35.417964, 6.600829, "apple-orange", "D"],[35.41796, 6.60078, "apple-orange", "D"],[35.417955, 6.600737, "apple-orange", "D"],[35.417905, 6.60097, "pear", "D"],[35.41791, 6.60101, "pear", "D"],[35.417941, 6.601012, "pear", "D"],[35.417941, 6.600967, "pear", "D"],[35.417976, 6.600966, "cherry", "D"],[35.418133, 6.600766, "fig", "D"],[35.418251, 6.600675, "fig", "C"],[35.418665, 6.600722, "fig", "A"],[35.418667, 6.600762, "fig", "A"],[35.418634, 6.600769, "fig", "A"],[35.418559, 6.600772, "fig", "A"],[35.418566, 6.60082, "fig", "A"],[35.418581, 6.600943, "fig", "A"],[35.418577, 6.60123, "pomegranate", "A"],[35.418563, 6.601236, "pomegranate", "A"],[35.418551, 6.601239, "pomegranate", "A"],[35.418537, 6.601245, "pomegranate", "A"],[35.418526, 6.601248, "pomegranate", "A"],[35.418512, 6.601254, "pomegranate", "A"],[35.418496, 6.601258, "pomegranate", "A"],[35.418484, 6.601264, "pomegranate", "A"],[35.418469, 6.60127, "pomegranate", "A"],[35.418446, 6.601277, "pomegranate", "A"],[35.418426, 6.601285, "pomegranate", "A"],[35.418622, 6.600967, "pomegranate", "A"],[35.41862, 6.600943, "pomegranate", "A"],[35.418616, 6.600912, "pomegranate", "A"],[35.418605, 6.600818, "pomegranate", "A"],[35.41867, 6.600816, "fig", "A"],[35.418672, 6.600857, "fig", "A"],[35.418382, 6.601301, "fig", "C"],[35.41846, 6.601215, "fig", "A"],[35.418261, 6.601002, "grapes", "C"],[35.418268, 6.60102, "grapes", "C"],[35.418275, 6.601038, "grapes", "C"],[35.418277, 6.601057, "grapes", "C"],[35.418283, 6.601077, "grapes", "C"],[35.418402, 6.600607, "grapes", ""],[35.418384, 6.600612, "grapes", ""],[35.418088, 6.600977, "grapes", "C"],[35.418101, 6.601219, "apricot", "C"],[35.418562, 6.601119, "apricot", "A"],[35.417987, 6.600684, "apricot", "D"],[35.418021, 6.600676, "peach", "D"],[35.418019, 6.600645, "apricot", "D"],[35.417983, 6.600651, "apricot", "D"],[35.418093, 6.600951, "fig", "C"],[35.41866, 6.600621, "fig", "A"],[35.41866, 6.600561, "olive", "A"],[35.418678, 6.600621, "olive", "A"],[35.418687, 6.600675, "olive", "A"],[35.418708, 6.600758, "olive", "A"],[35.418707, 6.600813, "olive", "A"],[35.4187, 6.600864, "olive", "A"],[35.418716, 6.600919, "olive", "A"],[35.418625, 6.601038, "olive", "A"],[35.418606, 6.600993, "olive", "A"],[35.41868, 6.600941, "olive", "A"],[35.418651, 6.60113, "olive", "A"],[35.418727, 6.601175, "olive", "A"],[35.418691, 6.601127, "olive", "A"],[35.418735, 6.601118, "olive", "A"],[35.418602, 6.601146, "olive", "A"],[35.418561, 6.601053, "olive", "A"],[35.418454, 6.601181, "pear", "A"],[35.418506, 6.601206, "pear", "A"],[35.4185, 6.601162, "pear", "A"],[35.418489, 6.601128, "pear", "A"],[35.418545, 6.601191, "pear", "A"],[35.418537, 6.60116, "pear", "A"],[35.418331, 6.601217, "cherry", "C"],[35.418421, 6.601225, "pear", "A"],[35.418411, 6.60119, "pear", "A"],[35.418103, 6.600918, "cherry", "C"],[35.418453, 6.600526, "fig", ""],[35.418618, 6.60049, "fig", ""],[35.418077, 6.600824, "grapes", "D"],[35.418067, 6.600841, "grapes", "D"],[35.418061, 6.60086, "grapes", "D"],[35.418056, 6.600882, "grapes", "D"],[35.418051, 6.600904, "grapes", "D"],[35.418042, 6.600935, "grapes", "D"],[35.418036, 6.600959, "grapes", "D"],[35.418033, 6.600981, "grapes", "D"],[35.418593, 6.601224, "pomegranate", "A"],[35.418609, 6.601219, "pomegranate", "A"],[35.418482, 6.601084, "peach", ""],[35.418436, 6.601095, "peach", ""],[35.418518, 6.601081, "peach", ""],[35.418529, 6.601122, "peach", "A"],[35.417978, 6.601005, "peach", "D"],[35.418167, 6.600723, "peach", "C"],[35.418043, 6.600818, "hawthorn", "D"],[35.418303, 6.601073, "hawthorn", "C"],[35.418174, 6.600699, "sour-cherry", "C"],[35.418293, 6.601214, "sour-cherry", "C"],[35.418061, 6.601114, "mint", "C"],[35.418249, 6.600695, "rose", "C"],[35.418245, 6.600719, "rose", "C"],[35.418245, 6.600746, "rose", "C"],[35.418251, 6.600777, "rose", "C"],[35.418207, 6.600979, "rose", "C"],[35.41819, 6.600985, "rose", "C"],[35.418166, 6.600994, "rose", "C"],[35.418142, 6.601006, "rose", "C"],[35.418113, 6.601038, "rose", "C"],[35.418134, 6.600812, "mulberry", "C"],[35.418443, 6.601136, "persimmon", "A"],[35.418111, 6.600857, "walnut", "C"],[35.418082, 6.601002, "walnut", "C"],[35.418059, 6.601038, "walnut", "C"],[35.41807, 6.601159, "walnut", "C"],[35.418084, 6.601191, "walnut", "C"],[35.418614, 6.600871, "walnut", "A"],[35.41816, 6.600747, "apricot", "C"],[35.418157, 6.60077, "apricot", "C"],[35.418115, 6.601248, "cherry", "C"],[35.418574, 6.600861, "persimmon", "A"],[35.418572, 6.601174, "peach", "A"],[35.418397, 6.601115, "peach", ""],[35.418518, 6.601042, "peach", "B"],[35.418483, 6.601048, "apple-orange", "B"],[35.418449, 6.601056, "apple-orange", "B"],[35.418419, 6.601059, "apple-orange", "B"],[35.418384, 6.601064, "apple-orange", "B"],[35.418348, 6.601068, "apple-orange", "B"],[35.418349, 6.601119, "pear", ""],[35.418367, 6.601206, "cherry", "C"],[35.417877, 6.601009, "persimmon", "D"],[35.418318, 6.60116, "sour-cherry", "C"],[35.418611, 6.600841, "pomegranate", "A"],[35.418639, 6.600825, "fig", "A"],[35.418698, 6.600715, "olive", "A"],[35.417942, 6.600652, "apple-orange", "D"],[35.417908, 6.600659, "apple-orange", "D"],[35.418099, 6.603124, "apple-orange", ""]];
 
 var SPECIES_CFG = {
   'apple-orange': {label:'Apple 4yr', ar:'تفاح 4 سنوات', color:'#f97316'},
@@ -1167,6 +1694,7 @@ var FARM_BOUNDARY = [
 var leafMap = null;
 var treeMarkers = [];
 var activeFilter = 'all';
+var activeBlockFilter = null;
 
 function initFarmMap() {
   if (leafMap) { setTimeout(function(){ leafMap.invalidateSize(); }, 100); return; }
@@ -1185,39 +1713,124 @@ function initFarmMap() {
   renderTreeMarkers();
   buildMapLegend();
   addBlockLabels();
-  updateIrrigationGlow();
+  // irrigation glow handled inside addBlockLabels tooltip
 }
 
-// Block center coordinates for labels
+// Block marker positions - exact GPS from user (verified)
 var BLOCK_CENTERS = {
-  'A': [35.4182, 6.60085],
-  'B': [35.4183, 6.60105],
-  'C': [35.4174, 6.60085],
-  'D': [35.4170, 6.60085]
+  'A': [35.418639, 6.600433],
+  'B': [35.418378, 6.600492],
+  'C': [35.418128, 6.601292],
+  'D': [35.417906, 6.600600],
+  'E': [35.417567, 6.600661],
+  'F': [35.417128, 6.600739],
 };
 
 var blockLabelMarkers = [];
+
+var BLOCK_INFO = {
+  'A': {name:'Block A', nameAr:'القطعة أ', species:'Trees Mix · أشجار متنوعة'},
+  'B': {name:'Block B', nameAr:'القطعة ب', species:'Apple 4yr · تفاح 4 سنوات'},
+  'C': {name:'Block C', nameAr:'القطعة ج', species:'Around house · حول المنزل'},
+  'D': {name:'Block D', nameAr:'القطعة د', species:'Apple Mix · تفاح متنوع'},
+  'E': {name:'Block E', nameAr:'القطعة هـ', species:'Apple 3yr · تفاح 3 سنوات'},
+  'F': {name:'Block F', nameAr:'القطعة و', species:'Apple 7yr · تفاح 7 سنوات'}
+};
+
+function getBlockIrrigInfo(id) {
+  var allIrrig = (D.irrigation||[]).filter(function(r){
+    return r.block && (r.block.startsWith('Block '+id) || r.block === 'All blocks');
+  });
+  if (!allIrrig.length) return null;
+  var last = allIrrig.sort(function(a,b){return new Date(b.date)-new Date(a.date);})[0];
+  var days = Math.round((Date.now()-new Date(last.date))/86400000);
+  var mo = new Date().getMonth();
+  var freq = (mo>=5&&mo<=7) ? 5 : 7;
+  var nextDate = new Date(new Date(last.date).getTime()+freq*86400000);
+  var overdue = days > freq;
+  var warning = days > freq*0.75;
+  return {
+    lastDate: last.date, days: days, method: last.method||'—',
+    duration: last.duration ? last.duration+' min' : '—',
+    nextDate: nextDate.toISOString().split('T')[0], freq: freq,
+    overdue: overdue, warning: warning,
+    statusColor: overdue ? '#ef4444' : warning ? '#f59e0b' : '#22c55e',
+    statusLabel: overdue ? 'OVERDUE' : warning ? 'DUE SOON' : 'OK',
+    statusEmoji: overdue ? '🔴' : warning ? '🟡' : '🟢'
+  };
+}
+
 function addBlockLabels() {
   blockLabelMarkers.forEach(function(m){ leafMap.removeLayer(m); });
   blockLabelMarkers = [];
-  var blockInfo = {
-    'A': {name:'Block A', color:'#f97316', nameAr:'القطعة أ'},
-    'B': {name:'Block B', color:'#8b5cf6', nameAr:'القطعة ب'},
-    'C': {name:'Block C', color:'#06b6d4', nameAr:'القطعة ج'},
-    'D': {name:'Block D', color:'#84cc16', nameAr:'القطعة د'}
-  };
+
   Object.keys(BLOCK_CENTERS).forEach(function(id) {
-    var info = blockInfo[id];
     var center = BLOCK_CENTERS[id];
-    var icon = L.divIcon({
-      className: '',
-      html: '<div style="background:'+info.color+'dd;color:#fff;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:700;white-space:nowrap;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,0.4)">'+info.name+'<br><span style="font-size:9px;opacity:.85">'+info.nameAr+'</span></div>',
-      iconSize: [80, 36],
-      iconAnchor: [40, 18]
-    });
-    var m = L.marker(center, {icon:icon, interactive:false}).addTo(leafMap);
-    blockLabelMarkers.push(m);
+    var info = BLOCK_INFO[id];
+    var irrig = getBlockIrrigInfo(id);
+    var circleColor = irrig ? irrig.statusColor : '#94a3b8';
+    var pulse = irrig && irrig.overdue ? 'animation:blockGlow 1s infinite' : irrig && irrig.warning ? 'animation:blockGlow 2s infinite' : '';
+
+    // Tooltip
+    var tooltipHtml = '<div style="min-width:200px;font-family:Arial,sans-serif;font-size:13px;line-height:1.8">'
+      + '<div style="font-weight:700;font-size:14px;color:'+circleColor+';margin-bottom:2px">'+info.name+' · '+info.nameAr+'</div>'
+      + '<div style="color:#666;font-size:11px;margin-bottom:6px">'+info.species+'</div>'
+      + '<hr style="border:none;border-top:1px solid #eee;margin:4px 0"/>';
+    if (irrig) {
+      tooltipHtml += '<div style="font-weight:700;color:'+irrig.statusColor+';margin-bottom:4px">'+irrig.statusEmoji+' '+irrig.statusLabel+'</div>'
+        + '<div>💧 Last: '+irrig.lastDate+' ('+irrig.days+'d ago)</div>'
+        + '<div>🔧 Method: '+irrig.method+'</div>'
+        + '<div>⏱️ Duration: '+irrig.duration+'</div>'
+        + '<div>📅 Next: ~'+irrig.nextDate+' (every '+irrig.freq+'d)</div>';
+    } else {
+      tooltipHtml += '<div style="color:#94a3b8;font-style:italic">No irrigation logged yet</div>';
+    }
+    tooltipHtml += '</div>';
+
+    // Large circle: color = status, letter = white
+    var html = '<div style="position:relative;width:44px;height:44px">'
+      + '<div style="position:absolute;inset:0;border-radius:50%;background:'+circleColor+';opacity:0.25;'+pulse+'"></div>'
+      + '<div style="position:absolute;inset:4px;border-radius:50%;background:'+circleColor+
+        ';border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;'+
+        'font-size:16px;font-weight:900;color:#fff;font-family:Arial,sans-serif;text-shadow:0 1px 2px rgba(0,0,0,0.3)">'+id+'</div>'
+      + '</div>';
+
+    var icon = L.divIcon({className:'', html:html, iconSize:[44,44], iconAnchor:[22,22]});
+    var marker = L.marker(center, {icon:icon}).addTo(leafMap);
+    marker.bindTooltip(tooltipHtml, {permanent:false, direction:'right', offset:[24,0], opacity:1});
+    blockLabelMarkers.push(marker);
   });
+
+  // Update the status strip below the map
+  renderIrrigStatusStrip();
+}
+
+function renderIrrigStatusStrip() {
+  var strip = document.getElementById('irrig-status-strip');
+  if (!strip) return;
+  var blocks = ['A','B','C','D','E','F'];
+  strip.innerHTML = blocks.map(function(id) {
+    var info = BLOCK_INFO[id];
+    var irrig = getBlockIrrigInfo(id);
+    var color = irrig ? irrig.statusColor : '#94a3b8';
+    var label = irrig ? irrig.statusEmoji+' '+irrig.statusLabel : '⚪ No data';
+    var days = irrig ? irrig.days+'d ago' : '—';
+    return '<div style="flex:1;min-width:90px;background:#fff;border:2px solid '+color+';border-radius:8px;padding:7px 8px;text-align:center">'
+      + '<div style="font-size:15px;font-weight:800;color:'+color+'">'+id+'</div>'
+      + '<div style="font-size:10px;font-weight:600;color:'+color+';margin:1px 0">'+label+'</div>'
+      + '<div style="font-size:10px;color:#94a3b8">'+days+'</div>'
+      + '</div>';
+  }).join('');
+}
+
+function refreshMapMarkers() {
+  if(leafMap) addBlockLabels();
+}
+function refreshMapMarkers() {
+  if(leafMap) addBlockLabels();
+}
+function refreshMapMarkers() {
+  if(leafMap) addBlockLabels();
 }
 
 var irrigGlowMarkers = [];
@@ -1254,11 +1867,26 @@ function renderTreeMarkers() {
   treeMarkers.forEach(function(m){ leafMap.removeLayer(m); });
   treeMarkers = [];
 
+  // Block filter uses block field (t[3]) from tree data — assigned by user in tree_map tool
+  var BLOCK_SPECIES_FILTER = {
+    'A': function(t) { return t[3] === 'A'; },
+    'B': function(t) { return t[3] === 'B'; },
+    'C': function(t) { return t[3] === 'C'; },
+    'D': function(t) { return t[3] === 'D'; },
+    'E': function(t) { return t[3] === 'E'; },
+    'F': function(t) { return t[3] === 'F'; }
+  };
+
   TREE_DATA.forEach(function(t) {
     var sp = SPECIES_CFG[t[2]] || {label:t[2], ar:'', color:'#888'};
     var isApple = t[2].indexOf('apple') >= 0;
     var show = activeFilter === 'all' || (activeFilter === 'apple' && isApple) || (activeFilter === 'other' && !isApple);
     if (!show) return;
+    // Block filter - species+lat based
+    if (activeBlockFilter) {
+      var filterFn = BLOCK_SPECIES_FILTER[activeBlockFilter];
+      if (filterFn && !filterFn(t)) return;
+    }
 
     var icon = L.divIcon({
       className:'',
@@ -1270,8 +1898,8 @@ function renderTreeMarkers() {
     marker.on('click', function() {
       var sel = document.getElementById('map-sel');
       if (sel) sel.innerHTML = '<div style="padding:6px;background:var(--surface2);border-radius:6px;margin-top:4px">'
-        + '<div style="font-size:13px;font-weight:600;color:'+sp.color+'">'+sp.label+'</div>'
-        + '<div style="font-size:12px;color:var(--text3);direction:rtl;margin-top:2px">'+sp.ar+'</div>'
+        + '<div style="font-size:14px;font-weight:600;color:'+sp.color+'">'+sp.label+'</div>'
+        + '<div style="font-size:14px;color:var(--text3);direction:rtl;margin-top:2px">'+sp.ar+'</div>'
         + '<div style="font-size:10px;color:var(--text3);margin-top:4px">'+t[0].toFixed(5)+', '+t[1].toFixed(5)+'</div>'
         + '</div>';
     });
@@ -1294,8 +1922,28 @@ function buildMapLegend() {
   }).join('');
 }
 
+function mapFilterBlock(blockId, btn) {
+  if (activeBlockFilter === blockId) {
+    // Toggle off
+    activeBlockFilter = null;
+    document.querySelectorAll('.mfbtn').forEach(function(b){ b.classList.remove('active'); });
+    var allBtn = document.querySelector('.mfbtn[onclick*="all"]');
+    if(allBtn) allBtn.classList.add('active');
+    if(leafMap) leafMap.setView([35.41780, 6.60085], 17);
+    renderTreeMarkers();
+    return;
+  }
+  activeBlockFilter = blockId;
+  document.querySelectorAll('.mfbtn').forEach(function(b){ b.classList.remove('active'); });
+  if(btn) btn.classList.add('active');
+  var center = BLOCK_CENTERS[blockId];
+  if (center && leafMap) leafMap.setView(center, 19);
+  renderTreeMarkers();
+}
+
 function mapFilter(type, btn) {
   activeFilter = type;
+  activeBlockFilter = null;
   document.querySelectorAll('.mfbtn').forEach(function(b){ b.classList.remove('active'); });
   btn.classList.add('active');
   renderTreeMarkers();
@@ -1508,40 +2156,85 @@ function setCalView(v) {
 
 
 // ═══ RAIN LOG ═══
-function logRain(intensity) {
-  var today = new Date().toISOString().split('T')[0];
-  // Remove today entry if exists
-  D.weather = (D.weather||[]).filter(function(w){ return w.date !== today; });
-  if (intensity !== 'none') {
-    D.weather.push({id:Date.now(), date:today, rain:intensity});
-  }
-  persist();
-  renderRainLog();
+var RAIN_COLORS = {heavy:'#1d4ed8', normal:'#60a5fa', light:'#bfdbfe', none:'#f1f5f9'};
+var RAIN_BORDER = {heavy:'#1d4ed8', normal:'#60a5fa', light:'#bfdbfe', none:'#e2e8f0'};
+var RAIN_TEXT   = {heavy:'#fff',    normal:'#1e3a8a', light:'#1e3a8a', none:'#94a3b8'};
+
+function setRainTog(val) {
+  var el = document.getElementById('ir-rain');
+  if (el) el.value = val;
+  ['none','light','normal','heavy'].forEach(function(r) {
+    var btn = document.getElementById('rt-'+r);
+    if (!btn) return;
+    if (r === val) {
+      btn.style.background = RAIN_COLORS[r];
+      btn.style.color = RAIN_TEXT[r];
+      btn.style.border = '2px solid '+RAIN_BORDER[r];
+      btn.style.fontWeight = '700';
+    } else {
+      btn.style.background = '#f8fafc';
+      btn.style.color = '#64748b';
+      btn.style.border = '1px solid #e2e8f0';
+      btn.style.fontWeight = '400';
+    }
+  });
 }
 
 function renderRainLog() {
-  var today = new Date().toISOString().split('T')[0];
-  var todayRain = (D.weather||[]).find(function(w){ return w.date===today; });
+  var now = new Date();
+  var year = now.getFullYear();
+  var month = now.getMonth();
+  var today = now.getDate();
+  var todayStr = now.toISOString().split('T')[0];
+  var daysInMonth = new Date(year, month+1, 0).getDate();
+  var firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+
+  // Update label
+  var lbl = document.getElementById('rain-month-label');
+  if (lbl) lbl.textContent = now.toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+
+  // Today rain pill
+  var todayRain = (D.weather||[]).find(function(w){ return w.date===todayStr; });
   var pill = document.getElementById('rain-today');
   if (pill) {
-    if (todayRain) {
-      var icons = {heavy:'⛈️ Heavy · غزير', normal:'🌧️ Normal · عادي', light:'🌦️ Light · خفيف'};
-      pill.textContent = 'Today: ' + (icons[todayRain.rain]||todayRain.rain);
-      pill.style.color = 'var(--blue)';
+    if (todayRain && todayRain.rain !== 'none') {
+      var icons = {heavy:'⛈️ Heavy',normal:'🌧️ Normal',light:'🌦️ Light'};
+      pill.textContent = 'Today: '+(icons[todayRain.rain]||todayRain.rain);
+      pill.style.color = '#1d4ed8';
     } else {
-      pill.textContent = 'Not logged today';
+      pill.textContent = '☀️ No rain today';
+      pill.style.color = 'var(--text3)';
     }
   }
-  var hist = document.getElementById('rain-history');
-  if (hist) {
-    var recent = [...(D.weather||[])].sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0,7);
-    if (!recent.length) { hist.innerHTML='<span>No rain logged yet</span>'; return; }
-    var rainIcons = {heavy:'⛈️',normal:'🌧️',light:'🌦️'};
-    hist.innerHTML = '<div style="display:flex;gap:8px;flex-wrap:wrap">'
-      + recent.map(function(w){ return '<div style="background:var(--blue-bg);border:1px solid var(--blue-mid);border-radius:8px;padding:4px 10px;font-size:11px;color:var(--blue);text-align:center">'
-        +(rainIcons[w.rain]||'🌧️')+'<br>'+w.date.slice(5)+'<br><b>'+w.rain+'</b></div>'; }).join('')
-      + '</div>';
+
+  // Build grid - headers are already in HTML, just render day cells
+  var grid = document.getElementById('rain-month-grid');
+  if (!grid) return;
+  var cells = [];
+  // Empty cells for days before month start
+  for (var i = 0; i < firstDay; i++) {
+    cells.push('<div></div>');
   }
+  for (var d = 1; d <= daysInMonth; d++) {
+    var dateStr = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    var rainEntry = (D.weather||[]).find(function(w){ return w.date===dateStr; });
+    var rain = rainEntry ? rainEntry.rain : 'none';
+    var isToday = (d === today);
+    var bg = RAIN_COLORS[rain] || '#f1f5f9';
+    var txt = RAIN_TEXT[rain] || '#94a3b8';
+    var border = isToday ? '2px solid var(--green-mid)' : '1px solid '+RAIN_BORDER[rain];
+    var icon = {heavy:'⛈',normal:'🌧',light:'🌦',none:''}[rain]||'';
+    var title = dateStr + (rain!=='none'?' · '+rain+' rain':'');
+    cells.push(
+      '<div title="'+title+'" style="height:38px;border-radius:6px;background:'+bg+
+      ';border:'+border+';display:flex;flex-direction:column;align-items:center;justify-content:center;'+
+      'font-size:11px;color:'+txt+';font-weight:'+(isToday?'700':'500')+';cursor:default">'+
+      '<span>'+d+'</span>'+
+      (icon?'<span style="font-size:9px">'+icon+'</span>':'')+
+      '</div>'
+    );
+  }
+  grid.innerHTML = cells.join('');
 }
 
 // ═══ MATERIALS ═══
@@ -1580,7 +2273,7 @@ function renderMaterials() {
     var low = m.min && parseFloat(m.qty||0) <= parseFloat(m.min||0);
     return '<div class="mat-row">'
       +'<div style="flex:1">'
-      +'<div style="font-size:13px;font-weight:600;color:var(--text)">'+m.name+'</div>'
+      +'<div style="font-size:14px;font-weight:600;color:var(--text)">'+m.name+'</div>'
       +'<div style="font-size:11px;color:var(--text3);margin-top:2px">'+m.cat+' · '+m.notes+'</div>'
       +'</div>'
       +(low?'<span class="mat-alert">⚠️ Low stock</span>':'')
@@ -1589,7 +2282,10 @@ function renderMaterials() {
       +'<span style="min-width:50px;text-align:center;font-weight:600">'+m.qty+' '+m.unit+'</span>'
       +'<button class="btn btn-sm" onclick="updateMaterialQty('+m.id+',1)">+</button>'
       +'</div>'
-      +'<button onclick="deleteMaterial('+m.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px">×</button>'
+      +'<div style="display:flex;gap:4px">'
+      +'<button onclick="editMaterial('+m.id+')" style="border:none;background:none;cursor:pointer;font-size:14px" title="Edit">✏️</button>'
+      +'<button onclick="deleteMaterial('+m.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px" title="Delete">×</button>'
+      +'</div>'
       +'</div>';
   }).join('');
 }
@@ -1614,11 +2310,11 @@ var APPLE_STAGES = [
   {stage:'Bud swell · انتفاخ البراعم', months:'Feb – Mar', desc:'Buds begin to swell and turn green. Vulnerable to frost.', actions:'Apply nitrogen fertiliser, first fungicide spray, frost watch', watch:'⚠️ Late frost at 1,194m — protect with covers if <0°C'},
   {stage:'Pink / Bloom · التزهير', months:'Mar – Apr', desc:'Flowers open. Critical pollination window.', actions:'Support bees, scab prevention spray, no insecticides during bloom', watch:'Frost damage to open flowers (most critical), fire blight'},
   {stage:'Petal fall · سقوط البتلات', months:'Apr', desc:'Flowers drop, small fruitlets visible.', actions:'First insecticide (codling moth), copper spray, thin Block C flowers', watch:'Fruitlet drop, aphids starting'},
-  {stage:'Fruit set · عقد الثمار', months:'Apr – May', desc:'Small apple fruitlets developing fast.', actions:'Fruit thinning G2 (6–8 per cluster → 1–2), drip irrigation, K+P start', watch:'Aphids, mites, June drop'},
+  {stage:'Fruit set · عقد الثمار', months:'Apr – May', desc:'Small apple fruitlets developing fast.', actions:'Fruit thinning Block B+F (6–8 per cluster → 1–2), drip irrigation, K+P start', watch:'Aphids, mites, June drop'},
   {stage:'Cell division · انقسام الخلايا', months:'May – Jun', desc:'Cells multiplying — determines final fruit size.', actions:'K+P fertiliser, irrigate every 5–7 days, spider mite monitoring', watch:'🕷️ Spider mites in heat, lack of water = small fruit'},
   {stage:'Fruit development · تطور الثمار', months:'Jun – Aug', desc:'Fruit sizing rapidly. Peak water demand.', actions:'Peak irrigation every 3–5 days, codling moth traps, stop N fertiliser', watch:'Codling moth, sunburn on fruit, water stress'},
   {stage:'Colour / Maturity · النضج', months:'Aug – Sep', desc:'Fruit changes colour and sweetens. Approach harvest.', actions:'Reduce watering, starch-iodine test, pressure test, harvest trial', watch:'Over-ripening, pre-harvest drop, wasps'},
-  {stage:'Harvest · الحصاد', months:'Sep – Oct', desc:'G2 trees (Block A+D) ready. G1 (Block C) 2–3 fruits max.', actions:'Pick early morning, grade A/B/rejected, record yield per block', watch:'Bruising during picking, post-harvest rots'},
+  {stage:'Harvest · الحصاد', months:'Sep – Oct', desc:'Block B+F (4yr+7yr) ready. Block E (3yr): 2–3 fruits max.', actions:'Pick early morning, grade A/B/rejected, record yield per block', watch:'Bruising during picking, post-harvest rots'},
   {stage:'Post-harvest · ما بعد الحصاد', months:'Oct – Nov', desc:'Tree recovers and stores energy for next year.', actions:'Post-harvest fertiliser, copper spray, remove fallen fruit, mulch Block C', watch:'Canker, collar rot, late season pests'},
 ];
 
@@ -1631,10 +2327,10 @@ function buildGrowthTable() {
     var isCur = (m >= (monthRanges[i]?.[0]||0) && m <= (monthRanges[i]?.[1]||11));
     var bg = isCur ? 'background:var(--green-light);' : '';
     return '<tr style="'+bg+'"><td><strong>'+(isCur?'▶ ':'')+s.stage+'</strong>'+(isCur?'<br><span class="badge b-green" style="font-size:10px">Current · الحالي</span>':'')+' </td>'
-      +'<td style="font-size:12px;color:var(--text3)">'+s.months+'</td>'
-      +'<td style="font-size:12px">'+s.desc+'</td>'
-      +'<td style="font-size:12px;color:var(--green)">'+s.actions+'</td>'
-      +'<td style="font-size:12px;color:var(--amber)">'+s.watch+'</td></tr>';
+      +'<td style="font-size:14px;color:var(--text3)">'+s.months+'</td>'
+      +'<td style="font-size:14px">'+s.desc+'</td>'
+      +'<td style="font-size:14px;color:var(--green)">'+s.actions+'</td>'
+      +'<td style="font-size:14px;color:var(--amber)">'+s.watch+'</td></tr>';
   }).join('');
   var curStage = document.getElementById('growth-cur-stage');
   if (curStage) {
@@ -1664,6 +2360,324 @@ function showReceiptImg(costId) {
   var w = window.open('','_blank','width=600,height=500');
   w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+c.receiptImg+'" style="max-width:100%;max-height:100vh"/></body></html>');
 }
+
+
+// ═══ EDIT MODAL ═══
+function showEditModal(html, onSave) {
+  var existing = document.getElementById('edit-modal-overlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'edit-modal-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+  overlay.innerHTML = '<div style="background:#fff;border-radius:12px;padding:24px;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,0.2);max-height:90vh;overflow-y:auto">'
+    + html
+    + '<div style="display:flex;gap:8px;margin-top:16px">'
+    + '<button onclick="saveEditModal()" style="flex:1;padding:10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer">Save · حفظ</button>'
+    + '<button onclick="closeEditModal()" style="padding:10px 16px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:14px;cursor:pointer">Cancel · إلغاء</button>'
+    + '</div></div>';
+  document.body.appendChild(overlay);
+  overlay.onclick = function(e){ if(e.target===overlay) overlay.remove(); };
+  window._editSaveFn = onSave;
+}
+
+function closeEditModal() {
+  var o = document.getElementById('edit-modal-overlay');
+  if(o) o.remove();
+}
+
+function saveEditModal() {
+  if(window._editSaveFn) window._editSaveFn();
+  var overlay = document.getElementById('edit-modal-overlay');
+  if(overlay) overlay.remove();
+}
+
+function editField(label, id, value, type) {
+  type = type||'text';
+  return '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">'+label+'</label>'
+    + '<input id="ef-'+id+'" type="'+type+'" value="'+String(value||'').replace(/"/g,'&quot;')+'" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:6px;font-size:14px;box-sizing:border-box"/></div>';
+}
+
+function ef(id){ var el=document.getElementById('ef-'+id); return el?el.value:''; }
+
+function editTask(id) {
+  var t = D.tasks.find(x=>x.id===id);
+  if(!t) return;
+  var cats = ['Spraying · رش','ادوية · Medication / Pesticide','Pruning · تقليم','Fertilising · تسميد','Thinning · ترقيق','Irrigation · ري','Monitoring · مراقبة','Harvest · حصاد','Other · أخرى'];
+  var catOpts = cats.map(function(c){ return '<option'+(c===t.cat?' selected':'')+'>'+c+'</option>'; }).join('');
+  var blockOpts = ['Block A — Trees Mix','Block B — Apple 4yr','Block C — Around house','Block D — Apple Mix','Block E — Apple 3yr','Block F — Apple 7yr','All blocks','Other fruits']
+    .map(function(b){ return '<option'+(b===t.block?' selected':'')+'>'+b+'</option>'; }).join('');
+  var html = '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px">✏️ Edit Task · تعديل المهمة</div>'
+    + editField('Title · العنوان','title',t.title)
+    + editField('Date · التاريخ','date',t.date,'date')
+    + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Block · القطعة</label><select id="ef-block" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">'+blockOpts+'</select></div>'
+    + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Category · الفئة</label><select id="ef-cat" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">'+catOpts+'</select></div>'
+    + editField('Notes · ملاحظات','notes',t.notes);
+  showEditModal(html, function(){
+    t.title = ef('title')||t.title;
+    t.date = ef('date')||t.date;
+    t.block = ef('block');
+    t.cat = ef('cat');
+    t.notes = ef('notes');
+    persist();
+  });
+}
+
+function editIrrig(id) {
+  var r = D.irrigation.find(x=>x.id===id);
+  if(!r) return;
+  var blockOpts = ['Block A — Trees Mix','Block B — Apple 4yr','Block C — Around house','Block D — Apple Mix','Block E — Apple 3yr','Block F — Apple 7yr','All blocks']
+    .map(function(b){ return '<option'+(b===r.block?' selected':'')+'>'+b+'</option>'; }).join('');
+  var methodOpts = ['Drip · تنقيط','Flood · غمر','Both · كلاهما']
+    .map(function(m){ return '<option'+(m===r.method?' selected':'')+'>'+m+'</option>'; }).join('');
+  var html = '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px">✏️ Edit Irrigation · تعديل الري</div>'
+    + editField('Date · التاريخ','date',r.date,'date')
+    + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Block · القطعة</label><select id="ef-block" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">'+blockOpts+'</select></div>'
+    + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Method · الطريقة</label><select id="ef-method" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">'+methodOpts+'</select></div>'
+    + editField('Duration (min) · المدة','duration',r.duration,'number')
+    + editField('Notes · ملاحظات','notes',r.notes);
+  showEditModal(html, function(){
+    r.date = ef('date')||r.date;
+    r.block = ef('block');
+    r.method = ef('method');
+    r.duration = ef('duration');
+    r.notes = ef('notes');
+    persist();
+  });
+}
+
+function editHarvest(id) {
+  var h = D.harvest.find(x=>x.id===id);
+  if(!h) return;
+  var html = '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px">✏️ Edit Harvest · تعديل الحصاد</div>'
+    + editField('Date · التاريخ','date',h.date,'date')
+    + editField('Variety · الصنف','variety',h.variety)
+    + editField('Total kg · الإجمالي','kg',h.kg,'number')
+    + editField('Grade A kg · الدرجة أ','gradeA',h.gradeA,'number')
+    + editField('Grade B kg · الدرجة ب','gradeB',h.gradeB,'number')
+    + editField('Rejected kg · المرفوض','rejected',h.rejected,'number')
+    + editField('Pickers · العمال','pickers',h.pickers);
+  showEditModal(html, function(){
+    h.date = ef('date')||h.date;
+    h.variety = ef('variety');
+    h.kg = ef('kg');
+    h.gradeA = ef('gradeA');
+    h.gradeB = ef('gradeB');
+    h.rejected = ef('rejected');
+    h.pickers = ef('pickers');
+    persist();
+  });
+}
+
+function editCost(id) {
+  var c = D.costs.find(x=>x.id===id);
+  if(!c) return;
+  var cats = ['Fertiliser · سماد','Pesticide · مبيد','Irrigation · ري','Labour · عمالة','Equipment · معدات','Maintenance · صيانة','Packaging · تعبئة','Transport · نقل','Other · أخرى'];
+  var catOpts = cats.map(function(cat){ return '<option'+(cat===c.cat?' selected':'')+'>'+cat+'</option>'; }).join('');
+  var html = '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px">✏️ Edit Cost · تعديل التكلفة</div>'
+    + editField('Date · التاريخ','date',c.date,'date')
+    + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Category · الفئة</label><select id="ef-cat" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">'+catOpts+'</select></div>'
+    + editField('Item · المنتج','item',c.item)
+    + editField('Supplier · المورد','supplier',c.supplier)
+    + editField('Quantity · الكمية','qty',c.qty,'number')
+    + editField('Unit · الوحدة','unit',c.unit)
+    + editField('Unit price DZD · السعر','price',c.price,'number')
+    + editField('Receipt ref · مرجع الإيصال','receipt',c.receipt);
+  showEditModal(html, function(){
+    c.date = ef('date')||c.date;
+    c.cat = ef('cat');
+    c.item = ef('item');
+    c.supplier = ef('supplier');
+    c.qty = ef('qty');
+    c.unit = ef('unit');
+    c.price = ef('price');
+    c.receipt = ef('receipt');
+    persist();
+  });
+}
+
+function editMaterial(id) {
+  var m = (D.materials||[]).find(x=>x.id===id);
+  if(!m) return;
+  var cats = ['Fertiliser · سماد','Pesticide · مبيد','ادوية · Medication','Tool · أداة','Irrigation supply · مستلزمات ري','Other · أخرى'];
+  var catOpts = cats.map(function(cat){ return '<option'+(cat===m.cat?' selected':'')+'>'+cat+'</option>'; }).join('');
+  var html = '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px">✏️ Edit Material · تعديل المادة</div>'
+    + editField('Name · الاسم','name',m.name)
+    + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Category · الفئة</label><select id="ef-cat" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">'+catOpts+'</select></div>'
+    + editField('Quantity · الكمية','qty',m.qty,'number')
+    + editField('Unit · الوحدة','unit',m.unit)
+    + editField('Min stock alert · الحد الأدنى','min',m.min,'number')
+    + editField('Notes · ملاحظات','notes',m.notes);
+  showEditModal(html, function(){
+    m.name = ef('name')||m.name;
+    m.cat = ef('cat');
+    m.qty = ef('qty');
+    m.unit = ef('unit');
+    m.min = ef('min');
+    m.notes = ef('notes');
+    persist();
+  });
+}
+
+
+
+// ═══ GENERATE ANNUAL TASKS ═══
+function initGenYear() {
+  var sel = document.getElementById('gen-year');
+  var srcSel = document.getElementById('gen-src-year');
+  if (!sel) return;
+  var currentYear = new Date().getFullYear();
+  sel.innerHTML = '';
+  for (var y = currentYear; y <= currentYear + 3; y++) {
+    var opt = document.createElement('option');
+    opt.value = y;
+    opt.textContent = y;
+    if (y === currentYear + 1) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  // Source year (for copy mode) - years that have tasks
+  if (srcSel) {
+    srcSel.innerHTML = '';
+    var yearsWithTasks = {};
+    (D.tasks||[]).forEach(function(t) {
+      if (t.date) yearsWithTasks[t.date.slice(0,4)] = true;
+    });
+    var years = Object.keys(yearsWithTasks).sort().reverse();
+    if (!years.length) years = [String(currentYear)];
+    years.forEach(function(y) {
+      var opt = document.createElement('option');
+      opt.value = y;
+      var count = (D.tasks||[]).filter(function(t){return t.date&&t.date.startsWith(y);}).length;
+      opt.textContent = y + ' (' + count + ' tasks)';
+      if (y === String(currentYear)) opt.selected = true;
+      srcSel.appendChild(opt);
+    });
+  }
+}
+
+function updateGenUI() {
+  var isCopy = document.getElementById('gs-copy') && document.getElementById('gs-copy').checked;
+  var calOpts = document.getElementById('gen-cal-opts');
+  var copyOpts = document.getElementById('gen-copy-opts');
+  if (calOpts) calOpts.style.display = isCopy ? 'none' : 'flex';
+  if (copyOpts) copyOpts.style.display = isCopy ? 'flex' : 'none';
+}
+
+function generateAnnualTasks() {
+  var year = parseInt(document.getElementById('gen-year').value);
+  var preview = document.getElementById('gen-preview');
+  var isCopy = document.getElementById('gs-copy') && document.getElementById('gs-copy').checked;
+
+  // Check existing
+  var existing = (D.tasks||[]).filter(function(t){ return t.date && t.date.startsWith(year+''); });
+  if (existing.length > 0) {
+    if (!confirm('Found ' + existing.length + ' tasks already for ' + year + '. Add more tasks anyway?')) return;
+  }
+
+  var generated = [];
+  var MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+  if (isCopy) {
+    // ── COPY MODE: copy manual tasks from source year ──
+    var srcYear = document.getElementById('gen-src-year').value;
+    var IRRIGATION_KEYWORDS = ['irrigat','ري ','ري كل','water','drip','flood','تنقيط','غمر','ري'];
+    var srcTasks = (D.tasks||[]).filter(function(t){
+      if (!t.date || !t.date.startsWith(srcYear)) return false;
+      if (t.notes && t.notes.includes('Auto-generated')) return false; // skip auto-gen
+      if (t.cat && t.cat.toLowerCase().includes('irrigation')) return false; // skip irrigation category
+      // Skip if title contains irrigation keywords
+      var titleLower = (t.title||'').toLowerCase();
+      for (var i=0; i<IRRIGATION_KEYWORDS.length; i++) {
+        if (titleLower.includes(IRRIGATION_KEYWORDS[i])) return false;
+      }
+      return true;
+    });
+
+    if (!srcTasks.length) {
+      alert('No manual tasks found for ' + srcYear + '. Please add tasks manually for ' + srcYear + ' first.');
+      return;
+    }
+
+    srcTasks.forEach(function(t) {
+      var newDate = t.date.replace(srcYear, year+'');
+      generated.push({
+        id: Date.now() + generated.length,
+        title: t.title,
+        date: newDate,
+        block: t.block || 'All blocks',
+        cat: t.cat || 'Other · أخرى',
+        notes: t.notes || '',
+        done: false
+      });
+    });
+
+    D.tasks = (D.tasks||[]).concat(generated);
+    persist();
+
+    // Preview grouped by month
+    var byMonth = {};
+    generated.forEach(function(t){
+      var mk = t.date.slice(0,7);
+      if(!byMonth[mk]) byMonth[mk] = [];
+      byMonth[mk].push(t.title);
+    });
+
+    preview.innerHTML = '<div style="background:#fff;border-radius:8px;padding:12px;border:1px solid var(--border)">'
+      + '<div style="font-weight:700;color:var(--green);font-size:14px;margin-bottom:8px">✅ Copied ' + generated.length + ' tasks from ' + srcYear + ' → ' + year + '</div>'
+      + Object.keys(byMonth).sort().map(function(mk){
+          var mn = MONTH_NAMES[parseInt(mk.split('-')[1])-1];
+          return '<div style="margin-bottom:4px;font-size:13px"><b style="color:var(--text2);min-width:90px;display:inline-block">'+mn+'</b>'
+            + '<span style="color:var(--text3)">'+byMonth[mk].join(' · ')+'</span></div>';
+        }).join('')
+      + '<div style="margin-top:10px;font-size:12px;color:var(--text3)">✏️ Edit individual tasks to adjust dates if needed</div>'
+      + '</div>';
+
+  } else {
+    // ── CALENDAR MODE: generate from seasonal calendar ──
+    var day = parseInt(document.getElementById('gen-day').value);
+    var catMap = {
+      0:'Pruning · تقليم', 1:'Pruning · تقليم', 2:'Spraying · رش',
+      3:'Spraying · رش', 4:'Thinning · ترقيق', 5:'Fertilising · تسميد',
+      6:'Irrigation · ري', 7:'Monitoring · مراقبة', 8:'Harvest · حصاد',
+      9:'Harvest · حصاد', 10:'Maintenance · صيانة', 11:'Other · أخرى'
+    };
+    for (var m = 0; m < 12; m++) {
+      var season = SEASON[m];
+      var dateStr = year + '-' + String(m+1).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+      season.tasks.forEach(function(task) {
+        generated.push({
+          id: Date.now() + generated.length,
+          title: task,
+          date: dateStr,
+          block: 'All blocks',
+          cat: catMap[m] || 'Other · أخرى',
+          notes: 'Auto-generated from seasonal calendar · ' + season.en + ' · ' + season.ar,
+          done: false
+        });
+      });
+    }
+
+    D.tasks = (D.tasks||[]).concat(generated);
+    persist();
+
+    var byMonth = {};
+    generated.forEach(function(t){
+      var mk = t.date.slice(0,7);
+      if(!byMonth[mk]) byMonth[mk] = [];
+      byMonth[mk].push(t.title.split('·')[0].trim());
+    });
+
+    preview.innerHTML = '<div style="background:#fff;border-radius:8px;padding:12px;border:1px solid var(--border)">'
+      + '<div style="font-weight:700;color:var(--green);font-size:14px;margin-bottom:8px">✅ Generated ' + generated.length + ' tasks for ' + year + '</div>'
+      + Object.keys(byMonth).sort().map(function(mk){
+          var mn = MONTH_NAMES[parseInt(mk.split('-')[1])-1];
+          return '<div style="margin-bottom:4px;font-size:13px"><b style="color:var(--text2);min-width:90px;display:inline-block">'+mn+'</b>'
+            + '<span style="color:var(--text3)">'+byMonth[mk].join(' · ')+'</span></div>';
+        }).join('')
+      + '<div style="margin-top:10px;font-size:12px;color:var(--text3)">📅 Check Calendar tab to see them</div>'
+      + '</div>';
+  }
+}
+
 
 // ── Start app ──
 init();
