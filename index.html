@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- 
   Farm Yawmi Dashboard · مزرعة يومي
-  Version: 4.3
+  Version: 4.4
   Date: 2026-06-14
   Changelog:
     v1.0 - Initial dashboard (Overview, Farm Map, Tasks, Irrigation, Harvest, Costs)
@@ -62,8 +62,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .btn-sm{padding:4px 10px;font-size:11px}
 
 /* ── NAV ── */
-.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;overflow-x:auto}
-.nav-item{padding:12px 18px;font-size:15px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font)}
+.nav{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;display:flex;gap:0;flex-wrap:wrap;overflow-x:auto}
+.nav-item{padding:10px 12px;font-size:13px;font-weight:500;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font)}
 .nav-item:hover{color:var(--text2)}
 .nav-item.active{color:var(--green);border-bottom-color:var(--green)}
 
@@ -378,7 +378,7 @@ textarea{resize:vertical;min-height:52px}
     <div class="brand-icon">🌿</div>
     <div>
       <div class="brand-name">Farm Yawmi <span style="font-size:14px;font-weight:400;color:var(--text3)">مزرعة يومي</span></div>
-      <div class="brand-sub">Khenchela · 494 trees · 6 blocks · 1.015 ha · 1,194 m · <span style="color:var(--green);font-weight:600">v4.3</span></div>
+      <div class="brand-sub">Khenchela · 494 trees · 6 blocks · 1.015 ha · 1,194 m · <span style="color:var(--green);font-weight:600">v4.9</span><span style="color:var(--text3);font-size:11px;margin-left:6px">· deployed 24 Jun 2026 21:39</span></div>
     </div>
   </div>
   <div class="header-right">
@@ -396,15 +396,17 @@ textarea{resize:vertical;min-height:52px}
 
 <!-- NAV -->
 <div class="nav">
-  <button class="nav-item active" onclick="goPage('overview',this)">Overview · نظرة عامة</button>
-  <button class="nav-item" onclick="goPage('farm',this)">Farm Map · الخريطة</button>
-  <button class="nav-item" onclick="goPage('calendar',this)">Calendar · التقويم</button>
-  <button class="nav-item" onclick="goPage('tasks',this)">Tasks · المهام</button>
-  <button class="nav-item" onclick="goPage('irrigation',this)">Irrigation · الري</button>
-  <button class="nav-item" onclick="goPage('harvest',this)">Harvest · الحصاد</button>
-  <button class="nav-item" onclick="goPage('costs',this)">Costs · التكاليف</button>
-  <button class="nav-item" onclick="goPage('materials',this)">Materials · المواد</button>
-  <button class="nav-item" onclick="goPage('growth',this)">Growth Stages · أطوار النمو</button>
+  <button class="nav-item active" onclick="goPage('overview',this)">Overview</button>
+  <button class="nav-item" onclick="goPage('farm',this)">Farm Map</button>
+  <button class="nav-item" onclick="goPage('calendar',this)">Calendar</button>
+  <button class="nav-item" onclick="goPage('tasks',this)">Tasks</button>
+  <button class="nav-item" onclick="goPage('irrigation',this)">Irrigation</button>
+  <button class="nav-item" onclick="goPage('harvest',this)">Harvest</button>
+  <button class="nav-item" onclick="goPage('costs',this)">Costs</button>
+  <button class="nav-item" onclick="goPage('materials',this)">Materials</button>
+  <button class="nav-item" onclick="goPage('growth',this)">Growth</button>
+  <button class="nav-item" onclick="goPage('docs',this)">Documents</button>
+  <button class="nav-item" onclick="goPage('diag',this)">🔬 Diagnostics</button>
 </div>
 
 <!-- ═══ OVERVIEW ═══ -->
@@ -669,6 +671,65 @@ textarea{resize:vertical;min-height:52px}
         </div>
       </div>
       <div class="fg" style="margin-bottom:10px"><label>Notes · ملاحظات</label><textarea id="t-notes" placeholder="Optional…"></textarea></div>
+
+      <!-- Purchase section -->
+      <div style="margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--text2)">
+          <input type="checkbox" id="t-has-purchase" onchange="document.getElementById('t-purchase-row').style.display=this.checked?'block':'none'" style="width:16px;height:16px;accent-color:var(--green)">
+          🛒 This task involves a purchase · يتضمن هذه المهمة شراء
+        </label>
+        <div id="t-purchase-row" style="display:none;margin-top:8px;padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+          <div style="font-size:12px;color:var(--text3);margin-bottom:8px">Will auto-create a cost entry · سيتم إنشاء إدخال في التكاليف تلقائياً</div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+            <div class="fg" style="margin:0">
+              <label style="font-size:12px">Brand/Mark · الماركة</label>
+              <input id="t-mark" placeholder="e.g. Bayer, BASF"/>
+            </div>
+            <div class="fg" style="margin:0">
+              <label style="font-size:12px">Quantity · الكمية</label>
+              <input id="t-qty" type="number" min="0" step="0.1" placeholder="e.g. 5"/>
+            </div>
+            <div class="fg" style="margin:0">
+              <label style="font-size:12px">Unit · الوحدة</label>
+              <select id="t-unit">
+                <option>L · لتر</option>
+                <option>kg · كغ</option>
+                <option>g · غرام</option>
+                <option>unit · وحدة</option>
+                <option>bag · كيس</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-top:8px;">
+            <div class="fg" style="margin:0">
+              <label style="font-size:12px">Unit price DZD · السعر</label>
+              <input id="t-price" type="number" min="0" placeholder="e.g. 2500"/>
+            </div>
+            <div class="fg" style="margin:0">
+              <label style="font-size:12px">Total DZD · الإجمالي</label>
+              <input id="t-total" readonly style="background:var(--surface);color:var(--green);font-weight:600" placeholder="auto-calculated"/>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Follow-up section -->
+      <div class="fg" style="margin-bottom:10px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="t-has-followup" onchange="document.getElementById('t-followup-row').style.display=this.checked?'flex':'none'" style="width:16px;height:16px;accent-color:var(--green)">
+          Schedule follow-up treatment · جدولة معالجة متابعة
+        </label>
+        <div id="t-followup-row" style="display:none;align-items:center;gap:10px;margin-top:8px;padding:10px;background:var(--surface2);border-radius:8px">
+          <div class="fg" style="margin:0;flex:1">
+            <label style="font-size:12px">Follow-up date · تاريخ المتابعة</label>
+            <input type="date" id="t-followup-date"/>
+          </div>
+          <div class="fg" style="margin:0;flex:2">
+            <label style="font-size:12px">Follow-up note · ملاحظة المتابعة</label>
+            <input id="t-followup-note" placeholder="e.g. Second spray application"/>
+          </div>
+        </div>
+      </div>
       <div style="display:flex;gap:8px">
         <button class="btn btn-primary btn-sm" onclick="saveTask()">Save task</button>
         <button class="btn btn-sm" onclick="toggleEl('task-form')">Cancel</button>
@@ -694,7 +755,7 @@ textarea{resize:vertical;min-height:52px}
         <button class="btn btn-sm" id="tv-all" onclick="setTaskView('all',this)">☰ All</button>
       </div>
     </div>
-    <div id="tasks-body"></div>
+    <div id="tasks-body" style="flex-direction:column;display:flex;width:100%"></div>
   </div>
 </div>
 
@@ -793,6 +854,14 @@ textarea{resize:vertical;min-height:52px}
 
 <!-- ═══ COSTS ═══ -->
 <div id="page-costs" class="page">
+  <!-- Yearly Summary -->
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-head">
+      <h3>📊 Yearly cost summary · ملخص التكاليف السنوية</h3>
+      <button class="btn btn-sm" onclick="toggleEl('costs-yearly-summary');renderCostsSummary()">Toggle</button>
+    </div>
+    <div id="costs-yearly-summary" style="display:none"></div>
+  </div>
   <div class="kpi-strip" style="margin-bottom:14px">
     <div class="kpi"><div class="kpi-val" id="c-total">0</div><div class="kpi-label">Total DZD · الإجمالي</div></div>
     <div class="kpi"><div class="kpi-val" id="c-tree">0</div><div class="kpi-label">Per tree · لكل شجرة</div></div>
@@ -922,9 +991,138 @@ textarea{resize:vertical;min-height:52px}
   </div>
 </div>
 
+<!-- ═══ DOCUMENTS ═══ -->
+<div id="page-docs" class="page">
+  <div class="card" style="margin-bottom:14px">
+    <div class="card-head">
+      <h3>📎 Add document · إضافة مستند</h3>
+      <button class="btn btn-sm" onclick="toggleEl('doc-form')">+ New</button>
+    </div>
+    <div id="doc-form" style="display:none">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr 1fr;">
+        <div class="fg"><label>Title · العنوان</label><input id="doc-title" placeholder="e.g. Fertiliser receipt June"/></div>
+        <div class="fg"><label>Date · التاريخ</label><input type="date" id="doc-date"/></div>
+        <div class="fg"><label>Category · الفئة</label>
+          <select id="doc-cat">
+            <option>Receipt · إيصال</option>
+            <option>Invoice · فاتورة</option>
+            <option>Certificate · شهادة</option>
+            <option>Analysis · تحليل</option>
+            <option>Photo · صورة</option>
+            <option>Other · أخرى</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg" style="margin-bottom:8px"><label>Notes · ملاحظات</label><input id="doc-notes" placeholder="Optional description"/></div>
+      <div class="fg" style="margin-bottom:12px">
+        <label>Images · الصور (multiple allowed)</label>
+        <div id="doc-drop-zone" onclick="document.getElementById('doc-images').click()" style="border:2px dashed var(--border);border-radius:8px;padding:24px;text-align:center;cursor:pointer;background:var(--surface2);transition:border-color .2s" ondragover="event.preventDefault();this.style.borderColor='var(--green)'" ondragleave="this.style.borderColor='var(--border)'" ondrop="handleDocDrop(event)">
+          <div style="font-size:28px;margin-bottom:6px">📷</div>
+          <div style="font-size:14px;color:var(--text2);font-weight:500">Click to upload or drag & drop</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:2px">JPG, PNG, WEBP — multiple files supported</div>
+        </div>
+        <input type="file" id="doc-images" multiple accept="image/*" style="display:none" onchange="previewDocImages(this.files)"/>
+        <div id="doc-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-primary btn-sm" onclick="saveDocument()">Save document · حفظ</button>
+        <button class="btn btn-sm" onclick="toggleEl('doc-form')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+    <span style="font-size:13px;font-weight:600;color:var(--text2)">Filter:</span>
+    <button class="btn btn-sm active" id="df-all" onclick="setDocFilter('all',this)">All</button>
+    <button class="btn btn-sm" id="df-receipt" onclick="setDocFilter('Receipt',this)">Receipts</button>
+    <button class="btn btn-sm" id="df-invoice" onclick="setDocFilter('Invoice',this)">Invoices</button>
+    <button class="btn btn-sm" id="df-photo" onclick="setDocFilter('Photo',this)">Photos</button>
+    <button class="btn btn-sm" id="df-other" onclick="setDocFilter('Other',this)">Other</button>
+  </div>
+
+  <div id="docs-gallery"></div>
+</div>
+
+<!-- ═══ DIAGNOSTICS ═══ -->
+<div id="page-diag" class="page">
+  <div style="max-width:720px;margin:0 auto">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:32px;margin-bottom:8px">🔬</div>
+      <h2 style="font-size:20px;font-weight:700;color:var(--text)">AI Tree Diagnostics · تشخيص الأشجار بالذكاء الاصطناعي</h2>
+      <p style="font-size:13px;color:var(--text3);margin-top:4px">Upload a photo of a leaf, fruit, or branch — AI will identify diseases, pests, and deficiencies</p>
+    </div>
+
+    <!-- Upload area -->
+    <div class="card" style="margin-bottom:16px">
+      <div class="form-grid" style="grid-template-columns:1fr 1fr;margin-bottom:12px">
+        <div class="fg" style="margin:0">
+          <label>Block · القطعة</label>
+          <select id="diag-block">
+            <option>Block A — Trees Mix</option>
+            <option>Block B — Apple 4yr</option>
+            <option>Block C — Around house</option>
+            <option>Block D — Apple Mix</option>
+            <option>Block E — Apple 3yr</option>
+            <option>Block F — Apple 7yr</option>
+          </select>
+        </div>
+        <div class="fg" style="margin:0">
+          <label>Species · النوع</label>
+          <select id="diag-species">
+            <option>Apple · تفاح</option>
+            <option>Cherry · كرز</option>
+            <option>Pomegranate · رمان</option>
+            <option>Fig · تين</option>
+            <option>Olive · زيتون</option>
+            <option>Pear · إجاص</option>
+            <option>Peach · خوخ</option>
+            <option>Grapes · عنب</option>
+            <option>Walnut · جوز</option>
+            <option>Other · أخرى</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Image upload -->
+      <div id="diag-drop" onclick="document.getElementById('diag-file').click()"
+        style="border:2px dashed var(--border);border-radius:12px;padding:32px;text-align:center;cursor:pointer;background:var(--surface2);transition:all .2s;margin-bottom:12px"
+        ondragover="event.preventDefault();this.style.borderColor='var(--green)';this.style.background='var(--green-light)'"
+        ondragleave="this.style.borderColor='var(--border)';this.style.background='var(--surface2)'"
+        ondrop="handleDiagDrop(event)">
+        <div id="diag-preview-img" style="margin-bottom:8px"></div>
+        <div style="font-size:36px;margin-bottom:8px">📷</div>
+        <div style="font-size:15px;font-weight:600;color:var(--text2)">Click or drag a photo here</div>
+        <div style="font-size:12px;color:var(--text3);margin-top:4px">Leaf, fruit, branch, or whole tree — JPG or PNG</div>
+      </div>
+      <input type="file" id="diag-file" accept="image/*" style="display:none" onchange="loadDiagImage(this.files[0])"/>
+
+      <div class="fg" style="margin-bottom:12px">
+        <label>Describe the problem · وصف المشكلة (optional)</label>
+        <textarea id="diag-desc" rows="2" placeholder="e.g. Yellow leaves with brown spots, curling edges, white powder on surface..."></textarea>
+      </div>
+
+      <button class="btn btn-primary" id="diag-btn" onclick="runDiagnostics()" style="width:100%;padding:12px;font-size:15px" disabled>
+        🔬 Analyze · تحليل
+      </button>
+    </div>
+
+    <!-- Results -->
+    <div id="diag-result"></div>
+
+    <!-- History -->
+    <div id="diag-history-section" style="display:none">
+      <div style="font-size:14px;font-weight:600;color:var(--text2);margin-bottom:8px">📋 Previous diagnoses · التشخيصات السابقة</div>
+      <div id="diag-history"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ═══ DATA ═══
-let D={tasks:[],irrigation:[],harvest:[],costs:[],weather:[],materials:[]};
+let D={tasks:[],irrigation:[],harvest:[],costs:[],weather:[],materials:[],docs:[]};
 const saved=localStorage.getItem('farmYawmi3');
 if(saved)try{D=JSON.parse(saved);}catch(e){}
 
@@ -1150,19 +1348,52 @@ function buildAIBrief(){
 
 // ═══ AI SUGGESTIONS ═══
 function buildAISuggestions(){
-  const m=new Date().getMonth();
-  const el=document.getElementById('ai-suggestions');
-  el.innerHTML=SEASON[m].tasks.map(t=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:14px;color:var(--green)">
-      <span style="opacity:.5">→</span><span style="flex:1">${t}</span>
-      <button class="btn btn-sm" style="font-size:11px;border-color:var(--green-mid);color:var(--green)" onclick="quickAddTask('${t.replace(/'/g,"\\'")}')">+ Add</button>
-    </div>`).join('')+`<div style="font-size:11px;color:var(--green);opacity:.6;margin-top:6px">Based on Khenchela seasonal calendar · بناءً على تقويم خنشلة الموسمي</div>`;
+  var m = new Date().getMonth();
+  var thisMonth = new Date().toISOString().slice(0,7);
+  var el = document.getElementById('ai-suggestions');
+  if (!el) return;
+  el.innerHTML = SEASON[m].tasks.map(function(t) {
+    var titleKey = t.split('·')[0].trim().toLowerCase();
+    var matchingTask = D.tasks.find(function(task){
+      return task.title && task.title.toLowerCase().includes(titleKey) && task.date && task.date.startsWith(thisMonth);
+    });
+    var isDone = matchingTask && matchingTask.done;
+    var exists = !!matchingTask;
+    var safeTitle = t.replace(/"/g,"&quot;");
+    return '<div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:14px;border-bottom:1px solid var(--border)">'
+      +'<div onclick="toggleSuggestedTask(\"'+safeTitle+'\")" style="width:18px;height:18px;border-radius:4px;border:2px solid var(--green-mid);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:'+(isDone?'var(--green-mid)':'transparent')+'">'
+      +(isDone?'<span style="color:#fff;font-size:12px;line-height:1">&#10003;</span>':'')
+      +'</div>'
+      +'<span style="flex:1;'+(isDone?'text-decoration:line-through;color:var(--text3);opacity:.6':'color:var(--text)')+'">'+t+'</span>'
+      +(exists?'':'<button class="btn btn-sm" style="font-size:11px;border-color:var(--green-mid);color:var(--green);flex-shrink:0" onclick="quickAddTask(\"'+safeTitle+'\")">+ Add</button>')
+      +'</div>';
+  }).join('')+'<div style="font-size:11px;color:var(--green);opacity:.6;margin-top:8px">Based on Khenchela seasonal calendar</div>';
+}
+
+function toggleSuggestedTask(title) {
+  var thisMonth = new Date().toISOString().slice(0,7);
+  var titleKey = title.split('·')[0].trim().toLowerCase();
+  var match = D.tasks.find(function(t){
+    return t.title && t.title.toLowerCase().includes(titleKey) && t.date && t.date.startsWith(thisMonth);
+  });
+  if (match) {
+    match.done = !match.done;
+    persist();
+  } else {
+    D.tasks.push({id:Date.now(),title:title,date:new Date().toISOString().split('T')[0],block:'All blocks',cat:'Monitoring · مراقبة',notes:'AI suggested',done:true});
+    persist();
+  }
+  buildAISuggestions();
+  renderTasks();
 }
 
 function quickAddTask(title){
-  D.tasks.push({id:Date.now(),title,date:new Date().toISOString().split('T')[0],block:'All blocks',cat:'Monitoring · مراقبة',notes:'AI suggested',done:false});
+  D.tasks.push({id:Date.now(),title:title,date:new Date().toISOString().split('T')[0],block:'All blocks',cat:'Monitoring · مراقبة',notes:'AI suggested',done:false});
   persist();
+  buildAISuggestions();
+  showToast('✅ Task added');
 }
+
 
 // ═══ BLOCK CARDS ═══
 let selectedBlock=null;
@@ -1202,7 +1433,7 @@ function buildBlockCards(){
       </div>
       <div style="padding:0 16px 10px">
         <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:3px">
-          <span>Irrigation · الري</span>
+          <span>Irrigation</span>
           <span style="color:${irColor};font-weight:600">${days!==null?days+'d ago':irStatus}</span>
         </div>
         <div class="prog"><div class="prog-fill" style="width:${irPct}%;background:${irColor}"></div></div>
@@ -1342,6 +1573,7 @@ function renderAll(){
   renderMaterials();
   buildGrowthTable();
   renderIrrigStatusStrip();
+  renderDocs();
   // irrigation glow handled in block labels tooltip
 }
 
@@ -1383,16 +1615,129 @@ function renderOverview(){
 
 // ═══ TASKS ═══
 function saveTask(){
-  const title=document.getElementById('t-title').value.trim();
-  if(!title)return alert('Please enter a task title');
-  D.tasks.push({id:Date.now(),title,date:document.getElementById('t-date').value,block:document.getElementById('t-block').value,cat:document.getElementById('t-cat').value,notes:document.getElementById('t-notes').value,done:false});
-  document.getElementById('t-title').value='';
-  document.getElementById('t-notes').value='';
+  var title = document.getElementById('t-title').value.trim();
+  if(!title) return alert('Please enter a task title');
+  var taskDate = document.getElementById('t-date').value;
+  var taskBlock = document.getElementById('t-block').value;
+  var taskCat = document.getElementById('t-cat').value;
+  var taskNotes = document.getElementById('t-notes').value;
+
+  var newTask = {id:Date.now(), title:title, date:taskDate, block:taskBlock, cat:taskCat, notes:taskNotes, done:false};
+  D.tasks.push(newTask);
+
+  // Handle purchase → auto-create cost entry
+  var hasPurchase = document.getElementById('t-has-purchase');
+  if (hasPurchase && hasPurchase.checked) {
+    var mark = document.getElementById('t-mark').value.trim();
+    var qty = document.getElementById('t-qty').value;
+    var unit = document.getElementById('t-unit').value;
+    var price = document.getElementById('t-price').value;
+    var total = parseFloat(qty||0) * parseFloat(price||0);
+    var costItem = mark ? title + ' · ' + mark : title;
+    if (price) {
+      D.costs = D.costs || [];
+      D.costs.push({
+        id: Date.now()+2,
+        date: taskDate,
+        cat: taskCat,
+        item: costItem,
+        supplier: mark || '',
+        qty: qty || '1',
+        unit: unit.split(' · ')[0].trim(),
+        price: price,
+        total: total,
+        notes: 'Auto from task: ' + title
+      });
+      showToast('✅ Task saved + cost entry created (' + Math.round(total).toLocaleString() + ' DZD)');
+    } else {
+      showToast('✅ Task saved');
+    }
+    // Store purchase info in task notes
+    var purchaseNote = '';
+    if(mark) purchaseNote += 'الماركة: ' + mark;
+    if(qty) purchaseNote += (purchaseNote?' · ':'') + 'الكمية: ' + qty + ' ' + unit.split('·')[0].trim();
+    if(price) purchaseNote += (purchaseNote?' · ':'') + 'الثمن: ' + parseFloat(price).toLocaleString() + ' دج';
+    if(purchaseNote) newTask.notes = (taskNotes ? taskNotes + ' | ' : '') + purchaseNote;
+    hasPurchase.checked = false;
+    document.getElementById('t-purchase-row').style.display = 'none';
+    ['t-mark','t-qty','t-price','t-total'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  } else {
+    showToast('✅ Task saved');
+  }
+
+  // Handle follow-up task
+  var hasFollowup = document.getElementById('t-has-followup');
+  if (hasFollowup && hasFollowup.checked) {
+    var followDate = document.getElementById('t-followup-date').value;
+    var followNote = document.getElementById('t-followup-note').value;
+    if (followDate) {
+      D.tasks.push({
+        id: Date.now()+1, title: title + ' (follow-up · متابعة)',
+        date: followDate, block: taskBlock, cat: taskCat,
+        notes: followNote || 'Follow-up of: ' + title, done: false
+      });
+    }
+    hasFollowup.checked = false;
+    document.getElementById('t-followup-row').style.display = 'none';
+    if(document.getElementById('t-followup-date')) document.getElementById('t-followup-date').value = '';
+    if(document.getElementById('t-followup-note')) document.getElementById('t-followup-note').value = '';
+  }
+
+  document.getElementById('t-title').value = '';
+  document.getElementById('t-notes').value = '';
   toggleEl('task-form');
   persist();
 }
+
+// Auto-calculate total when qty or price changes
+document.addEventListener('DOMContentLoaded', function(){
+  ['t-qty','t-price'].forEach(function(id){
+    var el = document.getElementById(id);
+    if(el) el.addEventListener('input', function(){
+      var qty = parseFloat(document.getElementById('t-qty').value||0);
+      var price = parseFloat(document.getElementById('t-price').value||0);
+      var tot = document.getElementById('t-total');
+      if(tot) tot.value = qty && price ? Math.round(qty*price).toLocaleString() + ' DZD' : '';
+    });
+  });
+});
 function toggleTask(id){const t=D.tasks.find(t=>t.id===id);if(t){t.done=!t.done;persist();}}
 function deleteTask(id){D.tasks=D.tasks.filter(t=>t.id!==id);persist();}
+
+// ── Copy task to next year (same month, 1st of month) ──
+function copyTaskNextYear(id) {
+  var t = D.tasks.find(function(x){return x.id===id;});
+  if (!t) return;
+  var nextDate = '';
+  if (t.date) {
+    var d = new Date(t.date);
+    nextDate = (d.getFullYear()+1) + '-' + String(d.getMonth()+1).padStart(2,'0') + '-01';
+  }
+  var newTask = Object.assign({}, t, {
+    id: Date.now(),
+    date: nextDate,
+    done: false,
+    notes: (t.notes ? t.notes + ' · ' : '') + 'Copied from ' + (t.date ? t.date.slice(0,4) : 'previous year')
+  });
+  D.tasks.push(newTask);
+  persist();
+  showToast('📅 Copied to ' + (nextDate ? nextDate.slice(0,7) : 'next year'));
+}
+
+// ── Toast notification ──
+function showToast(msg, duration) {
+  var el = document.getElementById('toast-msg');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'toast-msg';
+    el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#2d6a0f;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 12px rgba(0,0,0,0.2)';
+    document.body.appendChild(el);
+  }
+  el.textContent = msg;
+  el.style.opacity = '1';
+  clearTimeout(el._t);
+  el._t = setTimeout(function(){ el.style.opacity = '0'; }, duration||2500);
+}
 var taskView = 'month';
 
 function setTaskView(v, btn) {
@@ -1402,105 +1747,194 @@ function setTaskView(v, btn) {
   renderTasks();
 }
 
+// Year colors - light pastel backgrounds
+var YEAR_COLORS = ['#f0f9f0','#f0f4ff','#fff8f0','#f5f0ff','#f0fffc','#fff0f5'];
+var YEAR_BORDER = ['#22c55e','#6366f1','#f97316','#8b5cf6','#06b6d4','#ec4899'];
+
 function renderTasks(){
   var pending = D.tasks.filter(function(t){return !t.done;});
   var done = D.tasks.filter(function(t){return t.done;});
-  document.getElementById('task-counts').textContent = pending.length + ' pending · ' + done.length + ' done';
+  document.getElementById('task-counts').textContent = pending.length + ' pending \xb7 ' + done.length + ' done';
   var body = document.getElementById('tasks-body');
-  if(!D.tasks.length){ body.innerHTML='<div class="empty">No tasks yet. Add manually or generate from seasonal calendar.</div>'; return; }
+  if(!D.tasks.length){body.innerHTML='<div class="empty">No tasks yet.</div>';return;}
 
   var today = new Date(); today.setHours(0,0,0,0);
+  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
   function taskRow(t) {
     var isOverdue = !t.done && t.date && new Date(t.date) < today;
-    var dateLabel = t.date ? new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '';
-    return '<div class="task-row" style="'+(isOverdue?'border-left:3px solid var(--red);padding-left:10px;':'')+'">'
-      +'<div class="task-check '+(t.done?'done':'')+'" onclick="toggleTask('+t.id+')">'+(t.done?'✓':'')+'</div>'
-      +'<div style="flex:1">'
-        +'<div style="font-size:15px;font-weight:500;'+(t.done?'text-decoration:line-through;opacity:.5;':'')+(isOverdue?'color:var(--red);':'color:var(--text);')+'">'+t.title+'</div>'
-        +'<div style="font-size:12px;color:var(--text3);margin-top:3px;display:flex;gap:8px;flex-wrap:wrap">'
-          +'<span class="badge b-blue" style="font-size:11px">'+t.cat.split("·")[0].trim()+'</span>'
+    var dateLabel = t.date ? new Date(t.date).toLocaleDateString('en-GB',{day:'numeric',month:'short'}) : '';
+    var borderStyle = isOverdue ? 'border-left:3px solid #d63030;padding-left:10px;' : '';
+    var titleStyle = t.done ? 'text-decoration:line-through;opacity:.5;' : (isOverdue ? 'color:#d63030;' : '');
+    return '<div class="task-row" style="'+borderStyle+'">'
+      +'<div class="task-check '+(t.done?'done':'')+'" onclick="toggleTask('+t.id+')">'+(t.done?'&#10003;':'')+'</div>'
+      +'<div style="flex:1;min-width:0;">'
+        +'<div style="font-size:14px;font-weight:500;'+titleStyle+'">'+t.title+'</div>'
+        +'<div style="font-size:12px;color:var(--text3);margin-top:2px;display:flex;gap:6px;flex-wrap:wrap;">'
+          +'<span class="badge b-blue" style="font-size:11px">'+t.cat.split('\xb7')[0].trim()+'</span>'
           +(t.block?'<span>'+t.block+'</span>':'')
-          +(dateLabel?'<span>'+(isOverdue?'⚠️ ':'')+dateLabel+'</span>':'')
+          +(dateLabel?'<span>'+(isOverdue?'\u26a0\ufe0f ':'')+dateLabel+'</span>':'')
         +'</div>'
-        +(t.notes&&t.notes!=='AI suggested'?'<div style="font-size:13px;color:var(--text3);margin-top:3px">'+t.notes+'</div>':'')
+        +(t.notes&&t.notes!=='AI suggested'?'<div style="font-size:12px;color:var(--text3);margin-top:2px;">'+t.notes+'</div>':'')
       +'</div>'
-      +'<div style="display:flex;gap:4px">'
-        +'<button onclick="editTask('+t.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:14px;padding:0 4px">✏️</button>'
-        +'<button onclick="deleteTask('+t.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:18px;padding:0 4px">×</button>'
+      +'<div style="display:flex;gap:2px;flex-shrink:0;">'
+        +'<button onclick="copyTaskNextYear('+t.id+')" title="Copy to next year" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:11px;padding:2px 4px;font-weight:600;">&#128197;+1</button>'
+        +'<button onclick="editTask('+t.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:13px;padding:2px 4px;">&#9999;&#65039;</button>'
+        +'<button onclick="deleteTask('+t.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:16px;padding:2px 4px;">\xd7</button>'
       +'</div>'
     +'</div>';
   }
 
-  function groupHeader(label, count, pendingCnt, doneCount, id, defaultOpen) {
-    var stored = localStorage.getItem('tg_'+id);
-    var isOpen = stored !== null ? stored === '1' : defaultOpen;
-    return '<div onclick="toggleTaskGroup(\''+id+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:8px;cursor:pointer;margin-bottom:4px;border:1px solid var(--border);user-select:none">'
-      +'<div style="display:flex;align-items:center;gap:10px">'
-        +'<span id="tg-arrow-'+id+'" style="font-size:12px;color:var(--text3)">'+(isOpen?'▾':'▸')+'</span>'
-        +'<span style="font-weight:700;font-size:15px;color:var(--text)">'+label+'</span>'
-      +'</div>'
-      +'<div style="display:flex;gap:6px">'
-        +(pendingCnt>0?'<span class="badge b-green" style="font-size:12px">'+pendingCnt+' pending</span>':'')
-        +(doneCount>0?'<span class="badge" style="font-size:12px;background:var(--surface);color:var(--text3)">'+doneCount+' done</span>':'')
-      +'</div>'
-    +'</div>'
-    +'<div id="tg-body-'+id+'" style="display:'+(isOpen?'block':'none')+';margin-bottom:10px;padding-left:4px">';
-  }
-
   if (taskView === 'all') {
-    body.innerHTML =
-      (pending.length ? '<div style="font-size:12px;font-weight:600;color:var(--text3);padding:8px 0 4px;text-transform:uppercase;letter-spacing:.4px">Pending ('+pending.length+')</div>'
-        + [...pending].sort(function(a,b){return new Date(a.date||'9999')-new Date(b.date||'9999');}).map(taskRow).join('') : '')
-      +(done.length ? '<div style="font-size:12px;font-weight:600;color:var(--text3);padding:12px 0 4px;text-transform:uppercase;letter-spacing:.4px">Done ('+done.length+')</div>'
-        + [...done].sort(function(a,b){return new Date(b.date||'0')-new Date(a.date||'0');}).map(taskRow).join('') : '');
+    var html = '';
+    if(pending.length) {
+      html += '<div style="font-size:11px;font-weight:600;color:var(--text3);padding:6px 0 4px;text-transform:uppercase;">Pending ('+pending.length+')</div>';
+      [...pending].sort(function(a,b){return (a.date||'9999').localeCompare(b.date||'9999');}).forEach(function(t){ html += taskRow(t); });
+    }
+    if(done.length) {
+      html += '<div style="font-size:11px;font-weight:600;color:var(--text3);padding:10px 0 4px;text-transform:uppercase;">Done ('+done.length+')</div>';
+      [...done].sort(function(a,b){return (b.date||'0').localeCompare(a.date||'0');}).forEach(function(t){ html += taskRow(t); });
+    }
+    body.innerHTML = html;
     return;
   }
 
-  var MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var allTasks = [...D.tasks].sort(function(a,b){return (a.date||'9999').localeCompare(b.date||'9999');});
-  var groups = {};
+  var curYear = today.getFullYear().toString();
   var curKey = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0');
 
-  if (taskView === 'month') {
-    allTasks.forEach(function(t) {
+  if (taskView === 'week') {
+    // Week view: flat grouped by week within year sections
+    var weekGroups = {};
+    D.tasks.forEach(function(t){
       var d = t.date ? new Date(t.date) : null;
-      var key = d ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0') : 'zz-no-date';
-      var label = d ? MONTH_NAMES[d.getMonth()]+' '+d.getFullYear() : 'No date';
-      if(!groups[key]) groups[key] = {label:label, tasks:[]};
-      groups[key].tasks.push(t);
+      if(!d){if(!weekGroups['zz-no-date'])weekGroups['zz-no-date']={label:'No date',year:'?',tasks:[]};weekGroups['zz-no-date'].tasks.push(t);return;}
+      var dow = d.getDay(); var diff = dow===0?-6:1-dow;
+      var ws = new Date(d); ws.setDate(d.getDate()+diff);
+      var we = new Date(ws); we.setDate(ws.getDate()+6);
+      var key = ws.getFullYear()+'-'+String(ws.getMonth()+1).padStart(2,'0')+'-'+String(ws.getDate()).padStart(2,'0');
+      var fmt = function(x){return x.toLocaleDateString('en-GB',{day:'numeric',month:'short'});};
+      if(!weekGroups[key])weekGroups[key]={label:fmt(ws)+' \u2192 '+fmt(we),year:String(ws.getFullYear()),tasks:[]};
+      weekGroups[key].tasks.push(t);
     });
-  } else { // week
-    allTasks.forEach(function(t) {
-      var d = t.date ? new Date(t.date) : null;
-      if (!d) { if(!groups['zz-no-date'])groups['zz-no-date']={label:'No date',tasks:[]};groups['zz-no-date'].tasks.push(t);return;}
-      var dayOfWeek = d.getDay();
-      var diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-      var weekStart = new Date(d); weekStart.setDate(d.getDate()+diff);
-      var weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate()+6);
-      var key = weekStart.getFullYear()+'-'+String(weekStart.getMonth()+1).padStart(2,'0')+'-'+String(weekStart.getDate()).padStart(2,'0');
-      var fmt = function(dt){ return dt.toLocaleDateString('en-GB',{day:'numeric',month:'short'}); };
-      var label = 'Week '+fmt(weekStart)+' → '+fmt(weekEnd);
-      if(!groups[key])groups[key]={label:label,tasks:[]};
-      groups[key].tasks.push(t);
+    // Group weeks by year
+    var yearWeeks = {};
+    Object.keys(weekGroups).sort().forEach(function(wk){
+      var yr = weekGroups[wk].year;
+      if(!yearWeeks[yr]) yearWeeks[yr] = {};
+      yearWeeks[yr][wk] = weekGroups[wk];
     });
+    var html = '';
+    var yi = 0;
+    Object.keys(yearWeeks).sort().forEach(function(yr){
+      var yColor = YEAR_COLORS[yi % YEAR_COLORS.length];
+      var yBorder = YEAR_BORDER[yi % YEAR_BORDER.length];
+      yi++;
+      var isCurYr = yr === curYear;
+      var yStored = localStorage.getItem('ty_'+yr);
+      var yOpen = yStored !== null ? yStored==='1' : true;
+      html += '<div style="margin-bottom:12px;border-radius:10px;overflow:hidden;border:2px solid '+yBorder+';">';
+      html += '<div onclick="toggleYearGroup(\''+yr+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:'+yBorder+';cursor:pointer;user-select:none;">';
+      html += '<span style="font-weight:800;font-size:16px;color:#fff;">'+(isCurYr?'📅 ':'')+yr+'</span>';
+      html += '<span id="ty-arrow-'+yr+'" style="color:#fff;font-size:12px;">'+(yOpen?'&#9660;':'&#9654;')+'</span>';
+      html += '</div>';
+      html += '<div id="ty-body-'+yr+'" style="display:'+(yOpen?'block':'none')+';background:'+yColor+';padding:8px;">';
+      Object.keys(yearWeeks[yr]).sort().forEach(function(wk){
+        var g = yearWeeks[yr][wk];
+        var gP = g.tasks.filter(function(t){return !t.done;}).length;
+        var gD = g.tasks.length-gP;
+        var wStored = localStorage.getItem('tg_'+wk);
+        var wOpen = wStored !== null ? wStored==='1' : !isCurYr ? false : true;
+        html += '<div style="margin-bottom:6px;">';
+        html += '<div onclick="toggleTaskGroup(\''+wk+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(255,255,255,.7);border-radius:6px;cursor:pointer;border:1px solid rgba(0,0,0,.08);">';
+        html += '<div style="display:flex;align-items:center;gap:8px;"><span id="tg-arrow-'+wk+'" style="font-size:11px;color:var(--text3);">'+(wOpen?'&#9660;':'&#9654;')+'</span><span style="font-weight:600;font-size:13px;">'+g.label+'</span></div>';
+        html += '<div style="display:flex;gap:5px;">'+(gP?'<span class="badge b-green" style="font-size:11px;">'+gP+' pending</span>':'')+(gD?'<span class="badge" style="font-size:11px;background:#eee;color:#666;">'+gD+' done</span>':'')+'</div>';
+        html += '</div>';
+        html += '<div id="tg-body-'+wk+'" style="display:'+(wOpen?'block':'none')+';">';
+        g.tasks.sort(function(a,b){return (a.date||'').localeCompare(b.date||'');}).forEach(function(t){ html += taskRow(t); });
+        html += '</div></div>';
+      });
+      html += '</div></div>';
+    });
+    body.innerHTML = html || '<div class="empty">No tasks found.</div>';
+    return;
   }
 
+  // ── MONTH VIEW (default) ── grouped Year → Month
+  var yearMonths = {};
+  D.tasks.forEach(function(t){
+    var d = t.date ? new Date(t.date) : null;
+    var yr = d ? String(d.getFullYear()) : 'zz';
+    var mk = d ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0') : 'zz-no-date';
+    var ml = d ? MONTHS[d.getMonth()] : 'No date';
+    if(!yearMonths[yr]) yearMonths[yr] = {};
+    if(!yearMonths[yr][mk]) yearMonths[yr][mk] = {label:ml, tasks:[]};
+    yearMonths[yr][mk].tasks.push(t);
+  });
+
   var html = '';
-  Object.keys(groups).sort().forEach(function(key) {
-    var g = groups[key];
-    var gPending = g.tasks.filter(function(t){return !t.done;}).length;
-    var gDone = g.tasks.length - gPending;
-    var isCurrentMonth = taskView==='month' && key===curKey;
-    var isPast = key < curKey;
-    var defaultOpen = isCurrentMonth || !isPast;
-    html += groupHeader(g.label, g.tasks.length, gPending, gDone, key, defaultOpen);
-    html += g.tasks.map(taskRow).join('');
-    html += '</div>';
+  var yi2 = 0;
+  Object.keys(yearMonths).sort().forEach(function(yr){
+    var yColor = YEAR_COLORS[yi2 % YEAR_COLORS.length];
+    var yBorder = YEAR_BORDER[yi2 % YEAR_BORDER.length];
+    yi2++;
+    var isCurYr = yr === curYear;
+    var yStored = localStorage.getItem('ty_'+yr);
+    var yOpen = yStored !== null ? yStored==='1' : true;
+    var yPending = 0;
+    Object.values(yearMonths[yr]).forEach(function(g){ yPending += g.tasks.filter(function(t){return !t.done;}).length; });
+
+    // Year header
+    html += '<div style="margin-bottom:14px;border-radius:12px;overflow:hidden;border:2px solid '+yBorder+';">';
+    html += '<div onclick="toggleYearGroup(\''+yr+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:'+yBorder+';cursor:pointer;user-select:none;">';
+    html += '<span style="font-weight:800;font-size:17px;color:#fff;letter-spacing:.5px;">'+(isCurYr?'📅 ':'')+yr+'</span>';
+    html += '<div style="display:flex;align-items:center;gap:10px;">';
+    if(yPending) html += '<span style="background:rgba(255,255,255,.25);color:#fff;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">'+yPending+' pending</span>';
+    html += '<span id="ty-arrow-'+yr+'" style="color:#fff;font-size:13px;">'+(yOpen?'&#9660;':'&#9654;')+'</span>';
+    html += '</div></div>';
+
+    // Year body
+    html += '<div id="ty-body-'+yr+'" style="display:'+(yOpen?'block':'none')+';background:'+yColor+';padding:10px;">';
+
+    Object.keys(yearMonths[yr]).sort().forEach(function(mk){
+      var g = yearMonths[yr][mk];
+      var gP = g.tasks.filter(function(t){return !t.done;}).length;
+      var gD = g.tasks.length - gP;
+      var isCurMonth = mk === curKey;
+      var mStored = localStorage.getItem('tg_'+mk);
+      var mOpen = isCurMonth ? true : (mStored !== null ? mStored==='1' : !isCurYr ? false : (mk >= curKey));
+
+      html += '<div style="margin-bottom:8px;">';
+      html += '<div onclick="toggleTaskGroup(\''+mk+'\')" style="display:flex;align-items:center;justify-content:space-between;padding:9px 14px;background:rgba(255,255,255,.8);border-radius:8px;cursor:pointer;border:1px solid rgba(0,0,0,.1);user-select:none;">';
+      html += '<div style="display:flex;align-items:center;gap:8px;">';
+      html += '<span id="tg-arrow-'+mk+'" style="font-size:11px;color:var(--text3);">'+(mOpen?'&#9660;':'&#9654;')+'</span>';
+      html += '<span style="font-weight:700;font-size:14px;color:var(--text);">'+g.label+'</span>';
+      if(isCurMonth) html += '<span style="font-size:10px;background:'+yBorder+';color:#fff;padding:1px 7px;border-radius:8px;font-weight:600;">Current</span>';
+      html += '</div><div style="display:flex;gap:6px;">';
+      if(gP) html += '<span class="badge b-green" style="font-size:11px;">'+gP+' pending</span>';
+      if(gD) html += '<span class="badge" style="font-size:11px;background:#eee;color:#666;">'+gD+' done</span>';
+      html += '</div></div>';
+
+      html += '<div id="tg-body-'+mk+'" style="display:'+(mOpen?'block':'none')+';">';
+      g.tasks.sort(function(a,b){return (a.date||'').localeCompare(b.date||'');}).forEach(function(t){ html += taskRow(t); });
+      html += '</div></div>';
+    });
+
+    html += '</div></div>';
   });
 
   body.innerHTML = html || '<div class="empty">No tasks found.</div>';
 }
+
+function toggleYearGroup(yr) {
+  var b = document.getElementById('ty-body-'+yr);
+  var a = document.getElementById('ty-arrow-'+yr);
+  if(!b) return;
+  var open = b.style.display !== 'none';
+  b.style.display = open ? 'none' : 'block';
+  if(a) a.innerHTML = open ? '&#9654;' : '&#9660;';
+  localStorage.setItem('ty_'+yr, open ? '0' : '1');
+}
+
 
 function toggleTaskGroup(id) {
   var b = document.getElementById('tg-body-'+id);
@@ -1610,6 +2044,8 @@ function goPage(id,btn){
   if(id==='farm'){setTimeout(function(){initFarmMap();},150);setTimeout(function(){renderIrrigStatusStrip();},300);}
   if(id==='calendar'){renderCalendar();}
   if(id==='growth'){buildGrowthTable();}
+  if(id==='docs'){renderDocs();var dd=document.getElementById('doc-date');if(dd&&!dd.value)dd.value=new Date().toISOString().split('T')[0];}
+  if(id==='diag'){renderDiagHistory();}
   if(id==='tasks'){initGenYear();}
   if(id==='materials'){renderMaterials();}
   if(id==='overview'){renderRainLog();}
@@ -2314,7 +2750,7 @@ var APPLE_STAGES = [
   {stage:'Cell division · انقسام الخلايا', months:'May – Jun', desc:'Cells multiplying — determines final fruit size.', actions:'K+P fertiliser, irrigate every 5–7 days, spider mite monitoring', watch:'🕷️ Spider mites in heat, lack of water = small fruit'},
   {stage:'Fruit development · تطور الثمار', months:'Jun – Aug', desc:'Fruit sizing rapidly. Peak water demand.', actions:'Peak irrigation every 3–5 days, codling moth traps, stop N fertiliser', watch:'Codling moth, sunburn on fruit, water stress'},
   {stage:'Colour / Maturity · النضج', months:'Aug – Sep', desc:'Fruit changes colour and sweetens. Approach harvest.', actions:'Reduce watering, starch-iodine test, pressure test, harvest trial', watch:'Over-ripening, pre-harvest drop, wasps'},
-  {stage:'Harvest · الحصاد', months:'Sep – Oct', desc:'Block B+F (4yr+7yr) ready. Block E (3yr): 2–3 fruits max.', actions:'Pick early morning, grade A/B/rejected, record yield per block', watch:'Bruising during picking, post-harvest rots'},
+  {stage:'Harvest', months:'Sep – Oct', desc:'Block B+F (4yr+7yr) ready. Block E (3yr): 2–3 fruits max.', actions:'Pick early morning, grade A/B/rejected, record yield per block', watch:'Bruising during picking, post-harvest rots'},
   {stage:'Post-harvest · ما بعد الحصاد', months:'Oct – Nov', desc:'Tree recovers and stores energy for next year.', actions:'Post-harvest fertiliser, copper spray, remove fallen fruit, mulch Block C', watch:'Canker, collar rot, late season pests'},
 ];
 
@@ -2676,6 +3112,409 @@ function generateAnnualTasks() {
       + '<div style="margin-top:10px;font-size:12px;color:var(--text3)">📅 Check Calendar tab to see them</div>'
       + '</div>';
   }
+}
+
+
+
+// ═══ DOCUMENTS ═══
+var docFilter = 'all';
+var pendingDocImages = []; // base64 images staged for saving
+
+function setDocFilter(f, btn) {
+  docFilter = f;
+  document.querySelectorAll('[id^="df-"]').forEach(function(b){b.classList.remove('active');});
+  if(btn) btn.classList.add('active');
+  renderDocs();
+}
+
+function previewDocImages(files) {
+  pendingDocImages = [];
+  var preview = document.getElementById('doc-preview');
+  preview.innerHTML = '';
+  Array.from(files).forEach(function(file) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      pendingDocImages.push({name:file.name, data:e.target.result});
+      var img = document.createElement('div');
+      img.style.cssText = 'position:relative;width:80px;height:80px;border-radius:6px;overflow:hidden;border:1px solid var(--border)';
+      img.innerHTML = '<img src="'+e.target.result+'" style="width:100%;height:100%;object-fit:cover"/>'
+        +'<div style="position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);color:#fff;font-size:9px;padding:2px 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">'+file.name+'</div>';
+      preview.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleDocDrop(e) {
+  e.preventDefault();
+  document.getElementById('doc-drop-zone').style.borderColor = 'var(--border)';
+  previewDocImages(e.dataTransfer.files);
+}
+
+function saveDocument() {
+  var title = document.getElementById('doc-title').value.trim();
+  if(!title) return alert('Please enter a document title');
+  if(!pendingDocImages.length) return alert('Please add at least one image');
+  D.docs = D.docs || [];
+  D.docs.push({
+    id: Date.now(),
+    title: title,
+    date: document.getElementById('doc-date').value,
+    cat: document.getElementById('doc-cat').value.split('·')[0].trim(),
+    notes: document.getElementById('doc-notes').value,
+    images: pendingDocImages.map(function(x){return x.data;})
+  });
+  pendingDocImages = [];
+  document.getElementById('doc-title').value = '';
+  document.getElementById('doc-notes').value = '';
+  document.getElementById('doc-preview').innerHTML = '';
+  toggleEl('doc-form');
+  persist();
+  renderDocs();
+  showToast('✅ Document saved · تم حفظ المستند');
+}
+
+function deleteDoc(id) {
+  if(!confirm('Delete this document?')) return;
+  D.docs = (D.docs||[]).filter(function(d){return d.id!==id;});
+  persist(); renderDocs();
+}
+
+function renderDocs() {
+  var el = document.getElementById('docs-gallery');
+  if(!el) return;
+  var docs = (D.docs||[]);
+  if(docFilter !== 'all') docs = docs.filter(function(d){return d.cat && d.cat.toLowerCase().includes(docFilter.toLowerCase());});
+  docs = [...docs].sort(function(a,b){return (b.date||'').localeCompare(a.date||'');});
+  if(!docs.length) { el.innerHTML='<div class="empty">No documents yet. Add receipts, invoices, photos.</div>'; return; }
+  el.innerHTML = docs.map(function(doc) {
+    var catColor = {Receipt:'var(--green)',Invoice:'var(--blue)',Photo:'var(--teal)',Certificate:'var(--amber)',Analysis:'var(--amber)'}[doc.cat]||'var(--text3)';
+    var imgs = (doc.images||[]).map(function(src,i){
+      return '<img onclick="viewDocImage('+doc.id+','+i+')" src="'+src+'" style="width:72px;height:72px;object-fit:cover;border-radius:6px;cursor:pointer;border:1px solid var(--border)">';
+    }).join('');
+    return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:10px">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">'
+        +'<div>'
+          +'<span style="font-size:15px;font-weight:600;color:var(--text)">'+doc.title+'</span>'
+          +'<span style="margin-left:8px;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:600;background:'+catColor+'22;color:'+catColor+'">'+doc.cat+'</span>'
+        +'</div>'
+        +'<div style="display:flex;align-items:center;gap:8px">'
+          +'<span style="font-size:12px;color:var(--text3)">'+doc.date+'</span>'
+          +'<button onclick="deleteDoc('+doc.id+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:16px">×</button>'
+        +'</div>'
+      +'</div>'
+      +(doc.notes?'<div style="font-size:13px;color:var(--text3);margin-bottom:8px">'+doc.notes+'</div>':'')
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+imgs+'</div>'
+      +'<div style="font-size:11px;color:var(--text3);margin-top:6px">'+doc.images.length+' image'+(doc.images.length>1?'s':'')+'</div>'
+    +'</div>';
+  }).join('');
+}
+
+function closeDocLightbox() {
+  var el = document.getElementById('doc-lightbox');
+  if(el) el.remove();
+}
+
+function viewDocImage(docId, imgIdx) {
+  var doc = (D.docs||[]).find(function(d){return d.id===docId;});
+  if(!doc) return;
+  var overlay = document.createElement('div');
+  overlay.id = 'doc-lightbox';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer';
+  overlay.onclick = function(){overlay.remove();};
+  overlay.innerHTML = '<img src="'+doc.images[imgIdx]+'" style="max-width:90vw;max-height:90vh;object-fit:contain;border-radius:8px">'
+    +'<div style="position:absolute;top:16px;right:20px;color:#fff;font-size:28px;cursor:pointer" onclick="closeDocLightbox()">×</div>';
+  document.body.appendChild(overlay);
+}
+
+// ═══ YEARLY COSTS SUMMARY ═══
+function renderCostsSummary() {
+  var el = document.getElementById('costs-yearly-summary');
+  if(!el) return;
+  var costs = D.costs||[];
+  if(!costs.length) { el.innerHTML='<div class="empty">No cost entries yet.</div>'; return; }
+
+  var years = {};
+  costs.forEach(function(c){
+    var yr = c.date ? c.date.slice(0,4) : 'Unknown';
+    if(!years[yr]) years[yr] = {};
+    var cat = c.cat ? c.cat.split('·')[0].trim() : 'Other';
+    if(!years[yr][cat]) years[yr][cat] = 0;
+    years[yr][cat] += parseFloat(c.qty||1) * parseFloat(c.price||0);
+  });
+
+  var curYear = new Date().getFullYear().toString();
+  var html = '';
+  Object.keys(years).sort().reverse().forEach(function(yr) {
+    var cats = years[yr];
+    var total = Object.values(cats).reduce(function(s,v){return s+v;},0);
+    var isCurrentYear = yr === curYear;
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-weight:700;font-size:15px;color:var(--text);margin-bottom:8px">'
+      +(isCurrentYear?'📅 ':'')+'Year '+yr+' · <span style="color:var(--green)">'+Math.round(total).toLocaleString()+' DZD total</span></div>';
+    // Bar chart per category
+    var maxVal = Math.max.apply(null, Object.values(cats));
+    Object.keys(cats).sort().forEach(function(cat){
+      var val = cats[cat];
+      var pct = maxVal > 0 ? Math.round(val/maxVal*100) : 0;
+      var catColors = {Fertiliser:'#22c55e',Pesticide:'#f97316',Irrigation:'#06b6d4',Labour:'#8b5cf6',Equipment:'#f59e0b',Maintenance:'#64748b',Packaging:'#ec4899',Transport:'#0ea5e9'};
+      var barColor = catColors[cat] || '#94a3b8';
+      html += '<div style="margin-bottom:6px">'
+        +'<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:2px">'
+          +'<span style="color:var(--text2)">'+cat+'</span>'
+          +'<span style="color:var(--text3);font-weight:600">'+Math.round(val).toLocaleString()+' DZD</span>'
+        +'</div>'
+        +'<div style="height:8px;background:var(--surface2);border-radius:4px;overflow:hidden">'
+          +'<div style="height:100%;width:'+pct+'%;background:'+barColor+';border-radius:4px;transition:width .5s"></div>'
+        +'</div>'
+      +'</div>';
+    });
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+
+
+// ═══ DIAGNOSTICS ═══
+var diagImageBase64 = null;
+var diagHistory = JSON.parse(localStorage.getItem('farmYawmi_diag') || '[]');
+
+function handleDiagDrop(e) {
+  e.preventDefault();
+  var drop = document.getElementById('diag-drop');
+  drop.style.borderColor = 'var(--border)';
+  drop.style.background = 'var(--surface2)';
+  if(e.dataTransfer.files[0]) loadDiagImage(e.dataTransfer.files[0]);
+}
+
+function loadDiagImage(file) {
+  if(!file) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    diagImageBase64 = e.target.result;
+    var drop = document.getElementById('diag-drop');
+    drop.innerHTML = '<img src="'+diagImageBase64+'" style="max-height:200px;max-width:100%;border-radius:8px;object-fit:contain"/>'
+      +'<div style="font-size:12px;color:var(--green);margin-top:8px;font-weight:600">✅ '+file.name+' — ready to analyze</div>';
+    document.getElementById('diag-btn').disabled = false;
+    document.getElementById('diag-result').innerHTML = '';
+  };
+  reader.readAsDataURL(file);
+}
+
+async function runDiagnostics() {
+  if(!diagImageBase64) return;
+  var btn = document.getElementById('diag-btn');
+  var result = document.getElementById('diag-result');
+  var block = document.getElementById('diag-block').value;
+  var species = document.getElementById('diag-species').value;
+  var desc = document.getElementById('diag-desc').value.trim();
+
+  btn.disabled = true;
+  btn.textContent = '⏳ Analyzing...';
+  result.innerHTML = '<div class="card" style="text-align:center;padding:32px"><div style="font-size:32px;margin-bottom:8px">🔬</div><div style="font-size:14px;color:var(--text2)">Analyzing your image with AI...</div><div style="font-size:12px;color:var(--text3);margin-top:4px">This may take 10–20 seconds</div></div>';
+
+  try {
+    // Use Plant.id Health Assessment API (free tier)
+    var base64Data = diagImageBase64.split(',')[1];
+    var payload = {
+      api_key: "nIAkgwUlvMJQWj9D9gJlxWJJQ3VWFcqvxMOKtF3bSW9fhz3Vts",
+      images: [base64Data],
+      modifiers: ["similar_images"],
+      plant_language: "en",
+      disease_details: ["cause","description","treatment","classification","common_names","url"],
+      plant_details: ["common_names","url","wiki_description","taxonomy"]
+    };
+
+    var response = await fetch("https://api.plant.id/v2/health_assessment", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload)
+    });
+
+    if(!response.ok) throw new Error("API error: " + response.status);
+    var data = await response.json();
+    renderDiagResult(data, block, species, desc);
+
+  } catch(err) {
+    // Fallback: use Claude API for diagnosis
+    try {
+      var claudeResult = await runClaudeDiagnosis(diagImageBase64, block, species, desc);
+      renderClaudeResult(claudeResult, block, species, desc);
+    } catch(err2) {
+      result.innerHTML = '<div class="card" style="border-left:3px solid var(--red)">'
+        +'<div style="color:var(--red);font-weight:600;margin-bottom:8px">❌ Analysis failed</div>'
+        +'<div style="font-size:13px;color:var(--text2)">'+err.message+'</div>'
+        +'<div style="font-size:12px;color:var(--text3);margin-top:8px">Please check your internet connection and try again.</div>'
+        +'</div>';
+    }
+  }
+
+  btn.disabled = false;
+  btn.textContent = '🔬 Analyze · تحليل';
+}
+
+async function runClaudeDiagnosis(imageBase64, block, species, desc) {
+  var base64Data = imageBase64.split(',')[1];
+  var mimeType = imageBase64.split(';')[0].split(':')[1];
+  var prompt = "You are an expert agronomist specializing in fruit tree diseases, pests, and nutrient deficiencies. "
+    + "The farmer is from Khenchela, Algeria (altitude 1194m, semi-arid climate). "
+    + "Tree: " + species + " in " + block + ". "
+    + (desc ? "Farmer notes: " + desc + ". " : "")
+    + "Analyze this image and provide: "
+    + "1. Most likely diagnosis (disease/pest/deficiency) with confidence level "
+    + "2. Key visual symptoms you can see "
+    + "3. Possible causes "
+    + "4. Recommended treatment (organic preferred, then chemical if needed) "
+    + "5. Prevention for next season "
+    + "Format your response as JSON with keys: diagnosis, confidence (0-100), symptoms, causes, treatment, prevention, severity (low/medium/high/critical)";
+
+  var response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 1000,
+      messages: [{
+        role: "user",
+        content: [
+          {type: "image", source: {type: "base64", media_type: mimeType, data: base64Data}},
+          {type: "text", text: prompt}
+        ]
+      }]
+    })
+  });
+
+  if(!response.ok) throw new Error("Claude API error: " + response.status);
+  var data = await response.json();
+  var text = data.content[0].text;
+  // Extract JSON
+  var jsonMatch = text.match(/\{[\s\S]*\}/);
+  if(jsonMatch) return JSON.parse(jsonMatch[0]);
+  return {diagnosis: text, confidence: null, symptoms: '', causes: '', treatment: '', prevention: '', severity: 'unknown'};
+}
+
+function renderClaudeResult(r, block, species, desc) {
+  var result = document.getElementById('diag-result');
+  var sevColor = {low:'#22c55e', medium:'#f59e0b', high:'#f97316', critical:'#ef4444', unknown:'#94a3b8'}[r.severity||'unknown'];
+  var confBar = r.confidence ? '<div style="margin:8px 0"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px"><span>Confidence</span><span style="font-weight:600">'+r.confidence+'%</span></div><div style="height:6px;background:var(--surface2);border-radius:3px"><div style="height:100%;width:'+r.confidence+'%;background:'+sevColor+';border-radius:3px"></div></div></div>' : '';
+
+  var html = '<div class="card" style="border-left:4px solid '+sevColor+';margin-bottom:12px">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">'
+      +'<div style="font-size:28px">'+(r.severity==='critical'?'🚨':r.severity==='high'?'⚠️':r.severity==='medium'?'⚡':'✅')+'</div>'
+      +'<div><div style="font-size:17px;font-weight:700;color:var(--text)">'+r.diagnosis+'</div>'
+        +'<span style="padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;background:'+sevColor+'22;color:'+sevColor+'">'+((r.severity||'unknown').toUpperCase())+' SEVERITY</span>'
+      +'</div>'
+    +'</div>'
+    + confBar
+    +(r.symptoms?'<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">👁️ Visual symptoms</div><div style="font-size:13px;color:var(--text)">'+r.symptoms+'</div></div>':'')
+    +(r.causes?'<div style="margin-bottom:10px"><div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">🔍 Possible causes</div><div style="font-size:13px;color:var(--text)">'+r.causes+'</div></div>':'')
+    +(r.treatment?'<div style="margin-bottom:10px;padding:10px;background:#f0f9f0;border-radius:8px"><div style="font-size:12px;font-weight:600;color:var(--green);margin-bottom:4px">💊 Recommended treatment</div><div style="font-size:13px;color:var(--text)">'+r.treatment+'</div></div>':'')
+    +(r.prevention?'<div style="margin-bottom:12px"><div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:4px">🛡️ Prevention</div><div style="font-size:13px;color:var(--text)">'+r.prevention+'</div></div>':'')
+    +'<div style="display:flex;gap:8px;margin-top:8px">'
+      +'<button class="btn btn-sm" onclick="saveDiagToTask()" style="border-color:var(--green);color:var(--green)">➕ Create task from this</button>'
+      +'<button class="btn btn-sm" onclick="saveDiagToHistory()" style="border-color:var(--blue);color:var(--blue)">💾 Save to history</button>'
+    +'</div>'
+  +'</div>';
+
+  result.innerHTML = html;
+
+  // Store for saving
+  window._lastDiag = {date: new Date().toISOString().split('T')[0], block: block, species: species, desc: desc, result: r, image: diagImageBase64};
+}
+
+function renderDiagResult(data, block, species, desc) {
+  // Plant.id response format
+  var result = document.getElementById('diag-result');
+  if(!data.health_assessment) {
+    // Fallback to Claude
+    runClaudeDiagnosis(diagImageBase64, block, species, desc).then(function(r){ renderClaudeResult(r, block, species, desc); });
+    return;
+  }
+  var ha = data.health_assessment;
+  var diseases = (ha.diseases||[]).slice(0,3);
+  var isHealthy = ha.is_healthy && ha.is_healthy.probability > 0.7;
+
+  var html = '';
+  if(isHealthy) {
+    html = '<div class="card" style="border-left:4px solid #22c55e;margin-bottom:12px">'
+      +'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="font-size:32px">✅</div>'
+        +'<div><div style="font-size:17px;font-weight:700;color:#22c55e">Plant appears healthy · النبات يبدو بصحة جيدة</div>'
+        +'<div style="font-size:13px;color:var(--text3);margin-top:2px">No significant disease or pest detected</div>'
+        +'</div></div></div>';
+  }
+
+  diseases.forEach(function(d) {
+    var prob = Math.round(d.probability * 100);
+    var sevColor = prob > 70 ? '#ef4444' : prob > 40 ? '#f97316' : '#f59e0b';
+    html += '<div class="card" style="border-left:4px solid '+sevColor+';margin-bottom:10px">'
+      +'<div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px">'
+        +'<div style="font-size:16px;font-weight:700;color:var(--text)">'+d.name+'</div>'
+        +'<span style="background:'+sevColor+'22;color:'+sevColor+';padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600">'+prob+'% match</span>'
+      +'</div>'
+      +'<div style="height:5px;background:var(--surface2);border-radius:3px;margin-bottom:10px"><div style="height:100%;width:'+prob+'%;background:'+sevColor+';border-radius:3px"></div></div>'
+      +(d.disease_details&&d.disease_details.description?'<div style="font-size:13px;color:var(--text2);margin-bottom:8px">'+d.disease_details.description.slice(0,200)+'...</div>':'')
+      +(d.disease_details&&d.disease_details.treatment?'<div style="padding:8px;background:#f0f9f0;border-radius:6px;margin-bottom:8px"><div style="font-size:11px;font-weight:600;color:var(--green);margin-bottom:3px">💊 TREATMENT</div><div style="font-size:13px">'+d.disease_details.treatment.biological+'</div></div>':'')
+    +'</div>';
+  });
+
+  if(!html) {
+    runClaudeDiagnosis(diagImageBase64, block, species, desc).then(function(r){ renderClaudeResult(r, block, species, desc); });
+    return;
+  }
+
+  html += '<div style="display:flex;gap:8px;margin-top:4px">'
+    +'<button class="btn btn-sm" onclick="saveDiagToTask()" style="border-color:var(--green);color:var(--green)">➕ Create task from this</button>'
+    +'<button class="btn btn-sm" onclick="saveDiagToHistory()" style="border-color:var(--blue);color:var(--blue)">💾 Save to history</button>'
+  +'</div>';
+  result.innerHTML = html;
+  window._lastDiag = {date: new Date().toISOString().split('T')[0], block: block, species: species, desc: desc, result: data, image: diagImageBase64};
+}
+
+function saveDiagToTask() {
+  if(!window._lastDiag) return;
+  var d = window._lastDiag;
+  var r = d.result;
+  var title = 'Treat: ' + (r.diagnosis || (r.health_assessment && r.health_assessment.diseases && r.health_assessment.diseases[0] && r.health_assessment.diseases[0].name) || 'diagnosed issue');
+  D.tasks.push({
+    id: Date.now(), title: title, date: new Date().toISOString().split('T')[0],
+    block: d.block, cat: 'Spraying · رش', notes: 'From AI diagnosis · ' + (d.desc||''), done: false
+  });
+  persist();
+  showToast('✅ Task created in Tasks tab');
+}
+
+function saveDiagToHistory() {
+  if(!window._lastDiag) return;
+  diagHistory.unshift(window._lastDiag);
+  if(diagHistory.length > 20) diagHistory = diagHistory.slice(0,20);
+  localStorage.setItem('farmYawmi_diag', JSON.stringify(diagHistory));
+  renderDiagHistory();
+  showToast('✅ Saved to diagnosis history');
+}
+
+function renderDiagHistory() {
+  var section = document.getElementById('diag-history-section');
+  var el = document.getElementById('diag-history');
+  if(!el) return;
+  if(!diagHistory.length) { section.style.display='none'; return; }
+  section.style.display = 'block';
+  el.innerHTML = diagHistory.map(function(d,i) {
+    return '<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:12px">'
+      +'<img src="'+d.image+'" style="width:56px;height:56px;object-fit:cover;border-radius:6px;flex-shrink:0"/>'
+      +'<div style="flex:1"><div style="font-size:13px;font-weight:600">'+d.block+' · '+d.species+'</div>'
+        +'<div style="font-size:12px;color:var(--text3)">'+d.date+(d.desc?' · '+d.desc.slice(0,40):'')+'</div>'
+      +'</div>'
+      +'<button onclick="deleteDiagHistory('+i+')" style="border:none;background:none;cursor:pointer;color:var(--text3);font-size:16px">×</button>'
+    +'</div>';
+  }).join('');
+}
+
+function deleteDiagHistory(i) {
+  diagHistory.splice(i,1);
+  localStorage.setItem('farmYawmi_diag', JSON.stringify(diagHistory));
+  renderDiagHistory();
 }
 
 
