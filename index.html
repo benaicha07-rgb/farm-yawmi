@@ -302,18 +302,23 @@ textarea{resize:vertical;min-height:52px}
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const farmDoc = doc(db, 'farms', 'yawmi');
-    const costsDoc = doc(db, 'farms', 'yawmi_costs');
 
     // Expose to global scope for use in main script
     window._fb = {
       save: async function(data) {
         try {
-          // Split costs into separate doc to stay under Firebase 1MB limit
-          var mainData = Object.assign({}, data);
-          var costsData = mainData.costs || [];
-          delete mainData.costs;
-          await setDoc(farmDoc, { data: JSON.stringify(mainData), updatedAt: Date.now() });
-          await setDoc(costsDoc, { data: JSON.stringify(costsData), updatedAt: Date.now() });
+          // Strip any large fields before saving to stay under Firebase 1MB limit
+          var clean = JSON.parse(JSON.stringify(data));
+          (clean.costs||[]).forEach(function(c){ delete c.receiptImg; delete c.productImgs; });
+          (clean.diag||[]).forEach(function(d){ delete d.img; delete d.imgData; });
+          (clean.album||[]).forEach(function(a){ delete a.img; delete a.data; });
+          var payload = JSON.stringify(clean);
+          if(payload.length > 900000){
+            // Still too big — trim album and diag history
+            clean.album = []; clean.diag = [];
+            payload = JSON.stringify(clean);
+          }
+          await setDoc(farmDoc, { data: payload, updatedAt: Date.now() });
           window._fbSetStatus('synced');
         } catch(e) {
           console.warn('Firebase save failed:', e);
@@ -323,28 +328,18 @@ textarea{resize:vertical;min-height:52px}
       load: async function() {
         try {
           const snap = await getDoc(farmDoc);
-          const costsSnap = await getDoc(costsDoc);
           if (snap.exists()) {
-            var mainData = JSON.parse(snap.data().data || '{}');
-            if (costsSnap.exists()) {
-              mainData.costs = JSON.parse(costsSnap.data().data || '[]');
-            }
-            return { data: mainData, updatedAt: snap.data().updatedAt || 0 };
+            return { data: JSON.parse(snap.data().data), updatedAt: snap.data().updatedAt || 0 };
           }
           return null;
         } catch(e) { console.warn('Firebase load failed:', e); return null; }
       },
       listen: function(callback) {
-        onSnapshot(farmDoc, async (snap) => {
+        onSnapshot(farmDoc, (snap) => {
           if (snap.exists()) {
             try {
-              var mainData = JSON.parse(snap.data().data);
-              // Merge costs from separate doc
-              try {
-                var costsSnap2 = await getDoc(costsDoc);
-                if(costsSnap2.exists()) mainData.costs = JSON.parse(costsSnap2.data().data || '[]');
-              } catch(e2) {}
-              callback(mainData, snap.data().updatedAt);
+              const remote = JSON.parse(snap.data().data);
+              callback(remote, snap.data().updatedAt);
             } catch(e) {}
           }
         }, (err) => {
@@ -2394,6 +2389,7 @@ function quickAddTask(title){
 let selectedBlock=null;
 function buildBlockCards(){
   const grid=document.getElementById('blocks-grid');
+  if(!grid) return;
   grid.innerHTML='';
   BLOCKS.forEach(b=>{
     const tasks=D.tasks.filter(t=>t.block&&t.block.includes(b.id)&&!t.done).length;
