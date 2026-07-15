@@ -218,6 +218,14 @@ textarea{resize:vertical;min-height:52px}
 @media(max-width:500px){.kpi-val{font-size:18px}.bc-title{font-size:14px}.nav-item{padding:10px 10px;font-size:14px}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 @keyframes slideDown{from{opacity:0;transform:translateY(-12px);max-height:0}to{opacity:1;transform:translateY(0);max-height:1000px}}
+#lightbox-overlay{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+#lightbox-overlay img{max-width:90vw;max-height:80vh;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,.6);transition:transform .2s;cursor:zoom-in;user-select:none;}
+#lightbox-overlay img.zoomed{transform:scale(2);cursor:zoom-out;}
+#lightbox-overlay .lb-close{position:fixed;top:18px;right:24px;color:#fff;font-size:32px;cursor:pointer;background:none;border:none;line-height:1;}
+#lightbox-overlay .lb-caption{color:#ccc;font-size:13px;margin-top:10px;max-width:80vw;text-align:center;}
+#lightbox-overlay .lb-nav{display:flex;gap:16px;margin-top:14px;}
+#lightbox-overlay .lb-nav button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 18px;border-radius:20px;cursor:pointer;font-size:14px;}
+#lightbox-overlay .lb-nav button:hover{background:rgba(255,255,255,.3);}
 @keyframes blockGlow{0%,100%{transform:scale(1);opacity:.3}50%{transform:scale(1.4);opacity:.15}}
 @keyframes irrigPulse{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.4),0 0 8px rgba(34,197,94,.6)}50%{box-shadow:0 0 0 6px rgba(34,197,94,.2),0 0 14px rgba(34,197,94,.4)}}
 #month-panel{animation:slideDown .32s cubic-bezier(.22,.61,.36,1) forwards;overflow:hidden;}
@@ -294,12 +302,18 @@ textarea{resize:vertical;min-height:52px}
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const farmDoc = doc(db, 'farms', 'yawmi');
+    const costsDoc = doc(db, 'farms', 'yawmi_costs');
 
     // Expose to global scope for use in main script
     window._fb = {
       save: async function(data) {
         try {
-          await setDoc(farmDoc, { data: JSON.stringify(data), updatedAt: Date.now() });
+          // Split costs into separate doc to stay under Firebase 1MB limit
+          var mainData = Object.assign({}, data);
+          var costsData = mainData.costs || [];
+          delete mainData.costs;
+          await setDoc(farmDoc, { data: JSON.stringify(mainData), updatedAt: Date.now() });
+          await setDoc(costsDoc, { data: JSON.stringify(costsData), updatedAt: Date.now() });
           window._fbSetStatus('synced');
         } catch(e) {
           console.warn('Firebase save failed:', e);
@@ -309,24 +323,28 @@ textarea{resize:vertical;min-height:52px}
       load: async function() {
         try {
           const snap = await getDoc(farmDoc);
+          const costsSnap = await getDoc(costsDoc);
           if (snap.exists()) {
-            const remote = snap.data();
-            window._fbSetStatus('synced');
-            return { data: JSON.parse(remote.data), updatedAt: remote.updatedAt };
+            var mainData = JSON.parse(snap.data().data || '{}');
+            if (costsSnap.exists()) {
+              mainData.costs = JSON.parse(costsSnap.data().data || '[]');
+            }
+            return { data: mainData, updatedAt: snap.data().updatedAt || 0 };
           }
           return null;
-        } catch(e) {
-          console.warn('Firebase load failed:', e);
-          window._fbSetStatus('offline');
-          return null;
-        }
+        } catch(e) { console.warn('Firebase load failed:', e); return null; }
       },
       listen: function(callback) {
-        onSnapshot(farmDoc, (snap) => {
+        onSnapshot(farmDoc, async (snap) => {
           if (snap.exists()) {
             try {
-              const remote = JSON.parse(snap.data().data);
-              callback(remote, snap.data().updatedAt);
+              var mainData = JSON.parse(snap.data().data);
+              // Merge costs from separate doc
+              try {
+                var costsSnap2 = await getDoc(costsDoc);
+                if(costsSnap2.exists()) mainData.costs = JSON.parse(costsSnap2.data().data || '[]');
+              } catch(e2) {}
+              callback(mainData, snap.data().updatedAt);
             } catch(e) {}
           }
         }, (err) => {
@@ -426,18 +444,15 @@ textarea{resize:vertical;min-height:52px}
           await window._fb.save(localData);
           console.log('Local is newer — pushed to Firestore');
         } else if (remoteTs > localUpdated + 30000 && remoteCount > localCount) {
-          // Remote is significantly newer AND has more entries — use remote
-          // (30 second gap required to avoid overwriting recent local edits)
+          // Remote is significantly newer AND has MORE entries — use remote
           localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
           localStorage.setItem('farmYawmi3_ts', remoteTs);
           if (window._reloadData) window._reloadData();
           console.log('Loaded from Firestore (newer + more data)');
         } else {
-          // Default: keep local, push to Firebase to sync
-          if (localCount >= remoteCount) {
-            await window._fb.save(localData);
-            console.log('Keeping local, pushed to Firestore');
-          }
+          // Default: keep local (it has equal or more data), push to Firebase to sync
+          await window._fb.save(localData);
+          console.log('Keeping local, pushed to Firestore');
         }
       }
 
@@ -452,12 +467,15 @@ textarea{resize:vertical;min-height:52px}
         var currentCount = countEntries(currentData);
         var newCount = countEntries(newRemoteData);
 
-        // Accept only if remote is clearly newer AND has more or equal data
-        if (newRemoteTs > currentTs + 5000 && newCount >= currentCount) {
+        // Accept only if remote is clearly newer AND has strictly more data
+        if (newRemoteTs > currentTs + 5000 && newCount > currentCount) {
           localStorage.setItem('farmYawmi3', JSON.stringify(newRemoteData));
           localStorage.setItem('farmYawmi3_ts', newRemoteTs);
           if (window._reloadData) window._reloadData();
           console.log('Real-time sync from another device (' + newCount + ' entries)');
+        } else if (newCount <= currentCount) {
+          // Our local has same or more data — push ours to keep Firebase in sync
+          if (window._fb) window._fb.save(currentData);
         }
       });
     });
@@ -1112,12 +1130,15 @@ textarea{resize:vertical;min-height:52px}
           <option>Fertiliser · سماد</option>
           <option>Fertilising · تسميد</option>
           <option>Pesticide · مبيد</option>
+          <option>Pruning · تقليم</option>
+          <option>Thinning · ترقيق</option>
           <option>Irrigation · ري</option>
           <option>Labour · عمالة</option>
           <option>Equipment · معدات</option>
           <option>Maintenance · صيانة</option>
           <option>Packaging · تعبئة</option>
           <option>Transport · نقل</option>
+          <option>Medication · أدوية</option>
           <option>Other · أخرى</option>
         </select>
       </div>
@@ -1134,15 +1155,27 @@ textarea{resize:vertical;min-height:52px}
       <div class="fg"><label>Qty · الكمية</label><input type="number" id="co-qty" placeholder="1"></div>
       <div class="fg"><label>Unit · الوحدة</label><input id="co-unit" placeholder="bag / L / day"></div>
       <div class="fg"><label>Unit price DZD</label><input type="number" id="co-price" placeholder="0"></div>
+      <div class="fg"><label>Total DZD · الإجمالي</label><input type="number" id="co-total" placeholder="Leave blank to auto-calculate"></div>
     </div>
-    <div class="form-grid">
-      <div class="fg" style="margin-bottom:10px"><label>Receipt ref · مرجع الإيصال</label><input id="co-receipt" placeholder="e.g. Blue folder #3"></div>
-      <div class="fg" style="margin-bottom:10px"><label>📎 Receipt image · صورة الإيصال</label>
+    <div class="form-grid" style="margin-top:8px;">
+      <div class="fg"><label>Receipt ref · مرجع الإيصال</label><input id="co-receipt" placeholder="e.g. Blue folder #3"></div>
+      <div class="fg"><label>📎 Receipt image · صورة الإيصال</label>
         <input type="file" id="co-img" accept="image/*" style="font-size:14px;padding:5px" onchange="previewReceiptImg(this)">
         <div id="co-img-preview" style="margin-top:4px"></div>
       </div>
     </div>
-    <button class="btn btn-primary" style="width:100%" onclick="logCost()">Save entry · حفظ</button>
+    <div style="margin-top:8px;">
+      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">🖼️ Product photos · صور المنتج <span style="font-weight:400;color:var(--text3);">(multi-select)</span></label>
+      <input type="file" id="co-prod-imgs" accept="image/*" multiple style="font-size:14px;padding:5px;width:100%;" onchange="previewProductImgs(this)">
+      <div id="co-prod-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
+    </div>
+    <div style="margin-top:8px;">
+      <label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px;">Notes · ملاحظات</label>
+      <input id="co-notes" placeholder="e.g. Applied after rain, bought from market…" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:14px;">
+    </div>
+    <div style="margin-top:12px;">
+      <button class="btn btn-primary" style="width:100%" onclick="logCost()">Save entry · حفظ</button>
+    </div>
   </div>
   </div>
   <div class="tbl-wrap" style="margin-top:14px;">
@@ -1162,7 +1195,7 @@ textarea{resize:vertical;min-height:52px}
     <h3>👤 Employee · الموظف</h3>
     <button class="btn btn-sm" onclick="toggleEl('employee-body')">Toggle · إخفاء/إظهار</button>
   </div>
-  <div id="employee-body">
+  <div id="employee-body" style="display:none">
     <!-- Employee info bar -->
     <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:12px;flex-wrap:wrap;">
       <div style="display:flex;align-items:center;gap:8px;">
@@ -1239,7 +1272,7 @@ textarea{resize:vertical;min-height:52px}
     <h3>⚡ Utilities · المرافق</h3>
     <button class="btn btn-sm" onclick="toggleEl('utilities-body')">Toggle · إخفاء/إظهار</button>
   </div>
-  <div id="utilities-body">
+  <div id="utilities-body" style="display:none">
 
     <!-- KPI bar -->
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
@@ -1939,9 +1972,25 @@ window._treeData = {"trees":[{"id":1,"species":"apple-orange","lat":35.418547810
 
 // === DATA ===
 let D={tasks:[],irrigation:[],harvest:[],costs:[],weather:[],materials:[],utilities:[],docs:[],taskOrder:{},products:[],album:[],tinBlocks:{},tinNotes:{},tinNumbers:{},notes:{}};
-var yearInEditMode = null; // which future year is currently being drag-reordered
+var yearInEditMode = null;
 const saved=localStorage.getItem('farmYawmi3');
 if(saved)try{D=JSON.parse(saved);}catch(e){}
+// ── EMERGENCY: strip inline images from D immediately to prevent Out of Memory ──
+(function(){
+  var dirty = false;
+  (D.costs||[]).forEach(function(c){
+    if(c.receiptImg || (c.productImgs && c.productImgs.length)){
+      // Move to separate store
+      try{
+        var imgs = JSON.parse(localStorage.getItem('farmYawmi_imgs')||'{}');
+        if(!imgs[c.id]) imgs[c.id] = {receipt: c.receiptImg||'', product: c.productImgs||[]};
+        localStorage.setItem('farmYawmi_imgs', JSON.stringify(imgs));
+      }catch(e){}
+      delete c.receiptImg; delete c.productImgs; dirty = true;
+    }
+  });
+  if(dirty) try{ localStorage.setItem('farmYawmi3', JSON.stringify(D)); }catch(e){}
+})();
 
 function save(){
   const ts = Date.now();
@@ -2060,6 +2109,21 @@ function syncLegacyCostsData() {
 
 function init(){
   syncLegacyCostsData();
+  // Migrate old inline images out of D.costs to separate storage (one-time fix)
+  var migrated = false;
+  (D.costs||[]).forEach(function(c){
+    if(c.receiptImg || (c.productImgs && c.productImgs.length)){
+      saveCostImgs(c.id, c.receiptImg||'', c.productImgs||[]);
+      delete c.receiptImg;
+      delete c.productImgs;
+      migrated = true;
+    }
+  });
+  if(migrated){
+    // Write directly to localStorage without triggering renderAll
+    try{ localStorage.setItem('farmYawmi3', JSON.stringify(D)); }catch(e){}
+    console.log('Migrated inline images to separate storage');
+  }
   const m=new Date().getMonth();
   document.getElementById('date-pill').textContent=new Date().toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
   document.getElementById('season-pill').textContent=SEASON[m].en+' · '+SEASON[m].ar;
@@ -4050,15 +4114,29 @@ function logCost(){
   if(!date)return alert('Please select a date');
   var imgPrev = document.getElementById('co-img-preview');
   var imgData = imgPrev ? imgPrev.dataset.imgData||'' : '';
-  D.costs.push({id:Date.now(),date,cat:document.getElementById('co-cat').value,applies:document.getElementById('co-applies').value,item:document.getElementById('co-item').value,supplier:document.getElementById('co-supplier').value,qty:document.getElementById('co-qty').value,unit:document.getElementById('co-unit').value,price:document.getElementById('co-price').value,receipt:document.getElementById('co-receipt').value,receiptImg:imgData});
-  ['co-item','co-supplier','co-qty','co-unit','co-price','co-receipt'].forEach(id=>document.getElementById(id).value='');
+  var manualTotal = document.getElementById('co-total') ? document.getElementById('co-total').value : '';
+  var prodPreview = document.getElementById('co-prod-preview');
+  var prodImgs = prodPreview && prodPreview.dataset.images ? JSON.parse(prodPreview.dataset.images) : [];
+  var newId = Date.now();
+  D.costs.push({id:newId,date,cat:document.getElementById('co-cat').value,applies:document.getElementById('co-applies').value,item:document.getElementById('co-item').value,supplier:document.getElementById('co-supplier').value,qty:document.getElementById('co-qty').value,unit:document.getElementById('co-unit').value,price:document.getElementById('co-price').value,total:manualTotal,receipt:document.getElementById('co-receipt').value,notes:document.getElementById('co-notes').value});
+  // Store images separately to avoid bloating main data
+  if(imgData || prodImgs.length){
+    try{
+      var imgs = JSON.parse(localStorage.getItem('farmYawmi_imgs')||'{}');
+      imgs[newId] = {receipt: imgData||'', product: prodImgs};
+      localStorage.setItem('farmYawmi_imgs', JSON.stringify(imgs));
+    }catch(e){ console.warn('Image storage full:', e); }
+  }
+  ['co-item','co-supplier','co-qty','co-unit','co-price','co-total','co-receipt','co-notes'].forEach(id=>{var el=document.getElementById(id);if(el)el.value='';});
+  if(prodPreview){prodPreview.innerHTML='';prodPreview.dataset.images='[]';}
+  var prodInput=document.getElementById('co-prod-imgs');if(prodInput)prodInput.value='';
   if(imgPrev){imgPrev.innerHTML='';delete imgPrev.dataset.imgData;}
   var imgInput=document.getElementById('co-img');if(imgInput)imgInput.value='';
   persist();
   renderCosts();
   renderCostsSummary();
 }
-function deleteCost(id){if(!confirm('Delete this entry? · حذف هذا الإدخال؟'))return;D.costs=D.costs.filter(c=>c.id!==id);persist();renderCosts();}
+function deleteCost(id){if(!confirm('Delete this entry? · حذف هذا الإدخال؟'))return;D.costs=D.costs.filter(c=>c.id!==id);deleteCostImgs(id);persist();renderCosts();}
 function renderCosts(){
   function costTotal(c){ return parseFloat(c.total||0) || parseFloat(c.qty||1)*parseFloat(c.price||0); }
   const total=D.costs.reduce((s,c)=>s+costTotal(c),0);
@@ -4072,7 +4150,7 @@ function renderCosts(){
   const body=document.getElementById('costs-body');
   if(!D.costs.length){body.innerHTML='<tr><td colspan="8" class="empty">No entries yet</td></tr>';return;}
   // Group by month
-  var sortedC=[...D.costs].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  var sortedC=[...D.costs].sort((a,b)=>new Date(a.date)-new Date(b.date));
   var mGroups={};var mOrder=[];
   sortedC.forEach(function(c){
     var mk=c.date?c.date.slice(0,7):'zz';
@@ -4090,13 +4168,15 @@ function renderCosts(){
     html2+='<tr style="background:var(--green-light);"><td colspan="7" style="padding:6px 10px;font-weight:700;font-size:12px;color:var(--green);">'      +dateLabel+' <span style="font-weight:400;color:var(--text3);font-size:11px;">('+grp.entries.length+' entries · '+Math.round(grp.total).toLocaleString()+' DZD)</span></td><td></td></tr>';
     grp.entries.forEach(function(c){
       const tot=costTotal(c);
-      var imgHtml=c.receiptImg?`<img src="${c.receiptImg}" onclick="showReceiptImg('${c.id}')" style="height:32px;border-radius:4px;cursor:pointer;border:1px solid var(--border)" title="View receipt"/>`:(c.receipt||'—');
+      var ci = getCostImgs(c.id);
+      var imgHtml=ci.receipt?`<img src="${ci.receipt}" onclick="showReceiptImg('${c.id}')" style="height:32px;border-radius:4px;cursor:pointer;border:1px solid var(--border)" title="View receipt"/>`:(c.receipt||'—');
+      var hasPhotos = ci.product && ci.product.length;
       var dateStr = c.date ? new Date(c.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
       html2+=`<tr><td>${dateStr}</td><td><span class="badge b-blue" style="font-size:10px">${c.cat?c.cat.split('·')[0].trim():''}</span></td>
-      <td>${c.item||'—'}</td><td style="font-size:14px;color:var(--text2)">${c.applies||'—'}</td>
+      <td>${c.item||'—'}${c.notes?'<div style="font-size:11px;color:var(--text3);margin-top:2px;">📝 '+c.notes+'</div>':''}</td><td style="font-size:14px;color:var(--text2)">${c.applies||'—'}</td>
       <td>${c.qty||'—'} ${c.unit||''}</td><td>${parseFloat(c.price||0).toLocaleString()}</td>
       <td><strong>${Math.round(tot).toLocaleString()}</strong></td>
-      <td>${imgHtml}</td>
+      <td>${imgHtml}${hasPhotos?` <span style="font-size:10px;color:var(--text3);">🖼️${ci.product.length}</span>`:''}</td>
       <td style="display:flex;gap:4px">
         <button class="btn btn-sm" onclick="viewCost(${c.id})" title="View">👁</button>
         <button class="btn btn-sm" onclick="editCost(${c.id})" title="Edit">✏️</button>
@@ -5887,10 +5967,9 @@ function openEditTask(id) {
 
 
 function showReceiptImg(costId) {
-  var c = D.costs.find(function(x){return String(x.id)===String(costId);});
-  if (!c || !c.receiptImg) return;
-  var w = window.open('','_blank','width=600,height=500');
-  w.document.write('<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+c.receiptImg+'" style="max-width:100%;max-height:100vh"/></body></html>');
+  var ci = getCostImgs(parseInt(costId)||costId);
+  if (!ci || !ci.receipt) return;
+  openLightbox([{src: ci.receipt, name: 'Receipt'}], 0);
 }
 
 
@@ -6204,7 +6283,7 @@ function editHarvest(id) {
 function editCost(id) {
   var c = D.costs.find(x=>x.id===id);
   if(!c) return;
-  var cats = ['Fertiliser · سماد','Pesticide · مبيد','Irrigation · ري','Labour · عمالة','Equipment · معدات','Maintenance · صيانة','Packaging · تعبئة','Transport · نقل','Other · أخرى'];
+  var cats = ['Spraying · رش','Fertiliser · سماد','Fertilising · تسميد','Pesticide · مبيد','Pruning · تقليم','Thinning · ترقيق','Irrigation · ري','Labour · عمالة','Equipment · معدات','Maintenance · صيانة','Packaging · تعبئة','Transport · نقل','Medication · أدوية','Other · أخرى'];
   var catOpts = cats.map(function(cat){ return '<option'+(cat===c.cat?' selected':'')+'>'+cat+'</option>'; }).join('');
   var html = '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px">✏️ Edit Cost · تعديل التكلفة</div>'
     + editField('Date · التاريخ','date',c.date,'date')
@@ -6214,7 +6293,9 @@ function editCost(id) {
     + editField('Quantity · الكمية','qty',c.qty,'number')
     + editField('Unit · الوحدة','unit',c.unit)
     + editField('Unit price DZD · السعر','price',c.price,'number')
-    + editField('Receipt ref · مرجع الإيصال','receipt',c.receipt);
+    + editField('Total DZD · الإجمالي (manual)','total',c.total,'number')
+    + editField('Receipt ref · مرجع الإيصال','receipt',c.receipt)
+    + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Notes · ملاحظات</label><textarea id="ef-notes" rows="2" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:var(--font);resize:vertical;">'+(c.notes||'')+'</textarea></div>';
   showEditModal(html, function(){
     c.date = ef('date')||c.date;
     c.cat = ef('cat');
@@ -6223,7 +6304,9 @@ function editCost(id) {
     c.qty = ef('qty');
     c.unit = ef('unit');
     c.price = ef('price');
+    c.total = ef('total');
     c.receipt = ef('receipt');
+    c.notes = document.getElementById('ef-notes') ? document.getElementById('ef-notes').value : (c.notes||'');
     persist();
     renderCosts();
   });
@@ -6249,8 +6332,24 @@ function viewCost(id) {
     + '</div>'
     + (c.supplier?'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">🏪 Supplier: <b>'+c.supplier+'</b></div>':'')
     + (c.receipt?'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;">📎 Receipt ref: <b>'+c.receipt+'</b></div>':'')
-    + (c.receiptImg?'<img src="'+c.receiptImg+'" style="width:100%;border-radius:8px;margin-top:8px;"/>':'');
+    + (c.notes?'<div style="font-size:13px;color:var(--text2);margin-bottom:8px;background:var(--surface2);padding:8px 12px;border-radius:8px;border-left:3px solid var(--amber);">📝 '+c.notes+'</div>':'')
+    + '<div id="view-receipt-'+c.id+'" style="cursor:pointer;margin-bottom:8px;"></div>'
+    + '<div id="view-prod-imgs-'+c.id+'" style="display:flex;gap:8px;flex-wrap:wrap;"></div>';
   showEditModal(html, null, '');
+  var ci = getCostImgs(c.id);
+  if(ci.receipt || (ci.product && ci.product.length)){
+    setTimeout(function(){
+      // Show receipt via lightbox
+      if(ci.receipt){
+        var el = document.getElementById('view-receipt-'+c.id);
+        if(el){ el.onclick = function(){ openLightbox([{src:ci.receipt,name:'Receipt'}],0); }; }
+      }
+      if(ci.product && ci.product.length){
+        var el2 = document.getElementById('view-prod-imgs-'+c.id);
+        if(el2) renderProductPreviews(el2, ci.product, true);
+      }
+    }, 50);
+  }
 }
 
 function editMaterial(id) {
@@ -6565,24 +6664,19 @@ function renderCostsSummary() {
     years[yr][cat] += parseFloat(c.total||0) || parseFloat(c.qty||1)*parseFloat(c.price||0);
   });
   var catColors = {
-    // Cost entry form categories
-    'Fertiliser':'#22c55e','Pesticide':'#f97316','Irrigation':'#06b6d4',
+    'Fertiliser':'#22c55e','Fertilising':'#22c55e','Pesticide':'#f97316','Irrigation':'#06b6d4',
     'Labour':'#8b5cf6','Equipment':'#f59e0b','Maintenance':'#64748b',
     'Packaging':'#ec4899','Transport':'#0ea5e9','Other':'#94a3b8',
-    // Task categories
-    'Spraying':'#f97316','Fertilising':'#22c55e','Pruning':'#84cc16',
-    'Medication':'#e879f9','Thinning':'#fb923c','Monitoring':'#06b6d4',
-    'Harvest':'#16a34a',
-    // Salary & Utilities
+    'Spraying':'#f97316','Pruning':'#84cc16','Thinning':'#fb923c',
+    'Medication':'#e879f9','Monitoring':'#06b6d4','Harvest':'#16a34a',
     'Salary · الراتب':'#6366f1','Utilities · مرافق':'#f59e0b'
   };
   var catAr = {
-    'Fertiliser':'سماد','Pesticide':'مبيد','Irrigation':'ري',
+    'Fertiliser':'سماد','Fertilising':'تسميد','Pesticide':'مبيد','Irrigation':'ري',
     'Labour':'عمالة','Equipment':'معدات','Maintenance':'صيانة',
     'Packaging':'تعبئة','Transport':'نقل','Other':'أخرى',
-    'Spraying':'رش','Fertilising':'تسميد','Pruning':'تقليم',
-    'Medication':'أدوية','Thinning':'ترقيق','Monitoring':'مراقبة',
-    'Harvest':'حصاد',
+    'Spraying':'رش','Pruning':'تقليم','Thinning':'ترقيق',
+    'Medication':'أدوية','Monitoring':'مراقبة','Harvest':'حصاد',
     'Salary · الراتب':'رواتب','Utilities · مرافق':'مرافق'
   };
   var curYear = new Date().getFullYear().toString();
@@ -7537,6 +7631,125 @@ function initProfitCard(){
   if(me && m) me.value = m;
   if(ye && y) ye.value = y;
 }
+
+function getCostImgs(id){
+  try{
+    var imgs = JSON.parse(localStorage.getItem('farmYawmi_imgs')||'{}');
+    return imgs[id] || {receipt:'', product:[]};
+  }catch(e){ return {receipt:'', product:[]}; }
+}
+function saveCostImgs(id, receipt, product){
+  try{
+    var imgs = JSON.parse(localStorage.getItem('farmYawmi_imgs')||'{}');
+    imgs[id] = {receipt: receipt||'', product: product||[]};
+    localStorage.setItem('farmYawmi_imgs', JSON.stringify(imgs));
+  }catch(e){ showToast('⚠️ Image storage full — photo not saved'); }
+}
+function deleteCostImgs(id){
+  try{
+    var imgs = JSON.parse(localStorage.getItem('farmYawmi_imgs')||'{}');
+    delete imgs[id];
+    localStorage.setItem('farmYawmi_imgs', JSON.stringify(imgs));
+  }catch(e){}
+}
+
+// ── PRODUCT IMAGE PREVIEW & LIGHTBOX ──
+var _lbImages = [];
+var _lbIndex  = 0;
+
+function previewProductImgs(input){
+  var preview = document.getElementById('co-prod-preview');
+  if(!preview) return;
+  preview.innerHTML = '';
+  preview.dataset.images = '[]';
+  var files = Array.from(input.files);
+  if(!files.length) return;
+  var results = [];
+  var loaded = 0;
+  files.forEach(function(file, i){
+    var reader = new FileReader();
+    reader.onload = function(e){
+      results[i] = {data: e.target.result, name: file.name};
+      loaded++;
+      if(loaded === files.length){
+        preview.dataset.images = JSON.stringify(results);
+        renderProductPreviews(preview, results, false);
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderProductPreviews(container, images, readonly){
+  container.innerHTML = '';
+  images.forEach(function(img, i){
+    var wrap = document.createElement('div');
+    wrap.style.cssText = 'position:relative;display:inline-block;';
+    var el = document.createElement('img');
+    el.src = img.data || img;
+    el.style.cssText = 'width:72px;height:72px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--border);box-shadow:0 2px 8px rgba(0,0,0,.12);transition:transform .15s;';
+    el.title = img.name || 'Image '+(i+1);
+    el.onmouseenter = function(){ this.style.transform='scale(1.08)'; };
+    el.onmouseleave = function(){ this.style.transform='scale(1)'; };
+    el.onclick = function(){
+      var srcs = images.map(function(x){ return {src: x.data||x, name: x.name||''}; });
+      openLightbox(srcs, i);
+    };
+    wrap.appendChild(el);
+    if(!readonly){
+      var del = document.createElement('button');
+      del.innerHTML = '×';
+      del.style.cssText = 'position:absolute;top:-6px;right:-6px;background:#ef4444;color:#fff;border:none;border-radius:50%;width:18px;height:18px;font-size:12px;cursor:pointer;line-height:1;display:flex;align-items:center;justify-content:center;';
+      del.onclick = function(e){
+        e.stopPropagation();
+        images.splice(i,1);
+        container.dataset.images = JSON.stringify(images);
+        renderProductPreviews(container, images, false);
+      };
+      wrap.appendChild(del);
+    }
+    container.appendChild(wrap);
+  });
+}
+
+function openLightbox(images, startIdx){
+  _lbImages = images;
+  _lbIndex  = startIdx || 0;
+  var existing = document.getElementById('lightbox-overlay');
+  if(existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'lightbox-overlay';
+  overlay.onclick = function(e){ if(e.target===overlay) closeLightbox(); };
+  overlay.innerHTML =
+    '<button class="lb-close" onclick="closeLightbox()">×</button>'
+    +'<img id="lb-img" onclick="toggleLbZoom(this)">'
+    +'<div class="lb-caption" id="lb-caption"></div>'
+    +'<div class="lb-nav">'
+      +'<button onclick="lbPrev()">← Prev</button>'
+      +'<span id="lb-counter" style="color:#fff;font-size:13px;padding:6px 12px;"></span>'
+      +'<button onclick="lbNext()">Next →</button>'
+    +'</div>';
+  document.body.appendChild(overlay);
+  lbShow();
+  document.addEventListener('keydown', lbKeyHandler);
+}
+
+function lbShow(){
+  var img = document.getElementById('lb-img');
+  var cap = document.getElementById('lb-caption');
+  var ctr = document.getElementById('lb-counter');
+  if(!img) return;
+  img.classList.remove('zoomed');
+  img.src = _lbImages[_lbIndex].src;
+  if(cap) cap.textContent = _lbImages[_lbIndex].name || '';
+  if(ctr) ctr.textContent = (_lbIndex+1)+' / '+_lbImages.length;
+}
+
+function lbPrev(){ _lbIndex = (_lbIndex - 1 + _lbImages.length) % _lbImages.length; lbShow(); }
+function lbNext(){ _lbIndex = (_lbIndex + 1) % _lbImages.length; lbShow(); }
+function toggleLbZoom(img){ img.classList.toggle('zoomed'); img.style.cursor = img.classList.contains('zoomed') ? 'zoom-out' : 'zoom-in'; }
+function closeLightbox(){ var o=document.getElementById('lightbox-overlay'); if(o)o.remove(); document.removeEventListener('keydown',lbKeyHandler); }
+function lbKeyHandler(e){ if(e.key==='ArrowLeft')lbPrev(); else if(e.key==='ArrowRight')lbNext(); else if(e.key==='Escape')closeLightbox(); }
 
 // ── Start app ──
 init();
