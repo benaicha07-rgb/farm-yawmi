@@ -283,8 +283,19 @@ textarea{resize:vertical;min-height:52px}
 .mfbtn.active{background:var(--green-bg);border-color:var(--green-mid);color:var(--green)}
 
 </style>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" media="print" onload="this.media='all'">
+<script>
+// Defer Leaflet loading until Farm Map tab is opened
+window._leafletLoaded = false;
+function loadLeafletIfNeeded(cb){
+  if(window._leafletLoaded){if(cb)cb();return;}
+  var s=document.createElement('script');
+  s.src='https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+  s.onload=function(){window._leafletLoaded=true;if(cb)cb();};
+  s.onerror=function(){console.warn('Leaflet failed to load');if(cb)cb();};
+  document.head.appendChild(s);
+}
+</script>
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
@@ -453,24 +464,20 @@ textarea{resize:vertical;min-height:52px}
 
       window._fbSetStatus('synced');
 
-      // Real-time listener — update if another device saves newer/richer data
+      // Real-time listener — update if another device saves newer data
+      var _listenerIgnoreNext = false; // avoid echo when we just saved
       window._fb.listen(function(newRemoteData, newRemoteTs) {
+        // Ignore the echo from our own just-completed save
+        if (_listenerIgnoreNext) { _listenerIgnoreNext = false; return; }
         var currentTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
-        var currentRaw = localStorage.getItem('farmYawmi3');
-        var currentData = null;
-        try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
-        var currentCount = countEntries(currentData);
-        var newCount = countEntries(newRemoteData);
-
-        // Accept only if remote is clearly newer AND has strictly more data
-        if (newRemoteTs > currentTs + 5000 && newCount > currentCount) {
+        // Remote is newer by >5s → always accept (covers edits, deletes, count changes)
+        if (newRemoteTs > currentTs + 5000) {
           localStorage.setItem('farmYawmi3', JSON.stringify(newRemoteData));
           localStorage.setItem('farmYawmi3_ts', newRemoteTs);
           if (window._reloadData) window._reloadData();
-          console.log('Real-time sync from another device (' + newCount + ' entries)');
-        } else if (newCount <= currentCount) {
-          // Our local has same or more data — push ours to keep Firebase in sync
-          if (window._fb) window._fb.save(currentData);
+          console.log('Real-time sync accepted (remote newer):', newRemoteTs, '>', currentTs);
+        } else {
+          console.log('Real-time sync skipped (local is current)');
         }
       });
     });
@@ -489,7 +496,7 @@ textarea{resize:vertical;min-height:52px}
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v5.8</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.2</div>
       </div>
     </div>
   </div>
@@ -1994,6 +2001,7 @@ function save(){
   // Push to Firebase — fire and forget but update ts after success
   if (window._fb) {
     window._fbSetStatus('syncing');
+    if (typeof _listenerIgnoreNext !== 'undefined') _listenerIgnoreNext = true;
     window._fb.save(D).then(function(){
       // Update local timestamp to match what Firebase just stored
       localStorage.setItem('farmYawmi3_ts', ts);
@@ -2026,7 +2034,8 @@ window._reloadData = function() {
   if (raw) {
     try {
       D = JSON.parse(raw);
-      renderAll();
+      renderOverviewKPIs();
+      renderCurrentPage();
       console.log('Data reloaded from Firebase sync');
     } catch(e) {}
   }
@@ -2134,14 +2143,20 @@ function init(){
   var tvM=document.getElementById('tv-month'); if(tvM) tvM.classList.add('active');
   var tvW=document.getElementById('tv-week'); if(tvW) tvW.classList.remove('active');
   var tvA=document.getElementById('tv-all'); if(tvA) tvA.classList.remove('active');
-  renderAll();
+  // Only render overview on init - other tabs render on demand
+  renderOverview();
   setTimeout(renderRainLog, 200);
   initGenYear();
-  // Backup reminder after 7 days without backup
+  // Auto-export reminder every 7 days
   setTimeout(function(){
     var lastTs = localStorage.getItem('farmYawmi_lastBackup');
     var daysSince = lastTs ? Math.floor((Date.now()-parseInt(lastTs))/(1000*60*60*24)) : 999;
-    if(daysSince >= 7) showToast('⚠️ No backup in '+daysSince+' days — visit Backup tab · ' + daysSince +' أيام بدون نسخة');
+    if(daysSince >= 7){
+      if(confirm('⚠️ No backup in '+daysSince+' days!\n\nExport your data now to keep it safe?\n\n'+daysSince+' أيام بدون نسخة — تصدير الآن؟')){
+        exportData();
+        localStorage.setItem('farmYawmi_lastBackup', Date.now().toString());
+      }
+    }
   }, 3500);
 }
 
@@ -2553,23 +2568,42 @@ function getLastIrrig(blockId){
 }
 
 // === RENDER ALL ===
+var _currentPage = 'overview';
+
 function renderAll(){
-  renderOverview();
-  renderTasks();
-  renderIrrigLog();
-  renderHarvest();
-  renderCosts();
-  renderCostsSummary();
-  renderEmployeeCard();
-  renderUtilitiesCard();
-  buildBlockCards();
-  buildIrrigStatus();
-  renderRainLog();
-  renderMaterials();
-  buildGrowthTable();
-  renderIrrigStatusStrip();
-  renderDocs();
-  renderProductLibrary();
+  // Only render current page + overview KPIs (lightweight)
+  // Full renderAll on all tabs at once causes Out of Memory on low-end devices
+  renderOverviewKPIs();
+  renderCurrentPage();
+}
+
+function renderOverviewKPIs(){
+  // Fast KPI-only update for header numbers - no heavy DOM rendering
+  try{
+    var pending=D.tasks.filter(t=>!t.done).length;
+    var el=document.getElementById('ov-pending'); if(el) el.textContent=pending;
+    var lastIr=[...D.irrigation].sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
+    var el2=document.getElementById('ov-irrig'); if(el2) el2.textContent=lastIr?Math.round((Date.now()-new Date(lastIr.date))/86400000)+'d ago':'—';
+    var kg=D.harvest.reduce((s,h)=>s+parseFloat(h.kg||0),0);
+    var el3=document.getElementById('ov-yield'); if(el3) el3.textContent=Math.round(kg)+' kg';
+    var tot=D.costs.reduce((s,c)=>s+(parseFloat(c.total||0)||parseFloat(c.qty||1)*parseFloat(c.price||0)),0);
+    var el4=document.getElementById('ov-costs'); if(el4) el4.textContent=Math.round(tot).toLocaleString();
+    var el5=document.getElementById('task-counts'); if(el5) el5.textContent=pending+' pending · '+D.tasks.filter(t=>t.done).length+' done';
+  }catch(e){}
+}
+
+function renderCurrentPage(){
+  var id = _currentPage;
+  if(id==='overview'){renderOverview();}
+  else if(id==='tasks'){renderTasks();}
+  else if(id==='irrigation'){renderIrrigLog();}
+  else if(id==='harvest'){renderHarvest();}
+  else if(id==='costs'){renderCosts();renderCostsSummary();renderEmployeeCard();renderUtilitiesCard();}
+  else if(id==='materials'){renderMaterials();}
+  else if(id==='growth'){buildGrowthTable();}
+  else if(id==='livestock'){renderChickenCard();}
+  else if(id==='notes'){renderNotesPage();}
+  // Other pages don't need re-render on data change
 }
 
 function renderOverview(){
@@ -4024,7 +4058,7 @@ function restoreBackup(snapshotId) {
           weather: parsed.weather||[], materials: parsed.materials||[],
           docs: parsed.docs||[], taskOrder: (parsed.taskOrder && !Array.isArray(parsed.taskOrder)) ? parsed.taskOrder : {}
         };
-        save(); renderAll();
+        save(); _currentPage='overview'; renderOverview(); renderOverviewKPIs();
         showToast('✅ Restored from ' + new Date(snapshot.ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}));
       } catch(e) { showToast('❌ Restore failed: ' + e.message); }
     });
@@ -5063,6 +5097,7 @@ function deleteUtilityBill(id) {
 
 // === NAV ===
 function goPage(id,btn){
+  _currentPage = id;
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('page-'+id).classList.add('active');
@@ -5119,7 +5154,7 @@ function importData(e){
         taskOrder: (importedData.taskOrder && !Array.isArray(importedData.taskOrder)) ? importedData.taskOrder : {}
       };
       save();
-      try { renderAll(); } catch(re) { console.warn('renderAll partial error:', re); }
+      try { _currentPage='overview'; renderOverview(); renderOverviewKPIs(); } catch(re) { console.warn('render error after import:', re); }
       try { renderRainLog(); } catch(re) {}
       try { renderMaterials(); } catch(re) {}
       alert('Imported ✅ ' + D.tasks.length + ' tasks, ' + D.irrigation.length + ' irrigation, ' + D.weather.length + ' rain entries');
@@ -5168,6 +5203,7 @@ var activeFilter = 'all';
 var activeBlockFilter = null;
 
 function initFarmMap() {
+  loadLeafletIfNeeded(function(){
   if (leafMap) { setTimeout(function(){ leafMap.invalidateSize(); }, 100); return; }
 
   leafMap = L.map('farmLeafMap', { center:[35.41815,6.60094], zoom:18 });
@@ -5185,6 +5221,7 @@ function initFarmMap() {
   buildMapLegend();
   addBlockLabels();
   // irrigation glow handled inside addBlockLabels tooltip
+  }); // end loadLeafletIfNeeded
 }
 
 // Block marker positions - exact GPS from user (verified)
