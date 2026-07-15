@@ -2527,6 +2527,7 @@ function buildIrrigStatus(){
   const m=new Date().getMonth();
   const freq=m>=6&&m<=7?'3–5':'5–7';
   const cont=document.getElementById('irrig-status-cards');
+  if(!cont) return;
   cont.innerHTML=BLOCKS.map(b=>{
     const last=getLastIrrig(b.id);
     const days=last?Math.round((Date.now()-new Date(last))/86400000):null;
