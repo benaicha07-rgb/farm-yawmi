@@ -498,7 +498,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.8</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.9</div>
       </div>
     </div>
   </div>
@@ -5173,7 +5173,8 @@ function importData(e){
       try { _currentPage='overview'; renderOverview(); renderOverviewKPIs(); } catch(re) { console.warn('render error after import:', re); }
       try { renderRainLog(); } catch(re) {}
       try { renderMaterials(); } catch(re) {}
-      alert('Imported ✅\n' + D.tasks.length + ' tasks\n' + D.costs.length + ' cost entries\n' + D.irrigation.length + ' irrigation entries\n' + Object.keys(D.notes||{}).length + ' notes\n' + D.materials.length + ' materials');
+      var _noteCount = Object.values(D.notes||{}).reduce(function(s,arr){return s+(Array.isArray(arr)?arr.length:0);},0);
+      alert('Imported ✅\n' + D.tasks.length + ' tasks\n' + D.costs.length + ' cost entries\n' + D.irrigation.length + ' irrigation entries\n' + _noteCount + ' notes\n' + D.materials.length + ' materials');
     }catch(err){
       alert('Import failed: ' + err.message + '\nPlease check the file format.');
     }
