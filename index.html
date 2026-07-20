@@ -440,32 +440,75 @@ function loadLeafletIfNeeded(cb){
 
       console.log('Firebase sync — local entries:', localCount, 'remote entries:', remoteCount, 'localTs:', localUpdated, 'remoteTs:', remoteTs);
 
+      // Simple checksum: join all task IDs + costs IDs to detect real content differences
+      function dataChecksum(d) {
+        if (!d) return '';
+        var tIds = (d.tasks||[]).map(function(t){return t.id||'';}).sort().join(',');
+        var cIds = (d.costs||[]).map(function(c){return c.id||'';}).sort().join(',');
+        var iLen = (d.irrigation||[]).length;
+        return tIds + '|' + cIds + '|' + iLen;
+      }
+
       if (!remoteData && localData) {
         // Firebase empty — push local up
         await window._fb.save(localData);
-        console.log('Startup sync: Firebase empty, pushed local up');
+        console.log('Startup: Firebase empty, pushed local up');
       } else if (remoteData && !localData) {
-        // No local — load from Firebase
+        // No local data — load from Firebase
         localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
         localStorage.setItem('farmYawmi3_ts', remoteTs);
         if (window._reloadData) window._reloadData();
-        console.log('Startup sync: no local, loaded Firebase');
+        console.log('Startup: no local, loaded Firebase');
       } else if (remoteData && localData) {
-        // Both exist — use entry count as primary signal, timestamp as tiebreaker
-        var tsNewer = remoteTs > localUpdated + 3000;
-        var countBetter = remoteCount > localCount;
-        var countEqual = remoteCount === localCount;
+        var localCheck = dataChecksum(localData);
+        var remoteCheck = dataChecksum(remoteData);
+        console.log('Startup checksums — local:', localCheck.substring(0,60), 'remote:', remoteCheck.substring(0,60));
+        console.log('Counts — local:', localCount, 'remote:', remoteCount, 'localTs:', localUpdated, 'remoteTs:', remoteTs);
 
-        if (countBetter || (countEqual && tsNewer)) {
-          // Remote has more data, OR same data but genuinely newer — use remote
+        if (localCheck === remoteCheck) {
+          // Identical content — no sync needed, just keep local
+          console.log('Startup: content identical, no sync needed');
+        } else if (remoteCount > localCount) {
+          // Firebase has more entries — always use Firebase
           localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
           localStorage.setItem('farmYawmi3_ts', remoteTs);
           if (window._reloadData) window._reloadData();
-          console.log('Startup sync: loaded Firebase (remote count=' + remoteCount + ' local count=' + localCount + ')');
+          console.log('Startup: Firebase has more entries (' + remoteCount + ' vs ' + localCount + '), loaded Firebase');
+        } else if (localCount > remoteCount) {
+          // Local has more entries — but only push if Firebase hasn't been updated very recently
+          // (prevents stale mobile import from overwriting a PC that just saved)
+          var firebaseAge = Date.now() - remoteTs;
+          if (firebaseAge < 60000) {
+            // Firebase was updated in the last 60 seconds — trust Firebase, don't overwrite
+            localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
+            localStorage.setItem('farmYawmi3_ts', remoteTs);
+            if (window._reloadData) window._reloadData();
+            console.log('Startup: local has more but Firebase is fresh (' + Math.round(firebaseAge/1000) + 's ago), loaded Firebase');
+          } else {
+            await window._fb.save(localData);
+            console.log('Startup: local has more entries (' + localCount + ' vs ' + remoteCount + '), pushed to Firebase');
+          }
         } else {
-          // Local has more or equal data and isn't older — push local up
-          await window._fb.save(localData);
-          console.log('Startup sync: pushed local to Firebase (local count=' + localCount + ' remote count=' + remoteCount + ')');
+          // Same count but different content — use Firebase timestamp to decide
+          if (remoteTs > localUpdated + 3000) {
+            localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
+            localStorage.setItem('farmYawmi3_ts', remoteTs);
+            if (window._reloadData) window._reloadData();
+            console.log('Startup: same count, Firebase newer by timestamp, loaded Firebase');
+          } else {
+            // Only push local if Firebase is old (more than 5 minutes)
+            var fbAge2 = Date.now() - remoteTs;
+            if (fbAge2 > 300000) {
+              await window._fb.save(localData);
+              console.log('Startup: same count, local newer, Firebase is old (' + Math.round(fbAge2/1000) + 's), pushed to Firebase');
+            } else {
+              // Firebase is recent — load it to be safe
+              localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
+              localStorage.setItem('farmYawmi3_ts', remoteTs);
+              if (window._reloadData) window._reloadData();
+              console.log('Startup: same count, Firebase recent, loaded Firebase to be safe');
+            }
+          }
         }
       }
 
@@ -479,19 +522,24 @@ function loadLeafletIfNeeded(cb){
         var currentRaw = localStorage.getItem('farmYawmi3');
         var currentData = null;
         try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
+        // Use checksum to detect real content changes
+        var localCheck = dataChecksum(currentData);
+        var remoteCheck = dataChecksum(newRemoteData);
+        if (localCheck === remoteCheck) {
+          console.log('Real-time: content identical, skipping');
+          return;
+        }
         var currentCount = countEntries(currentData);
         var newCount = countEntries(newRemoteData);
         var tsNewer = newRemoteTs > currentTs + 5000;
-        var countBetter = newCount > currentCount;
-        var countEqual = newCount === currentCount;
-        // Accept if remote has more entries, OR same entries and genuinely newer timestamp
-        if (countBetter || (countEqual && tsNewer)) {
+        // Accept if: remote has more entries, OR same count but newer timestamp
+        if (newCount > currentCount || (newCount >= currentCount && tsNewer)) {
           localStorage.setItem('farmYawmi3', JSON.stringify(newRemoteData));
           localStorage.setItem('farmYawmi3_ts', newRemoteTs);
           if (window._reloadData) window._reloadData();
-          console.log('Real-time sync accepted (remote count=' + newCount + ' local=' + currentCount + ')');
+          console.log('Real-time sync accepted (remote=' + newCount + ' local=' + currentCount + ' tsNewer=' + tsNewer + ')');
         } else {
-          console.log('Real-time sync skipped (local is richer or current)');
+          console.log('Real-time sync skipped (local richer: local=' + currentCount + ' remote=' + newCount + ')');
         }
       });
     });
@@ -539,7 +587,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.14</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.15</div>
       </div>
     </div>
   </div>
