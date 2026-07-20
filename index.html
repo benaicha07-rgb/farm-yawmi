@@ -428,7 +428,7 @@ function loadLeafletIfNeeded(cb){
       var remoteData = (remote && remote.data) ? remote.data : null;
 
       // Count entries to decide which is richer
-      function countEntries(d) {
+      window.countEntries = function countEntries(d) {
         if (!d) return 0;
         return (d.tasks||[]).length + (d.irrigation||[]).length + 
                (d.harvest||[]).length + (d.costs||[]).length;
@@ -509,8 +509,8 @@ function loadLeafletIfNeeded(cb){
             var currentRaw = localStorage.getItem('farmYawmi3');
             var currentData = null;
             try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
-            var remoteCount = countEntries(remoteData);
-            var localCount = countEntries(currentData);
+            var remoteCount = (window.countEntries||function(d){return 0;})(remoteData);
+            var localCount = (window.countEntries||function(d){return 0;})(currentData);
             var countBetter = remoteCount > localCount;
             var countEqual = remoteCount === localCount;
             var tsNewer = remoteTs > currentTs + 3000;
@@ -539,7 +539,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.11</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.12</div>
       </div>
     </div>
   </div>
@@ -582,6 +582,7 @@ function loadLeafletIfNeeded(cb){
   <span class="season-pill" id="season-pill">Fruit development · تطور الثمار</span>
   <span style="font-size:13px;color:var(--text3)" id="date-pill">Fri, 3 Jul 2026</span>
   <button class="btn btn-sm" onclick="exportData()">↓ Export</button>
+  <button class="btn btn-sm" id="sync-btn" onclick="forceSyncFromFirebase()" title="Pull latest data from Firebase" style="background:var(--green);color:#fff;">⟳ Sync</button>
   <button class="btn btn-sm" onclick="document.getElementById(&#39;imp&#39;).click()">↑ Import</button>
   <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
   <button id="dark-toggle" class="btn btn-sm" onclick="toggleDarkMode()" title="Toggle dark mode" style="font-size:15px;padding:4px 10px;">🌙</button>
@@ -2191,17 +2192,7 @@ function init(){
   renderOverview();
   setTimeout(renderRainLog, 200);
   initGenYear();
-  // Auto-export reminder every 7 days
-  setTimeout(function(){
-    var lastTs = localStorage.getItem('farmYawmi_lastBackup');
-    var daysSince = lastTs ? Math.floor((Date.now()-parseInt(lastTs))/(1000*60*60*24)) : 999;
-    if(daysSince >= 7){
-      if(confirm('⚠️ No backup in '+daysSince+' days!\n\nExport your data now to keep it safe?\n\n'+daysSince+' أيام بدون نسخة — تصدير الآن؟')){
-        exportData();
-        localStorage.setItem('farmYawmi_lastBackup', Date.now().toString());
-      }
-    }
-  }, 3500);
+  // Auto-export reminder removed — user manages backups manually
 }
 
 function setDefaults(){
@@ -6840,6 +6831,36 @@ function renderCostsSummary() {
   });
   el.innerHTML = html2;
   _renderCostCatFilter();
+}
+
+async function forceSyncFromFirebase() {
+  var btn = document.getElementById('sync-btn');
+  if(btn){ btn.textContent = '⟳ Syncing...'; btn.disabled = true; }
+  try {
+    var snap = await window._fb.load();
+    if (!snap) { alert('Could not reach Firebase'); return; }
+    var remoteTs = snap.updatedAt || 0;
+    var remoteData = snap.data;
+    var currentTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
+    var currentRaw = localStorage.getItem('farmYawmi3');
+    var currentData = null;
+    try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
+    var remoteCount = (window.countEntries||function(){return 0;})(remoteData);
+    var localCount = (window.countEntries||function(){return 0;})(currentData);
+    if (remoteCount > localCount || remoteTs > currentTs + 1000) {
+      localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
+      localStorage.setItem('farmYawmi3_ts', remoteTs);
+      if (window._reloadData) window._reloadData();
+      if(btn){ btn.textContent = '✓ Updated!'; }
+      setTimeout(function(){ if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; } }, 2000);
+    } else {
+      if(btn){ btn.textContent = '✓ Up to date'; }
+      setTimeout(function(){ if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; } }, 2000);
+    }
+  } catch(e) {
+    if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; }
+    console.warn('Force sync error:', e);
+  }
 }
 
 function _toggleCostYr(yr) {
