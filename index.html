@@ -539,7 +539,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.12</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.13</div>
       </div>
     </div>
   </div>
@@ -6838,25 +6838,19 @@ async function forceSyncFromFirebase() {
   if(btn){ btn.textContent = '⟳ Syncing...'; btn.disabled = true; }
   try {
     var snap = await window._fb.load();
-    if (!snap) { alert('Could not reach Firebase'); return; }
-    var remoteTs = snap.updatedAt || 0;
-    var remoteData = snap.data;
-    var currentTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
-    var currentRaw = localStorage.getItem('farmYawmi3');
-    var currentData = null;
-    try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
-    var remoteCount = (window.countEntries||function(){return 0;})(remoteData);
-    var localCount = (window.countEntries||function(){return 0;})(currentData);
-    if (remoteCount > localCount || remoteTs > currentTs + 1000) {
-      localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
-      localStorage.setItem('farmYawmi3_ts', remoteTs);
-      if (window._reloadData) window._reloadData();
-      if(btn){ btn.textContent = '✓ Updated!'; }
-      setTimeout(function(){ if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; } }, 2000);
-    } else {
-      if(btn){ btn.textContent = '✓ Up to date'; }
-      setTimeout(function(){ if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; } }, 2000);
+    if (!snap) {
+      if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; }
+      alert('Could not reach Firebase — check internet connection');
+      return;
     }
+    // Always load from Firebase when manually syncing — no comparison needed
+    var remoteData = snap.data;
+    var remoteTs = snap.updatedAt || 0;
+    localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
+    localStorage.setItem('farmYawmi3_ts', remoteTs);
+    if (window._reloadData) window._reloadData();
+    if(btn){ btn.textContent = '✓ Updated!'; }
+    setTimeout(function(){ if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; } }, 2000);
   } catch(e) {
     if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; }
     console.warn('Force sync error:', e);
