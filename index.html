@@ -539,7 +539,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.13</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.14</div>
       </div>
     </div>
   </div>
@@ -2078,11 +2078,33 @@ window._reloadData = function() {
   var raw = localStorage.getItem('farmYawmi3');
   if (raw) {
     try {
-      D = JSON.parse(raw);
+      var parsed = JSON.parse(raw);
+      // Assign all fields explicitly to ensure nothing is missed
+      D.tasks       = parsed.tasks       || [];
+      D.irrigation  = parsed.irrigation  || [];
+      D.harvest     = parsed.harvest     || [];
+      D.costs       = parsed.costs       || [];
+      D.weather     = parsed.weather     || [];
+      D.materials   = parsed.materials   || [];
+      D.utilities   = parsed.utilities   || [];
+      D.docs        = parsed.docs        || [];
+      D.products    = parsed.products    || [];
+      D.album       = parsed.album       || [];
+      D.notes       = parsed.notes       || {};
+      D.taskOrder   = parsed.taskOrder   || {};
+      D.tinBlocks   = parsed.tinBlocks   || {};
+      D.tinNotes    = parsed.tinNotes    || {};
+      D.tinNumbers  = parsed.tinNumbers  || {};
+      D.employee    = parsed.employee    || null;
+      D.chicken     = parsed.chicken     || null;
+      D.diag        = parsed.diag        || [];
+      D.growth      = parsed.growth      || [];
+      D.budgets     = parsed.budgets     || {};
+      try { renderOverview(); } catch(e) {}
       renderOverviewKPIs();
       renderCurrentPage();
-      console.log('Data reloaded from Firebase sync');
-    } catch(e) {}
+      console.log('Data reloaded — tasks:', D.tasks.length, 'costs:', D.costs.length);
+    } catch(e) { console.warn('_reloadData error:', e); }
   }
 };
 
@@ -6846,10 +6868,16 @@ async function forceSyncFromFirebase() {
     // Always load from Firebase when manually syncing — no comparison needed
     var remoteData = snap.data;
     var remoteTs = snap.updatedAt || 0;
+    // Write to localStorage
     localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
     localStorage.setItem('farmYawmi3_ts', remoteTs);
-    if (window._reloadData) window._reloadData();
+    // Directly assign to D and force full re-render
+    D = remoteData;
+    try { renderOverview(); } catch(e) {}
+    try { renderOverviewKPIs(); } catch(e) {}
+    try { renderCurrentPage(); } catch(e) {}
     if(btn){ btn.textContent = '✓ Updated!'; }
+    console.log('Force sync complete — tasks:', (D.tasks||[]).length, 'costs:', (D.costs||[]).length, 'notes keys:', Object.keys(D.notes||{}).length);
     setTimeout(function(){ if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; } }, 2000);
   } catch(e) {
     if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; }
