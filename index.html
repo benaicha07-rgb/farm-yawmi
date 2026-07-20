@@ -495,6 +495,35 @@ function loadLeafletIfNeeded(cb){
         }
       });
     });
+
+    // Visibility-based sync — when user returns to tab/app, check Firebase for updates
+    document.addEventListener('visibilitychange', function() {
+      if (document.visibilityState === 'visible') {
+        setTimeout(async function() {
+          try {
+            var snap = await window._fb.load();
+            if (!snap) return;
+            var remoteTs = snap.updatedAt || 0;
+            var remoteData = snap.data;
+            var currentTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
+            var currentRaw = localStorage.getItem('farmYawmi3');
+            var currentData = null;
+            try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
+            var remoteCount = countEntries(remoteData);
+            var localCount = countEntries(currentData);
+            var countBetter = remoteCount > localCount;
+            var countEqual = remoteCount === localCount;
+            var tsNewer = remoteTs > currentTs + 3000;
+            if (countBetter || (countEqual && tsNewer)) {
+              localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
+              localStorage.setItem('farmYawmi3_ts', remoteTs);
+              if (window._reloadData) window._reloadData();
+              console.log('Visibility sync: loaded newer Firebase data');
+            }
+          } catch(e) { console.warn('Visibility sync error:', e); }
+        }, 1000);
+      }
+    });
   </script>
 </head>
 <body class="">
@@ -510,7 +539,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.10</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.11</div>
       </div>
     </div>
   </div>
