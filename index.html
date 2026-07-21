@@ -473,17 +473,32 @@ function loadLeafletIfNeeded(cb){
         if (window._reloadData) window._reloadData();
         console.log('Startup: no local data, loaded Firebase');
       } else {
-        // Both exist — TIMESTAMP WINS
-        if (localTs >= remoteTs) {
-          // Local is newer or equal — push to Firebase to keep it current
-          await window._fb.save(localData);
-          console.log('Startup: local newer (localTs=' + localTs + ' >= remoteTs=' + remoteTs + '), pushed to Firebase');
-        } else {
-          // Firebase is newer — load it
+        // Both exist — COUNT WINS, timestamp only tiebreaker
+        var localCount = window.countEntries(localData);
+        var remoteCount = window.countEntries(remoteData);
+        console.log('Startup: localCount=' + localCount + ' remoteCount=' + remoteCount);
+
+        if (remoteCount > localCount) {
+          // Firebase has MORE data — always use Firebase regardless of timestamp
           localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
           localStorage.setItem('farmYawmi3_ts', remoteTs);
           if (window._reloadData) window._reloadData();
-          console.log('Startup: Firebase newer (remoteTs=' + remoteTs + ' > localTs=' + localTs + '), loaded Firebase');
+          console.log('Startup: Firebase has more entries, loaded Firebase');
+        } else if (localCount > remoteCount) {
+          // Local has MORE data — push to Firebase
+          await window._fb.save(localData);
+          console.log('Startup: local has more entries, pushed to Firebase');
+        } else {
+          // Same count — timestamp decides
+          if (remoteTs > localTs) {
+            localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
+            localStorage.setItem('farmYawmi3_ts', remoteTs);
+            if (window._reloadData) window._reloadData();
+            console.log('Startup: equal count, Firebase newer by timestamp, loaded Firebase');
+          } else {
+            await window._fb.save(localData);
+            console.log('Startup: equal count, local newer or equal, pushed to Firebase');
+          }
         }
       }
 
@@ -494,8 +509,13 @@ function loadLeafletIfNeeded(cb){
       window._fb.listen(function(newRemoteData, newRemoteTs) {
         if (window._listenerIgnoreNext) { window._listenerIgnoreNext = false; return; }
         var currentTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
-        // Only accept if Firebase is strictly newer than what we have
-        if (newRemoteTs > currentTs) {
+        var currentRaw = localStorage.getItem('farmYawmi3');
+        var currentData = null;
+        try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
+        var currentCount = window.countEntries(currentData);
+        var newCount = window.countEntries(newRemoteData);
+        // Accept if Firebase has more entries, OR same count and newer timestamp
+        if (newCount > currentCount || (newCount >= currentCount && newRemoteTs > currentTs)) {
           localStorage.setItem('farmYawmi3', JSON.stringify(newRemoteData));
           localStorage.setItem('farmYawmi3_ts', newRemoteTs);
           if (window._reloadData) window._reloadData();
@@ -549,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.21</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.22</div>
       </div>
     </div>
   </div>
