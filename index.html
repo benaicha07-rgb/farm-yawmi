@@ -317,6 +317,9 @@ function loadLeafletIfNeeded(cb){
     // Expose to global scope for use in main script
     window._fb = {
       save: async function(data) {
+        return window._fb.saveWithTs(data, Date.now());
+      },
+      saveWithTs: async function(data, ts) {
         try {
           // Strip any large fields before saving to stay under Firebase 1MB limit
           var clean = JSON.parse(JSON.stringify(data));
@@ -325,11 +328,11 @@ function loadLeafletIfNeeded(cb){
           (clean.album||[]).forEach(function(a){ delete a.img; delete a.data; });
           var payload = JSON.stringify(clean);
           if(payload.length > 900000){
-            // Still too big — trim album and diag history
             clean.album = []; clean.diag = [];
             payload = JSON.stringify(clean);
           }
-          await setDoc(farmDoc, { data: payload, updatedAt: Date.now() });
+          // Use the SAME timestamp passed in — guarantees local and Firebase are in sync
+          await setDoc(farmDoc, { data: payload, updatedAt: ts });
           window._fbSetStatus('synced');
         } catch(e) {
           console.warn('Firebase save failed:', e);
@@ -413,133 +416,74 @@ function loadLeafletIfNeeded(cb){
       }
     };
 
-    // Load on startup — always prefer Firestore if it has more data
+    // ── STARTUP SYNC ──
+    // Rule: whichever side has a NEWER timestamp wins. Period.
+    // save() always sets ts=Date.now() locally AND pushes updatedAt=Date.now() to Firebase.
+    // So timestamps are always reliable — the side that saved most recently wins.
     window.addEventListener('DOMContentLoaded', async () => {
       window._fbSetStatus('syncing');
+
+      window.countEntries = function(d) {
+        if (!d) return 0;
+        return (d.tasks||[]).length + (d.irrigation||[]).length +
+               (d.harvest||[]).length + (d.costs||[]).length;
+      };
+
       const remote = await window._fb.load();
-
       const localRaw = localStorage.getItem('farmYawmi3');
-      const localUpdated = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
-
-      // Parse both data sources
+      const localTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
       var localData = null;
       try { localData = localRaw ? JSON.parse(localRaw) : null; } catch(e) {}
-
       var remoteData = (remote && remote.data) ? remote.data : null;
-
-      // Count entries to decide which is richer
-      window.countEntries = function countEntries(d) {
-        if (!d) return 0;
-        return (d.tasks||[]).length + (d.irrigation||[]).length + 
-               (d.harvest||[]).length + (d.costs||[]).length;
-      }
-
-      var localCount = countEntries(localData);
-      var remoteCount = countEntries(remoteData);
       var remoteTs = (remote && remote.updatedAt) ? remote.updatedAt : 0;
 
-      console.log('Firebase sync — local entries:', localCount, 'remote entries:', remoteCount, 'localTs:', localUpdated, 'remoteTs:', remoteTs);
+      console.log('Startup: localTs=' + localTs + ' remoteTs=' + remoteTs +
+        ' localEntries=' + window.countEntries(localData) +
+        ' remoteEntries=' + window.countEntries(remoteData));
 
-      // Simple checksum: join all task IDs + costs IDs to detect real content differences
-      function dataChecksum(d) {
-        if (!d) return '';
-        var tIds = (d.tasks||[]).map(function(t){return t.id||'';}).sort().join(',');
-        var cIds = (d.costs||[]).map(function(c){return c.id||'';}).sort().join(',');
-        var iLen = (d.irrigation||[]).length;
-        return tIds + '|' + cIds + '|' + iLen;
-      }
-
-      if (!remoteData && localData) {
+      if (!remoteData && !localData) {
+        // Nothing anywhere — fresh start
+        console.log('Startup: no data anywhere');
+      } else if (!remoteData && localData) {
         // Firebase empty — push local up
         await window._fb.save(localData);
         console.log('Startup: Firebase empty, pushed local up');
       } else if (remoteData && !localData) {
-        // No local data — load from Firebase
+        // No local — load Firebase
         localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
         localStorage.setItem('farmYawmi3_ts', remoteTs);
         if (window._reloadData) window._reloadData();
-        console.log('Startup: no local, loaded Firebase');
-      } else if (remoteData && localData) {
-        var localCheck = dataChecksum(localData);
-        var remoteCheck = dataChecksum(remoteData);
-        console.log('Startup checksums — local:', localCheck.substring(0,60), 'remote:', remoteCheck.substring(0,60));
-        console.log('Counts — local:', localCount, 'remote:', remoteCount, 'localTs:', localUpdated, 'remoteTs:', remoteTs);
-
-        if (localCheck === remoteCheck) {
-          // Identical content — no sync needed, just keep local
-          console.log('Startup: content identical, no sync needed');
-        } else if (remoteCount > localCount) {
-          // Firebase has more entries — always use Firebase
+        console.log('Startup: no local data, loaded Firebase');
+      } else {
+        // Both exist — TIMESTAMP WINS
+        if (localTs >= remoteTs) {
+          // Local is newer or equal — push to Firebase to keep it current
+          await window._fb.save(localData);
+          console.log('Startup: local newer (localTs=' + localTs + ' >= remoteTs=' + remoteTs + '), pushed to Firebase');
+        } else {
+          // Firebase is newer — load it
           localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
           localStorage.setItem('farmYawmi3_ts', remoteTs);
           if (window._reloadData) window._reloadData();
-          console.log('Startup: Firebase has more entries (' + remoteCount + ' vs ' + localCount + '), loaded Firebase');
-        } else if (localCount > remoteCount) {
-          // Local has more entries — but only push if Firebase hasn't been updated very recently
-          // (prevents stale mobile import from overwriting a PC that just saved)
-          var firebaseAge = Date.now() - remoteTs;
-          if (firebaseAge < 60000) {
-            // Firebase was updated in the last 60 seconds — trust Firebase, don't overwrite
-            localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
-            localStorage.setItem('farmYawmi3_ts', remoteTs);
-            if (window._reloadData) window._reloadData();
-            console.log('Startup: local has more but Firebase is fresh (' + Math.round(firebaseAge/1000) + 's ago), loaded Firebase');
-          } else {
-            await window._fb.save(localData);
-            console.log('Startup: local has more entries (' + localCount + ' vs ' + remoteCount + '), pushed to Firebase');
-          }
-        } else {
-          // Same count but different content — use Firebase timestamp to decide
-          if (remoteTs > localUpdated + 3000) {
-            localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
-            localStorage.setItem('farmYawmi3_ts', remoteTs);
-            if (window._reloadData) window._reloadData();
-            console.log('Startup: same count, Firebase newer by timestamp, loaded Firebase');
-          } else {
-            // Only push local if Firebase is old (more than 5 minutes)
-            var fbAge2 = Date.now() - remoteTs;
-            if (fbAge2 > 300000) {
-              await window._fb.save(localData);
-              console.log('Startup: same count, local newer, Firebase is old (' + Math.round(fbAge2/1000) + 's), pushed to Firebase');
-            } else {
-              // Firebase is recent — load it to be safe
-              localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
-              localStorage.setItem('farmYawmi3_ts', remoteTs);
-              if (window._reloadData) window._reloadData();
-              console.log('Startup: same count, Firebase recent, loaded Firebase to be safe');
-            }
-          }
+          console.log('Startup: Firebase newer (remoteTs=' + remoteTs + ' > localTs=' + localTs + '), loaded Firebase');
         }
       }
 
       window._fbSetStatus('synced');
 
-      // Real-time listener — update if another device saves newer data
-      var _listenerIgnoreNext = false; // avoid echo when we just saved
+      // Real-time listener — fires when ANY device saves to Firebase
+      var _listenerIgnoreNext = false;
       window._fb.listen(function(newRemoteData, newRemoteTs) {
         if (_listenerIgnoreNext) { _listenerIgnoreNext = false; return; }
         var currentTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
-        var currentRaw = localStorage.getItem('farmYawmi3');
-        var currentData = null;
-        try { currentData = currentRaw ? JSON.parse(currentRaw) : null; } catch(e) {}
-        // Use checksum to detect real content changes
-        var localCheck = dataChecksum(currentData);
-        var remoteCheck = dataChecksum(newRemoteData);
-        if (localCheck === remoteCheck) {
-          console.log('Real-time: content identical, skipping');
-          return;
-        }
-        var currentCount = countEntries(currentData);
-        var newCount = countEntries(newRemoteData);
-        var tsNewer = newRemoteTs > currentTs + 5000;
-        // Accept if: remote has more entries, OR same count but newer timestamp
-        if (newCount > currentCount || (newCount >= currentCount && tsNewer)) {
+        // Only accept if Firebase is strictly newer than what we have
+        if (newRemoteTs > currentTs) {
           localStorage.setItem('farmYawmi3', JSON.stringify(newRemoteData));
           localStorage.setItem('farmYawmi3_ts', newRemoteTs);
           if (window._reloadData) window._reloadData();
-          console.log('Real-time sync accepted (remote=' + newCount + ' local=' + currentCount + ' tsNewer=' + tsNewer + ')');
+          console.log('Real-time: accepted Firebase update (remoteTs=' + newRemoteTs + ' > localTs=' + currentTs + ')');
         } else {
-          console.log('Real-time sync skipped (local richer: local=' + currentCount + ' remote=' + newCount + ')');
+          console.log('Real-time: skipped (localTs=' + currentTs + ' >= remoteTs=' + newRemoteTs + ')');
         }
       });
     });
@@ -587,7 +531,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.15</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.16</div>
       </div>
     </div>
   </div>
@@ -2091,13 +2035,11 @@ function save(){
   const ts = Date.now();
   localStorage.setItem('farmYawmi3', JSON.stringify(D));
   localStorage.setItem('farmYawmi3_ts', ts);
-  // Push to Firebase — fire and forget but update ts after success
+  // Push to Firebase with the SAME timestamp so both sides are in sync
   if (window._fb) {
     window._fbSetStatus('syncing');
     if (typeof _listenerIgnoreNext !== 'undefined') _listenerIgnoreNext = true;
-    window._fb.save(D).then(function(){
-      // Update local timestamp to match what Firebase just stored
-      localStorage.setItem('farmYawmi3_ts', ts);
+    window._fb.saveWithTs(D, ts).then(function(){
       window._fbSetStatus('synced');
     }).catch(function(){ window._fbSetStatus('offline'); });
   }
@@ -6916,16 +6858,13 @@ async function forceSyncFromFirebase() {
     // Always load from Firebase when manually syncing — no comparison needed
     var remoteData = snap.data;
     var remoteTs = snap.updatedAt || 0;
-    // Write to localStorage
+    // Write to localStorage with Firebase's timestamp (keeps both in sync)
     localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
     localStorage.setItem('farmYawmi3_ts', remoteTs);
-    // Directly assign to D and force full re-render
-    D = remoteData;
-    try { renderOverview(); } catch(e) {}
-    try { renderOverviewKPIs(); } catch(e) {}
-    try { renderCurrentPage(); } catch(e) {}
+    // Reload D fully
+    if (window._reloadData) window._reloadData();
     if(btn){ btn.textContent = '✓ Updated!'; }
-    console.log('Force sync complete — tasks:', (D.tasks||[]).length, 'costs:', (D.costs||[]).length, 'notes keys:', Object.keys(D.notes||{}).length);
+    console.log('Force sync: loaded from Firebase ts=' + remoteTs + ' tasks=' + (remoteData.tasks||[]).length + ' costs=' + (remoteData.costs||[]).length);
     setTimeout(function(){ if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; } }, 2000);
   } catch(e) {
     if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; }
