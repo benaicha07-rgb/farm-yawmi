@@ -531,7 +531,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.17</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.18</div>
       </div>
     </div>
   </div>
@@ -575,6 +575,7 @@ function loadLeafletIfNeeded(cb){
   <span style="font-size:13px;color:var(--text3)" id="date-pill">Fri, 3 Jul 2026</span>
   <button class="btn btn-sm" onclick="exportData()">↓ Export</button>
   <button class="btn btn-sm" id="sync-btn" onclick="forceSyncFromFirebase()" title="Pull latest data from Firebase" style="background:var(--green);color:#fff;">⟳ Sync</button>
+  <button class="btn btn-sm" onclick="diagFirebase()" title="Diagnose Firebase vs Local" style="background:#6366f1;color:#fff;">🔍 Diag</button>
   <button class="btn btn-sm" onclick="document.getElementById(&#39;imp&#39;).click()">↑ Import</button>
   <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
   <button id="dark-toggle" class="btn btn-sm" onclick="toggleDarkMode()" title="Toggle dark mode" style="font-size:15px;padding:4px 10px;">🌙</button>
@@ -6843,6 +6844,30 @@ function renderCostsSummary() {
   });
   el.innerHTML = html2;
   _renderCostCatFilter();
+}
+
+async function diagFirebase() {
+  try {
+    var snap = await window._fb.load();
+    if (!snap) { alert('Firebase: no data / offline'); return; }
+    var d = snap.data;
+    var fbCosts = (d.costs||[]).reduce(function(s,c){
+      return s + (parseFloat(c.total||0) || parseFloat(c.qty||1)*parseFloat(c.price||0));
+    }, 0);
+    var lcTs = localStorage.getItem('farmYawmi3_ts') || '0';
+    var lcCosts = D.costs.reduce(function(s,c){return s+(parseFloat(c.total||0)||parseFloat(c.qty||1)*parseFloat(c.price||0));},0);
+    var msg = 'FIREBASE:' +
+      ' tasks=' + (d.tasks||[]).length +
+      ' costs=' + (d.costs||[]).length +
+      ' total=' + Math.round(fbCosts).toLocaleString() + ' DZD' +
+      ' ts=' + new Date(snap.updatedAt).toLocaleTimeString() +
+      '\n\nLOCAL:' +
+      ' tasks=' + D.tasks.length +
+      ' costs=' + D.costs.length +
+      ' total=' + Math.round(lcCosts).toLocaleString() + ' DZD' +
+      ' ts=' + new Date(parseInt(lcTs)).toLocaleTimeString();
+    alert(msg);
+  } catch(e) { alert('Diag error: ' + e.message); }
 }
 
 async function forceSyncFromFirebase() {
