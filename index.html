@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.34</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.35</div>
       </div>
     </div>
   </div>
@@ -7125,7 +7125,7 @@ async function analyzeTreePhoto() {
     if (hasPhoto) parts.push({ inlineData: { mimeType: _prunePhotoMime, data: _prunePhotoBase64 } });
     parts.push({ text: prompt });
     // Try models in order until one works
-    var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key;
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + key;
     var resp = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({contents:[{parts:parts}]}) });
     var data = await resp.json();
     if (data.error) { throw new Error(data.error.message); }
