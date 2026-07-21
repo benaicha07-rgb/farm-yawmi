@@ -549,7 +549,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.20</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.21</div>
       </div>
     </div>
   </div>
@@ -6924,13 +6924,37 @@ async function forceSyncFromFirebase() {
     // Always load from Firebase when manually syncing — no comparison needed
     var remoteData = snap.data;
     var remoteTs = snap.updatedAt || 0;
-    // Write to localStorage with Firebase's timestamp (keeps both in sync)
+    // Write to localStorage
     localStorage.setItem('farmYawmi3', JSON.stringify(remoteData));
     localStorage.setItem('farmYawmi3_ts', remoteTs);
-    // Reload D fully
-    if (window._reloadData) window._reloadData();
+    // Directly assign ALL fields to D to guarantee UI updates
+    D.tasks      = remoteData.tasks      || [];
+    D.irrigation = remoteData.irrigation || [];
+    D.harvest    = remoteData.harvest    || [];
+    D.costs      = remoteData.costs      || [];
+    D.weather    = remoteData.weather    || [];
+    D.materials  = remoteData.materials  || [];
+    D.utilities  = remoteData.utilities  || [];
+    D.docs       = remoteData.docs       || [];
+    D.products   = remoteData.products   || [];
+    D.album      = remoteData.album      || [];
+    D.notes      = remoteData.notes      || {};
+    D.taskOrder  = remoteData.taskOrder  || {};
+    D.tinBlocks  = remoteData.tinBlocks  || {};
+    D.tinNotes   = remoteData.tinNotes   || {};
+    D.tinNumbers = remoteData.tinNumbers || {};
+    D.employee   = remoteData.employee   || null;
+    D.chicken    = remoteData.chicken    || null;
+    D.diag       = remoteData.diag       || [];
+    D.growth     = remoteData.growth     || [];
+    D.budgets    = remoteData.budgets    || {};
+    // Force full UI re-render
+    try { renderOverview(); } catch(e) {}
+    try { renderOverviewKPIs(); } catch(e) {}
+    try { renderCurrentPage(); } catch(e) {}
+    var syncedCost = D.costs.reduce(function(s,c){return s+(parseFloat(c.total||0)||parseFloat(c.qty||1)*parseFloat(c.price||0));},0);
     if(btn){ btn.textContent = '✓ Updated!'; }
-    console.log('Force sync: loaded from Firebase ts=' + remoteTs + ' tasks=' + (remoteData.tasks||[]).length + ' costs=' + (remoteData.costs||[]).length);
+    console.log('Force sync complete: tasks=' + D.tasks.length + ' costs=' + D.costs.length + ' total=' + Math.round(syncedCost).toLocaleString() + ' DZD');
     setTimeout(function(){ if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; } }, 2000);
   } catch(e) {
     if(btn){ btn.textContent = '⟳ Sync'; btn.disabled = false; }
