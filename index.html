@@ -531,7 +531,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.18</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.19</div>
       </div>
     </div>
   </div>
@@ -576,6 +576,7 @@ function loadLeafletIfNeeded(cb){
   <button class="btn btn-sm" onclick="exportData()">↓ Export</button>
   <button class="btn btn-sm" id="sync-btn" onclick="forceSyncFromFirebase()" title="Pull latest data from Firebase" style="background:var(--green);color:#fff;">⟳ Sync</button>
   <button class="btn btn-sm" onclick="diagFirebase()" title="Diagnose Firebase vs Local" style="background:#6366f1;color:#fff;">🔍 Diag</button>
+  <button class="btn btn-sm" id="push-btn" onclick="pushToFirebase()" title="Force push local data to Firebase" style="background:#dc2626;color:#fff;">↑ Push</button>
   <button class="btn btn-sm" onclick="document.getElementById(&#39;imp&#39;).click()">↑ Import</button>
   <input type="file" id="imp" accept=".json" style="display:none" onchange="importData(event)">
   <button id="dark-toggle" class="btn btn-sm" onclick="toggleDarkMode()" title="Toggle dark mode" style="font-size:15px;padding:4px 10px;">🌙</button>
@@ -2036,13 +2037,19 @@ function save(){
   const ts = Date.now();
   localStorage.setItem('farmYawmi3', JSON.stringify(D));
   localStorage.setItem('farmYawmi3_ts', ts);
-  // Push to Firebase with the SAME timestamp so both sides are in sync
-  if (window._fb) {
+  // Push to Firebase
+  if (window._fb && window._fb.saveWithTs) {
     window._fbSetStatus('syncing');
     window._listenerIgnoreNext = true;
     window._fb.saveWithTs(D, ts).then(function(){
       window._fbSetStatus('synced');
-    }).catch(function(){ window._fbSetStatus('offline'); });
+      console.log('Firebase save OK ts=' + ts + ' tasks=' + D.tasks.length + ' costs=' + D.costs.length);
+    }).catch(function(e){
+      window._fbSetStatus('offline');
+      console.error('Firebase save FAILED:', e);
+    });
+  } else {
+    console.warn('Firebase not ready — data saved locally only');
   }
   if(typeof refreshMapMarkers === 'function') refreshMapMarkers();
 }
@@ -6844,6 +6851,22 @@ function renderCostsSummary() {
   });
   el.innerHTML = html2;
   _renderCostCatFilter();
+}
+
+async function pushToFirebase() {
+  var btn = document.getElementById('push-btn');
+  if(btn){ btn.textContent = 'Pushing...'; btn.disabled = true; }
+  try {
+    var ts = Date.now();
+    localStorage.setItem('farmYawmi3_ts', ts);
+    await window._fb.saveWithTs(D, ts);
+    if(btn){ btn.textContent = '✓ Pushed!'; }
+    console.log('Manual push OK: tasks=' + D.tasks.length + ' costs=' + D.costs.length);
+    setTimeout(function(){ if(btn){ btn.textContent = '↑ Push'; btn.disabled = false; } }, 3000);
+  } catch(e) {
+    if(btn){ btn.textContent = '↑ Push'; btn.disabled = false; }
+    alert('Push failed: ' + e.message);
+  }
 }
 
 async function diagFirebase() {
