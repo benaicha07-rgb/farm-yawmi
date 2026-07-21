@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.33</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.34</div>
       </div>
     </div>
   </div>
@@ -7125,17 +7125,10 @@ async function analyzeTreePhoto() {
     if (hasPhoto) parts.push({ inlineData: { mimeType: _prunePhotoMime, data: _prunePhotoBase64 } });
     parts.push({ text: prompt });
     // Try models in order until one works
-    var models = ['gemini-2.0-flash-lite','gemini-1.5-flash','gemini-1.5-flash-latest','gemini-pro'];
-    var data = null;
-    var lastErr = '';
-    for (var mi = 0; mi < models.length; mi++) {
-      var url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[mi] + ':generateContent?key=' + key;
-      var r = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({contents:[{parts:parts}]}) });
-      var d = await r.json();
-      if (!d.error) { data = d; break; }
-      lastErr = d.error.message;
-    }
-    if (!data) { throw new Error(lastErr); }
+    var url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + key;
+    var resp = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({contents:[{parts:parts}]}) });
+    var data = await resp.json();
+    if (data.error) { throw new Error(data.error.message); }
     var advice = data.candidates[0].content.parts[0].text;
     _lastAiAdvice = advice;
     document.getElementById('ai-prune-text').textContent = advice;
