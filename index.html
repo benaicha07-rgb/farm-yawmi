@@ -472,9 +472,9 @@ function loadLeafletIfNeeded(cb){
       window._fbSetStatus('synced');
 
       // Real-time listener — fires when ANY device saves to Firebase
-      var _listenerIgnoreNext = false;
+      window._listenerIgnoreNext = false;
       window._fb.listen(function(newRemoteData, newRemoteTs) {
-        if (_listenerIgnoreNext) { _listenerIgnoreNext = false; return; }
+        if (window._listenerIgnoreNext) { window._listenerIgnoreNext = false; return; }
         var currentTs = parseInt(localStorage.getItem('farmYawmi3_ts') || '0');
         // Only accept if Firebase is strictly newer than what we have
         if (newRemoteTs > currentTs) {
@@ -531,7 +531,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.16</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.17</div>
       </div>
     </div>
   </div>
@@ -2038,7 +2038,7 @@ function save(){
   // Push to Firebase with the SAME timestamp so both sides are in sync
   if (window._fb) {
     window._fbSetStatus('syncing');
-    if (typeof _listenerIgnoreNext !== 'undefined') _listenerIgnoreNext = true;
+    window._listenerIgnoreNext = true;
     window._fb.saveWithTs(D, ts).then(function(){
       window._fbSetStatus('synced');
     }).catch(function(){ window._fbSetStatus('offline'); });
