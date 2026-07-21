@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.25</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.27</div>
       </div>
     </div>
   </div>
@@ -1596,24 +1596,40 @@ function loadLeafletIfNeeded(cb){
   <div class="card" style="margin-bottom:14px">
     <div class="card-head">
       <h3>🤖 AI Pruning Advisor · مستشار التقليم الذكي</h3>
-      <span style="font-size:12px;color:var(--text3)">Upload a photo of your tree · ارفع صورة شجرتك</span>
+      <span style="font-size:12px;color:var(--text3)">Powered by Google Gemini (free) · مدعوم من Gemini مجاناً</span>
     </div>
     <div style="padding:14px;">
-      <!-- Species selector -->
+
+      <!-- API Key setup -->
+      <div id="gemini-key-setup" style="display:none;background:#fef9c3;border:1px solid #fde68a;border-radius:10px;padding:12px;margin-bottom:14px;">
+        <div style="font-weight:700;font-size:13px;margin-bottom:6px">🔑 One-time setup · إعداد مرة واحدة</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px">
+          Get your free Gemini API key:<br>
+          1. Go to <a href="https://aistudio.google.com/apikey" target="_blank" style="color:var(--green)">aistudio.google.com/apikey</a><br>
+          2. Sign in with Google → Click <b>Create API key</b><br>
+          3. Copy and paste it below — saved on this device only
+        </div>
+        <div style="display:flex;gap:8px">
+          <input type="password" id="gemini-key-input" placeholder="Paste your Gemini API key here..." style="flex:1;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+          <button onclick="saveGeminiKey()" class="btn btn-green">Save · حفظ</button>
+        </div>
+      </div>
+
+      <!-- Main controls -->
       <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
         <div class="fg" style="flex:1;min-width:160px">
           <label>Tree species · نوع الشجرة</label>
           <select id="ai-prune-species" style="width:100%">
-            <option value="Apple tree (تفاح)">🍎 Apple · تفاح</option>
-            <option value="Cherry tree (كرز)">🍒 Cherry · كرز</option>
-            <option value="Fig tree (تين)">🫐 Fig · تين</option>
-            <option value="Olive tree (زيتون)">🫒 Olive · زيتون</option>
-            <option value="Pear tree (إجاص)">🍐 Pear · إجاص</option>
-            <option value="Peach tree (خوخ)">🍑 Peach · خوخ</option>
-            <option value="Pomegranate tree (رمان)">🌺 Pomegranate · رمان</option>
-            <option value="Grape vine (عنب)">🍇 Grapes · عنب</option>
-            <option value="Apricot tree (مشمش)">🟡 Apricot · مشمش</option>
-            <option value="Walnut tree (جوز)">🌰 Walnut · جوز</option>
+            <option value="Apple tree">🍎 Apple · تفاح</option>
+            <option value="Cherry tree">🍒 Cherry · كرز</option>
+            <option value="Fig tree">🫐 Fig · تين</option>
+            <option value="Olive tree">🫒 Olive · زيتون</option>
+            <option value="Pear tree">🍐 Pear · إجاص</option>
+            <option value="Peach tree">🍑 Peach · خوخ</option>
+            <option value="Pomegranate tree">🌺 Pomegranate · رمان</option>
+            <option value="Grape vine">🍇 Grapes · عنب</option>
+            <option value="Apricot tree">🟡 Apricot · مشمش</option>
+            <option value="Walnut tree">🌰 Walnut · جوز</option>
           </select>
         </div>
         <div class="fg" style="flex:1;min-width:160px">
@@ -1643,41 +1659,46 @@ function loadLeafletIfNeeded(cb){
         </div>
       </div>
 
-      <!-- Photo upload area -->
+      <!-- Photo upload -->
       <div id="ai-prune-drop" onclick="document.getElementById('ai-prune-file').click()"
-        style="border:2px dashed var(--border);border-radius:12px;padding:30px;text-align:center;cursor:pointer;background:var(--surface2);transition:border-color .2s;margin-bottom:14px;">
+        style="border:2px dashed var(--border);border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:var(--surface2);margin-bottom:14px;transition:border-color .2s">
         <div id="ai-prune-preview" style="display:none;margin-bottom:10px">
-          <img id="ai-prune-img" style="max-height:200px;max-width:100%;border-radius:8px;object-fit:cover">
+          <img id="ai-prune-img" style="max-height:180px;max-width:100%;border-radius:8px;object-fit:cover">
+          <div style="margin-top:6px;font-size:12px;color:var(--green);font-weight:600">✅ Photo ready · الصورة جاهزة</div>
         </div>
         <div id="ai-prune-placeholder">
-          <div style="font-size:36px;margin-bottom:8px">📷</div>
-          <div style="font-weight:600;color:var(--text2)">Click to upload tree photo · انقر لرفع صورة الشجرة</div>
-          <div style="font-size:12px;color:var(--text3);margin-top:4px">JPG, PNG — best with clear view of branches · أوضح صورة للأغصان</div>
+          <div style="font-size:32px;margin-bottom:6px">📷</div>
+          <div style="font-weight:600;color:var(--text2);font-size:14px">Click to upload tree photo (optional) · انقر لرفع صورة</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">JPG, PNG · clear view of branches gets best results</div>
         </div>
         <input type="file" id="ai-prune-file" accept="image/*" style="display:none" onchange="previewPrunePhoto(this)">
       </div>
 
       <button id="ai-prune-btn" onclick="analyzeTreePhoto()" class="btn btn-green" style="width:100%;padding:12px;font-size:15px;font-weight:700">
-        🤖 Analyze & Advise · حلل وأعطني النصيحة
+        🤖 Get Pruning Advice · احصل على نصيحة التقليم
       </button>
+
+      <!-- Loading -->
+      <div id="ai-prune-loading" style="display:none;text-align:center;padding:24px;color:var(--text3)">
+        <div style="font-size:28px;animation:spin 1s linear infinite;display:inline-block">⟳</div>
+        <div style="margin-top:8px;font-size:14px">AI is analyzing · الذكاء الاصطناعي يحلل...</div>
+      </div>
 
       <!-- Result -->
       <div id="ai-prune-result" style="display:none;margin-top:16px;background:var(--green-light);border:1px solid #bbf7d0;border-radius:12px;padding:16px">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
           <span style="font-size:20px">🤖</span>
-          <span style="font-weight:700;color:var(--green);font-size:15px">AI Pruning Advice · نصيحة التقليم</span>
+          <span style="font-weight:700;color:var(--green);font-size:15px">Pruning Advice · نصيحة التقليم</span>
         </div>
-        <div id="ai-prune-text" style="font-size:14px;line-height:1.8;color:var(--text1);white-space:pre-wrap"></div>
+        <div id="ai-prune-text" style="font-size:14px;line-height:1.9;color:var(--text1);white-space:pre-wrap"></div>
         <div style="margin-top:12px;padding-top:10px;border-top:1px solid #bbf7d0;display:flex;gap:8px;flex-wrap:wrap">
           <button onclick="saveAdviceAsNote()" class="btn btn-sm" style="background:var(--green);color:#fff">📝 Save as note · احفظ كملاحظة</button>
+          <button onclick="savePruningFromAdvice()" class="btn btn-sm" style="background:#8b5cf6;color:#fff">✂️ Log pruning · سجل التقليم</button>
           <button onclick="document.getElementById('ai-prune-result').style.display='none'" class="btn btn-sm">✕ Close</button>
         </div>
       </div>
 
-      <div id="ai-prune-loading" style="display:none;text-align:center;padding:20px;color:var(--text3)">
-        <div style="font-size:24px;animation:spin 1s linear infinite;display:inline-block">⟳</div>
-        <div style="margin-top:8px;font-size:14px">Analyzing your tree photo · جاري تحليل الصورة...</div>
-      </div>
+      <!-- Error -->
       <div id="ai-prune-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px;margin-top:12px;color:#dc2626;font-size:13px"></div>
     </div>
   </div>
@@ -2837,7 +2858,7 @@ function renderCurrentPage(){
   else if(id==='costs'){renderCosts();renderCostsSummary();renderEmployeeCard();renderUtilitiesCard();}
   else if(id==='materials'){renderMaterials();}
   else if(id==='growth'){buildGrowthTable();}
-  else if(id==='pruning'){renderPruning();}
+  else if(id==='pruning'){renderPruning();checkGeminiKeyUI();}
   else if(id==='livestock'){renderChickenCard();}
   else if(id==='notes'){renderNotesPage();}
   // Other pages don't need re-render on data change
@@ -7036,20 +7057,33 @@ function renderCostsSummary() {
   _renderCostCatFilter();
 }
 
-// ── AI PRUNING ADVISOR ───────────────────────────────────────
+// ── AI PRUNING ADVISOR (Gemini) ──────────────────────────────
 var _prunePhotoBase64 = null;
+var _prunePhotoMime = 'image/jpeg';
 var _lastAiAdvice = '';
 
+function saveGeminiKey() {
+  var key = document.getElementById('gemini-key-input').value.trim();
+  if (!key) { alert('Please paste your API key first'); return; }
+  localStorage.setItem('farmYawmi_geminiKey', key);
+  document.getElementById('gemini-key-setup').style.display = 'none';
+  alert('API key saved! You can now use the AI advisor.');
+}
+
+function getGeminiKey() { return localStorage.getItem('farmYawmi_geminiKey') || ''; }
+
+function checkGeminiKeyUI() {
+  var el = document.getElementById('gemini-key-setup');
+  if (el) el.style.display = getGeminiKey() ? 'none' : 'block';
+}
+
 function previewPrunePhoto(input) {
-  var file = input.files[0];
-  if (!file) return;
+  var file = input.files[0]; if (!file) return;
   var reader = new FileReader();
   reader.onload = function(e) {
     var dataUrl = e.target.result;
-    // Store base64 without the data:image/...;base64, prefix
     _prunePhotoBase64 = dataUrl.split(',')[1];
-    var mimeType = file.type || 'image/jpeg';
-    window._prunePhotoMime = mimeType;
+    _prunePhotoMime = file.type || 'image/jpeg';
     document.getElementById('ai-prune-img').src = dataUrl;
     document.getElementById('ai-prune-preview').style.display = 'block';
     document.getElementById('ai-prune-placeholder').style.display = 'none';
@@ -7059,67 +7093,37 @@ function previewPrunePhoto(input) {
 }
 
 async function analyzeTreePhoto() {
+  var key = getGeminiKey();
+  if (!key) { checkGeminiKeyUI(); document.getElementById('gemini-key-setup').scrollIntoView({behavior:'smooth'}); return; }
   var species = document.getElementById('ai-prune-species').value;
   var month   = document.getElementById('ai-prune-month').value;
   var lang    = document.getElementById('ai-prune-lang').value;
-
-  // Build prompt — works with OR without a photo
   var hasPhoto = !!_prunePhotoBase64;
-
+  var langLine = lang === 'Arabic' ? 'أجب باللغة العربية فقط. استخدم مصطلحات زراعية عربية واضحة.' : lang === 'French' ? 'Réponds entièrement en français.' : 'Respond in English.';
+  var context = 'You are an expert fruit tree pruning agronomist for orchards at ~1,200m altitude in semi-arid Algeria (Khenchela). ';
+  var photoQ = 'I am sharing a photo of my ' + species + ' in my orchard. Current month: ' + month + '. Please: 1. Describe the tree shape and condition. 2. Should I prune now or wait? 3. Which exact branches to remove and why. 4. Correct technique: tools, cut angle, wound treatment. 5. Any warnings. I have hand pruners, loppers and a pruning saw.';
+  var textQ  = 'I have a ' + species + ' in Khenchela orchard. Current month: ' + month + '. Please: 1. Is ' + month + ' right for pruning this species? 2. Type of pruning recommended. 3. Which branches to prioritize. 4. Exact technique and tools. 5. What to avoid.';
+  var prompt = langLine + ' ' + context + (hasPhoto ? photoQ : textQ);
   document.getElementById('ai-prune-result').style.display = 'none';
   document.getElementById('ai-prune-error').style.display = 'none';
   document.getElementById('ai-prune-loading').style.display = 'block';
   document.getElementById('ai-prune-btn').disabled = true;
-
-  var langInstr = lang === 'Arabic'
-    ? 'Respond entirely in Arabic (العربية). Use clear Arabic agricultural terminology.'
-    : lang === 'French'
-    ? 'Respond entirely in French. Use clear French agricultural terminology.'
-    : 'Respond in English.';
-
-  var systemPrompt = 'You are an expert fruit tree pruning agronomist specializing in orchards at high altitude (~1,200m) in semi-arid Algeria (Batna region/Khenchela). You give precise, practical, actionable pruning advice for small family orchards. ' + langInstr;
-
-  var photoPrompt = 'I am uploading a photo of my ' + species + ' in my orchard in Khenchela, Algeria (altitude ~1,194m). The current month is ' + month + '.' +
-      ' Please analyze the photo and tell me: 1. What you observe about the tree shape and condition. 2. Whether I should prune it now or wait. 3. Which branches to remove and why. 4. The pruning technique (tools, cut angle, wound treatment). 5. Any warnings. Be specific and practical. The farmer has basic tools (hand pruners, loppers, pruning saw).';
-  var textPrompt = 'I have a ' + species + ' in my orchard in Khenchela, Algeria (altitude ~1,194m). The current month is ' + month + '.' +
-      ' Please tell me: 1. Is ' + month + ' a good time to prune this tree? Why or why not? 2. What type of pruning is recommended at this time? 3. Which branches to prioritize (dead, crossing, inward-growing, etc). 4. The correct technique (tools, cut angle, wound treatment). 5. What to avoid. Be specific and practical for a small family orchard at 1,194m altitude.';
-  var userText = hasPhoto ? photoPrompt : textPrompt;
-
   try {
-    var messages;
-    if (hasPhoto) {
-      messages = [{
-        role: 'user',
-        content: [
-          { type: 'image', source: { type: 'base64', media_type: window._prunePhotoMime || 'image/jpeg', data: _prunePhotoBase64 } },
-          { type: 'text',  text: userText }
-        ]
-      }];
-    } else {
-      messages = [{ role: 'user', content: userText }];
-    }
-
-    var response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
-        system: systemPrompt,
-        messages: messages
-      })
+    var parts = [];
+    if (hasPhoto) parts.push({ inlineData: { mimeType: _prunePhotoMime, data: _prunePhotoBase64 } });
+    parts.push({ text: prompt });
+    var resp = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + key, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: parts }] })
     });
-
-    var data = await response.json();
-    if (data.error) throw new Error(data.error.message);
-    var advice = (data.content||[]).map(function(b){ return b.text||''; }).join('');
+    var data = await resp.json();
+    if (data.error) { if (data.error.code === 400) { localStorage.removeItem('farmYawmi_geminiKey'); checkGeminiKeyUI(); } throw new Error(data.error.message); }
+    var advice = data.candidates[0].content.parts[0].text;
     _lastAiAdvice = advice;
-
     document.getElementById('ai-prune-text').textContent = advice;
     document.getElementById('ai-prune-result').style.display = 'block';
     document.getElementById('ai-prune-loading').style.display = 'none';
     document.getElementById('ai-prune-btn').disabled = false;
-
   } catch(e) {
     document.getElementById('ai-prune-loading').style.display = 'none';
     document.getElementById('ai-prune-btn').disabled = false;
@@ -7136,15 +7140,17 @@ function saveAdviceAsNote() {
   var mk = 'month:' + today.substring(0,7);
   if (!D.notes) D.notes = {};
   if (!D.notes[mk]) D.notes[mk] = [];
-  D.notes[mk].push({
-    id: Date.now(),
-    type: 'Month',
-    date: today,
-    text: '✂️ AI Pruning Advice - ' + species + ' (' + month + '): ' + _lastAiAdvice,
-    created: today
-  });
-  save();
-  alert('Saved to Notes · تم الحفظ في الملاحظات ✅');
+  D.notes[mk].push({ id: Date.now(), type: 'Month', date: today, text: 'Pruning Advice - ' + species + ' (' + month + '): ' + _lastAiAdvice, created: today });
+  save(); alert('Saved to Notes!');
+}
+
+function savePruningFromAdvice() {
+  var species = document.getElementById('ai-prune-species').value.replace(' tree','').replace(' vine','');
+  var today   = new Date().toISOString().split('T')[0];
+  if (!D.pruning) D.pruning = [];
+  D.pruning.push({ id: Date.now(), species: species, date: today, type: 'Medium · متوسط', notes: 'AI-advised session' });
+  D.pruning.sort(function(a,b){ return b.date.localeCompare(a.date); });
+  save(); renderPruning(); alert('Pruning session logged!');
 }
 
 // ── PRUNING LOG ──────────────────────────────────────────────
