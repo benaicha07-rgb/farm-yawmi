@@ -323,20 +323,38 @@ function loadLeafletIfNeeded(cb){
         try {
           // Strip any large fields before saving to stay under Firebase 1MB limit
           var clean = JSON.parse(JSON.stringify(data));
+          // Strip images from costs, utilities, diag, album
           (clean.costs||[]).forEach(function(c){ delete c.receiptImg; delete c.productImgs; });
+          (clean.utilities||[]).forEach(function(u){ delete u.img; delete u.imgData; delete u.photo; delete u.image; delete u.billImg; delete u.receipt; delete u.factureImg; });
           (clean.diag||[]).forEach(function(d){ delete d.img; delete d.imgData; });
-          (clean.album||[]).forEach(function(a){ delete a.img; delete a.data; });
+          (clean.album||[]).forEach(function(a){ delete a.img; delete a.data; delete a.src; delete a.base64; });
           var payload = JSON.stringify(clean);
+          console.log('Firebase payload size: ' + payload.length + ' bytes');
           if(payload.length > 900000){
+            // Still too big — also clear album and diag
             clean.album = []; clean.diag = [];
             payload = JSON.stringify(clean);
+            console.log('After trim: ' + payload.length + ' bytes');
           }
-          // Use the SAME timestamp passed in — guarantees local and Firebase are in sync
+          if(payload.length > 1000000){
+            // Still too big — log all field sizes to find culprit
+            var sizes = {};
+            Object.keys(clean).forEach(function(k){ sizes[k] = JSON.stringify(clean[k]).length; });
+            console.warn('Payload still too large. Field sizes:', JSON.stringify(sizes));
+            // Sort by size and remove largest non-essential fields
+            var sorted = Object.keys(sizes).sort(function(a,b){return sizes[b]-sizes[a];});
+            var skip = ['tasks','costs','irrigation','notes','utilities','employee','budgets','tinBlocks','tinNumbers'];
+            for(var i=0; i<sorted.length && payload.length>900000; i++){
+              if(skip.indexOf(sorted[i])===-1){ clean[sorted[i]]=[]; payload=JSON.stringify(clean); }
+            }
+          }
           await setDoc(farmDoc, { data: payload, updatedAt: ts });
           window._fbSetStatus('synced');
+          console.log('Firebase save OK, payload=' + payload.length + ' bytes');
         } catch(e) {
           console.warn('Firebase save failed:', e);
           window._fbSetStatus('offline');
+          throw e;
         }
       },
       load: async function() {
@@ -531,7 +549,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.19</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.20</div>
       </div>
     </div>
   </div>
