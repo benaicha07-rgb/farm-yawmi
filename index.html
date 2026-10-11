@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.35</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.36</div>
       </div>
     </div>
   </div>
@@ -2886,7 +2886,7 @@ function renderCurrentPage(){
   if(id==='overview'){renderOverview();}
   else if(id==='tasks'){renderTasks();}
   else if(id==='irrigation'){renderIrrigLog();}
-  else if(id==='harvest'){renderHarvest();}
+  else if(id==='harvest'){renderHarvest(); if(typeof renderProfitCard==='function') renderProfitCard();}
   else if(id==='costs'){renderCosts();renderCostsSummary();renderEmployeeCard();renderUtilitiesCard();}
   else if(id==='materials'){renderMaterials();}
   else if(id==='growth'){buildGrowthTable();}
@@ -6711,6 +6711,7 @@ function editHarvest(id) {
     h.rejected = ef('rejected');
     h.pickers = ef('pickers');
     persist();
+    if(typeof renderProfitCard === 'function') setTimeout(renderProfitCard, 50);
   });
 }
 
@@ -8413,11 +8414,15 @@ function renderProfitCard(){
   // Ensure categories
   (D.harvest||[]).forEach(function(h){ if(!h.category) h.category='unclassified'; });
 
+  function yearOf(h){
+    var d = String(h.date||'').trim();
+    return d.slice(0,4);
+  }
   var summerKg = (D.harvest||[])
-    .filter(function(h){ return (h.date||'').startsWith(yr) && h.category==='summer'; })
+    .filter(function(h){ return yearOf(h)===yr && (h.category||'')==='summer'; })
     .reduce(function(s,h){ return s + parseFloat(h.kg||0); }, 0);
   var autumnKg = (D.harvest||[])
-    .filter(function(h){ return (h.date||'').startsWith(yr) && h.category==='autumn'; })
+    .filter(function(h){ return yearOf(h)===yr && (h.category||'')==='autumn'; })
     .reduce(function(s,h){ return s + parseFloat(h.kg||0); }, 0);
   var classifiedKg = summerKg + autumnKg;
 
