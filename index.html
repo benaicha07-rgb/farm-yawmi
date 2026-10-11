@@ -1113,21 +1113,35 @@ function loadLeafletIfNeeded(cb){
     <div id="profit-body">
       <!-- Settings row -->
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;padding:10px 0 14px;border-bottom:1px solid var(--border);margin-bottom:14px;">
-        <div class="fg" style="min-width:140px;flex:1;">
-          <label>Selling price per kg · سعر البيع/كغ</label>
+        <div class="fg" style="min-width:160px;flex:1;">
+          <label>🌞 Summer price · سعر الصيف</label>
           <div style="display:flex;align-items:center;gap:6px;">
-            <input type="number" id="pr-price" value="200" min="1" oninput="renderProfitCard()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:15px;font-weight:700;width:110px;">
-            <span style="font-size:13px;color:var(--text2);">DZD / kg</span>
+            <input type="number" id="pr-price-summer" value="200" min="1" oninput="renderProfitCard()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:15px;font-weight:700;width:100px;">
+            <span style="font-size:13px;color:var(--text2);">DZD/kg</span>
           </div>
         </div>
-        <div class="fg" style="min-width:140px;flex:1;">
-          <label>Profit margin target · هامش الربح المستهدف</label>
+        <div class="fg" style="min-width:120px;flex:0.7;">
+          <label>Summer margin</label>
           <div style="display:flex;align-items:center;gap:6px;">
-            <input type="number" id="pr-margin" value="20" min="0" max="200" oninput="renderProfitCard()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:15px;font-weight:700;width:80px;">
+            <input type="number" id="pr-margin-summer" value="20" min="0" max="200" oninput="renderProfitCard()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:15px;font-weight:700;width:70px;">
             <span style="font-size:13px;color:var(--text2);">%</span>
           </div>
         </div>
-        <div class="fg" style="min-width:140px;flex:1;">
+        <div class="fg" style="min-width:160px;flex:1;">
+          <label>🍂 Autumn price · سعر الخريف</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" id="pr-price-autumn" value="200" min="1" oninput="renderProfitCard()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:15px;font-weight:700;width:100px;">
+            <span style="font-size:13px;color:var(--text2);">DZD/kg</span>
+          </div>
+        </div>
+        <div class="fg" style="min-width:120px;flex:0.7;">
+          <label>Autumn margin</label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="number" id="pr-margin-autumn" value="20" min="0" max="200" oninput="renderProfitCard()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:15px;font-weight:700;width:70px;">
+            <span style="font-size:13px;color:var(--text2);">%</span>
+          </div>
+        </div>
+        <div class="fg" style="min-width:120px;flex:0.8;">
           <label>Year · السنة</label>
           <select id="pr-year" onchange="renderProfitCard()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:14px;">
             <option>2025</option><option selected>2026</option><option>2027</option>
@@ -1142,7 +1156,8 @@ function loadLeafletIfNeeded(cb){
   </div>
   <div class="kpi-strip" style="margin-bottom:14px">
     <div class="kpi"><div class="kpi-val" id="h-total">0 kg</div><div class="kpi-label">Total yield · الإجمالي</div></div>
-    <div class="kpi"><div class="kpi-val" id="h-apple">0 kg</div><div class="kpi-label">Apple · تفاح</div></div>
+    <div class="kpi"><div class="kpi-val" id="h-summer">0 kg</div><div class="kpi-label">🌞 Summer Apple</div></div>
+    <div class="kpi"><div class="kpi-val" id="h-autumn">0 kg</div><div class="kpi-label">🍂 Autumn Apple</div></div>
     <div class="kpi"><div class="kpi-val" id="h-grade-a">0 kg</div><div class="kpi-label">Grade A · الدرجة أ</div></div>
     <div class="kpi"><div class="kpi-val" id="h-avg">—</div><div class="kpi-label">Avg/tree · متوسط/شجرة</div></div>
   </div>
@@ -1152,7 +1167,7 @@ function loadLeafletIfNeeded(cb){
     <div class="form-grid">
       <div class="fg"><label>Date</label><input type="date" id="hv-date"></div>
       <div class="fg"><label>Species · النوع</label>
-        <select id="hv-species">
+        <select id="hv-species" onchange="suggestHarvestCategory()">
           <option>Apple 4yr (Block B)</option>
           <option>Apple 7yr (Block F)</option>
           <option>Apple 3yr (Block E)</option>
@@ -1161,8 +1176,18 @@ function loadLeafletIfNeeded(cb){
           <option>Pomegranate · رمان</option><option>Grapes · عنب</option><option>Olive · زيتون</option>
         </select>
       </div>
-      <div class="fg"><label>Block</label><input id="hv-block" placeholder="Block D"></div>
-      <div class="fg"><label>Variety · الصنف</label><input id="hv-variety" placeholder="e.g. Golden Delicious"></div>
+      <div class="fg"><label>Block</label><input id="hv-block" placeholder="Block D" oninput="suggestHarvestCategory()"></div>
+      <div class="fg"><label>Category · الفئة</label>
+        <select id="hv-category" onchange="updateVarietyButtons()">
+          <option value="unclassified">Unclassified · غير مصنف</option>
+          <option value="summer">🌞 Summer Apple (Gala Start)</option>
+          <option value="autumn">🍂 Autumn Apple (Golden / Kabda)</option>
+        </select>
+      </div>
+      <div class="fg"><label>Variety · الصنف</label>
+        <input id="hv-variety" placeholder="e.g. Gala Start" oninput="suggestHarvestCategory()">
+        <div id="hv-variety-btns" style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap;"></div>
+      </div>
       <div class="fg"><label>Total kg</label><input type="number" id="hv-kg" placeholder="0"></div>
       <div class="fg"><label>Grade A kg</label><input type="number" id="hv-a" placeholder="0"></div>
       <div class="fg"><label>Grade B kg</label><input type="number" id="hv-b" placeholder="0"></div>
@@ -1171,9 +1196,16 @@ function loadLeafletIfNeeded(cb){
     <div class="fg" style="margin-bottom:10px"><label>Pickers · العمال</label><input id="hv-pickers" placeholder="Names or count"></div>
     <button class="btn btn-primary" style="width:100%" onclick="logHarvest()">Log harvest · تسجيل الحصاد</button>
   </div>
+  <div style="display:flex;gap:8px;align-items:center;margin:12px 0 8px;flex-wrap:wrap;">
+    <span style="font-size:13px;color:var(--text2);font-weight:600;">Filter:</span>
+    <button class="btn btn-sm" id="hv-filter-all" onclick="setHarvestFilter('all')" style="background:var(--green);color:#fff;">All</button>
+    <button class="btn btn-sm" id="hv-filter-summer" onclick="setHarvestFilter('summer')">🌞 Summer</button>
+    <button class="btn btn-sm" id="hv-filter-autumn" onclick="setHarvestFilter('autumn')">🍂 Autumn</button>
+    <button class="btn btn-sm" id="hv-filter-unclassified" onclick="setHarvestFilter('unclassified')">Unclassified</button>
+  </div>
   <div class="tbl-wrap">
-    <table class="tbl"><thead><tr><th>Date</th><th>Species</th><th>Block</th><th>Variety</th><th>Total kg</th><th>Grade A</th><th>Grade B</th><th>Rejected</th><th></th></tr></thead>
-    <tbody id="harvest-body"><tr><td colspan="9" class="empty">No harvest recorded yet</td></tr></tbody></table>
+    <table class="tbl"><thead><tr><th>Date</th><th>Category</th><th>Species</th><th>Block</th><th>Variety</th><th>Total kg</th><th>Grade A</th><th>Grade B</th><th>Rejected</th><th></th></tr></thead>
+    <tbody id="harvest-body"><tr><td colspan="10" class="empty">No harvest recorded yet</td></tr></tbody></table>
   </div>
 </div>
 
@@ -4373,28 +4405,115 @@ function renderIrrigLog(){
 function logHarvest(){
   const date=document.getElementById('hv-date').value,kg=document.getElementById('hv-kg').value;
   if(!date||!kg)return alert('Please fill date and total kg');
-  D.harvest.push({id:Date.now(),date,species:document.getElementById('hv-species').value,block:document.getElementById('hv-block').value,variety:document.getElementById('hv-variety').value,kg,gradeA:document.getElementById('hv-a').value,gradeB:document.getElementById('hv-b').value,rejected:document.getElementById('hv-rej').value,pickers:document.getElementById('hv-pickers').value});
-  ['hv-block','hv-variety','hv-kg','hv-a','hv-b','hv-rej','hv-pickers'].forEach(id=>document.getElementById(id).value='');
+  var cat = document.getElementById('hv-category') ? document.getElementById('hv-category').value : 'unclassified';
+  D.harvest.push({
+    id:Date.now(),
+    date,
+    species:document.getElementById('hv-species').value,
+    block:document.getElementById('hv-block').value,
+    variety:document.getElementById('hv-variety').value,
+    category: cat,
+    kg, gradeA:document.getElementById('hv-a').value,
+    gradeB:document.getElementById('hv-b').value,
+    rejected:document.getElementById('hv-rej').value,
+    pickers:document.getElementById('hv-pickers').value
+  });
+  ['hv-block','hv-variety','hv-kg','hv-a','hv-b','hv-rej','hv-pickers'].forEach(id=>{var el=document.getElementById(id); if(el) el.value='';});
+  var catEl = document.getElementById('hv-category'); if(catEl) catEl.value='unclassified';
+  updateVarietyButtons();
   persist();
+}
+
+function suggestHarvestCategory(){
+  var block = (document.getElementById('hv-block')||{}).value || '';
+  var variety = (document.getElementById('hv-variety')||{}).value || '';
+  var species = (document.getElementById('hv-species')||{}).value || '';
+  var catEl = document.getElementById('hv-category');
+  if(!catEl) return;
+  var b = block.toLowerCase();
+  var v = variety.toLowerCase();
+  var s = species.toLowerCase();
+  var suggested = 'unclassified';
+  if (v.includes('gala') || b.includes('b') || b.includes('d') || b.includes('e') || s.includes('block b') || s.includes('block e')) suggested = 'summer';
+  if (v.includes('golden') || v.includes('kabda') || b.includes('f') || s.includes('block f')) suggested = 'autumn';
+  // Prefer variety match over block if both
+  if ((v.includes('gala')) && suggested !== 'autumn') suggested = 'summer';
+  if ((v.includes('golden') || v.includes('kabda')) && suggested !== 'summer') suggested = 'autumn';
+  catEl.value = suggested;
+  updateVarietyButtons();
+}
+
+function updateVarietyButtons(){
+  var cat = (document.getElementById('hv-category')||{}).value || 'unclassified';
+  var box = document.getElementById('hv-variety-btns');
+  if(!box) return;
+  var btns = '';
+  if(cat === 'summer') btns = '<button type="button" class="btn btn-sm" onclick="setVariety(\'Gala Start\')">Gala Start</button>';
+  else if(cat === 'autumn') btns = '<button type="button" class="btn btn-sm" onclick="setVariety(\'Golden\')">Golden</button><button type="button" class="btn btn-sm" onclick="setVariety(\'Kabda\')">Kabda</button>';
+  box.innerHTML = btns;
+}
+
+function setVariety(v){
+  var el = document.getElementById('hv-variety');
+  if(el){ el.value = v; suggestHarvestCategory(); }
+}
+
+window._harvestFilter = 'all';
+function setHarvestFilter(f){
+  window._harvestFilter = f;
+  ['all','summer','autumn','unclassified'].forEach(function(x){
+    var btn = document.getElementById('hv-filter-'+x);
+    if(btn) btn.style.background = (x===f) ? 'var(--green)' : '';
+    if(btn) btn.style.color = (x===f) ? '#fff' : '';
+  });
+  renderHarvest();
 }
 function deleteHarvest(id){D.harvest=D.harvest.filter(h=>h.id!==id);persist();}
 function renderHarvest(){
-  const total=D.harvest.reduce((s,h)=>s+parseFloat(h.kg||0),0);
-  const apple=D.harvest.filter(h=>h.species&&h.species.includes('Apple')).reduce((s,h)=>s+parseFloat(h.kg||0),0);
-  const gradeA=D.harvest.reduce((s,h)=>s+parseFloat(h.gradeA||0),0);
-  document.getElementById('h-total').textContent=total.toLocaleString()+' kg';
-  document.getElementById('h-apple').textContent=apple.toLocaleString()+' kg';
-  document.getElementById('h-grade-a').textContent=gradeA.toLocaleString()+' kg';
-  document.getElementById('h-avg').textContent=apple?(apple/254).toFixed(1)+' kg':'—';
-  const body=document.getElementById('harvest-body');
-  if(!D.harvest.length){body.innerHTML='<tr><td colspan="9" class="empty">No harvest recorded yet</td></tr>';return;}
-  body.innerHTML=[...D.harvest].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(h=>`
-    <tr><td>${h.date}</td><td>${h.species||'—'}</td><td>${h.block||'—'}</td><td>${h.variety||'—'}</td>
-    <td><strong>${parseFloat(h.kg||0).toLocaleString()}</strong></td>
-    <td style="color:var(--green)">${parseFloat(h.gradeA||0).toLocaleString()}</td>
-    <td style="color:var(--amber)">${parseFloat(h.gradeB||0).toLocaleString()}</td>
-    <td style="color:var(--red)">${parseFloat(h.rejected||0).toLocaleString()}</td>
-    <td style="display:flex;gap:4px"><button class="btn btn-sm" onclick="editHarvest(${h.id})" title="Edit">✏️</button><button class="btn btn-sm" style="color:var(--red)" onclick="deleteHarvest(${h.id})" title="Delete">×</button></td></tr>`).join('');
+  // Ensure old records have category
+  (D.harvest||[]).forEach(function(h){ if(!h.category) h.category = 'unclassified'; });
+
+  const total = D.harvest.reduce((s,h)=>s+parseFloat(h.kg||0),0);
+  const summer = D.harvest.filter(h=>h.category==='summer').reduce((s,h)=>s+parseFloat(h.kg||0),0);
+  const autumn = D.harvest.filter(h=>h.category==='autumn').reduce((s,h)=>s+parseFloat(h.kg||0),0);
+  const gradeA = D.harvest.reduce((s,h)=>s+parseFloat(h.gradeA||0),0);
+  const appleClassified = summer + autumn;
+  document.getElementById('h-total').textContent = total.toLocaleString()+' kg';
+  var hs = document.getElementById('h-summer'); if(hs) hs.textContent = summer.toLocaleString()+' kg';
+  var ha = document.getElementById('h-autumn'); if(ha) ha.textContent = autumn.toLocaleString()+' kg';
+  document.getElementById('h-grade-a').textContent = gradeA.toLocaleString()+' kg';
+  document.getElementById('h-avg').textContent = appleClassified ? (appleClassified/254).toFixed(1)+' kg' : '—';
+
+  const body = document.getElementById('harvest-body');
+  var filter = window._harvestFilter || 'all';
+  var list = (D.harvest||[]).filter(function(h){
+    if(filter==='all') return true;
+    return (h.category||'unclassified') === filter;
+  });
+  if(!list.length){ body.innerHTML='<tr><td colspan="10" class="empty">No harvest recorded yet</td></tr>'; return; }
+
+  function catBadge(c){
+    if(c==='summer') return '<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">🌞 Summer</span>';
+    if(c==='autumn') return '<span style="background:#ffedd5;color:#9a3412;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700;">🍂 Autumn</span>';
+    return '<span style="background:var(--surface3);color:var(--text3);padding:2px 8px;border-radius:999px;font-size:11px;">Unclassified</span>';
+  }
+
+  body.innerHTML = [...list].sort((a,b)=>new Date(b.date)-new Date(a.date)).map(h=>`
+    <tr>
+      <td>${h.date||'—'}</td>
+      <td>${catBadge(h.category)}</td>
+      <td>${h.species||'—'}</td>
+      <td>${h.block||'—'}</td>
+      <td>${h.variety||'—'}</td>
+      <td><strong>${parseFloat(h.kg||0).toLocaleString()}</strong></td>
+      <td style="color:var(--green)">${parseFloat(h.gradeA||0).toLocaleString()}</td>
+      <td style="color:var(--amber)">${parseFloat(h.gradeB||0).toLocaleString()}</td>
+      <td style="color:var(--red)">${parseFloat(h.rejected||0).toLocaleString()}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn btn-sm" onclick="editHarvest(${h.id})" title="Edit">✏️</button>
+        <button class="btn btn-sm" style="color:var(--red)" onclick="deleteHarvest(${h.id})" title="Delete">×</button>
+      </td>
+    </tr>`).join('');
 }
 
 // === COSTS ===
@@ -6567,8 +6686,15 @@ function editIrrig(id) {
 function editHarvest(id) {
   var h = D.harvest.find(x=>x.id===id);
   if(!h) return;
+  var curCat = h.category || 'unclassified';
+  var catOpts = [
+    ['unclassified','Unclassified · غير مصنف'],
+    ['summer','🌞 Summer Apple (Gala Start)'],
+    ['autumn','🍂 Autumn Apple (Golden / Kabda)']
+  ].map(function(o){ return '<option value="'+o[0]+'"'+(o[0]===curCat?' selected':'')+'>'+o[1]+'</option>'; }).join('');
   var html = '<div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:16px">✏️ Edit Harvest · تعديل الحصاد</div>'
     + editField('Date · التاريخ','date',h.date,'date')
+    + '<div style="margin-bottom:12px"><label style="font-size:12px;font-weight:600;color:var(--text2);display:block;margin-bottom:4px">Category · الفئة</label><select id="ef-category" style="width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:14px">'+catOpts+'</select></div>'
     + editField('Variety · الصنف','variety',h.variety)
     + editField('Total kg · الإجمالي','kg',h.kg,'number')
     + editField('Grade A kg · الدرجة أ','gradeA',h.gradeA,'number')
@@ -6577,6 +6703,7 @@ function editHarvest(id) {
     + editField('Pickers · العمال','pickers',h.pickers);
   showEditModal(html, function(){
     h.date = ef('date')||h.date;
+    h.category = document.getElementById('ef-category') ? document.getElementById('ef-category').value : (h.category||'unclassified');
     h.variety = ef('variety');
     h.kg = ef('kg');
     h.gradeA = ef('gradeA');
@@ -8224,11 +8351,15 @@ function renderOverviewProfit(){
   var el = document.getElementById('ov-profit-summary');
   if(!el) return;
   var yr = localStorage.getItem('pr_year') || new Date().getFullYear().toString();
-  var pricePerKg = parseFloat(localStorage.getItem('pr_price')||'200');
-  var marginPct  = parseFloat(localStorage.getItem('pr_margin')||'20');
+  var ps = parseFloat(localStorage.getItem('pr_price_summer')||localStorage.getItem('pr_price')||'200');
+  var pa = parseFloat(localStorage.getItem('pr_price_autumn')||localStorage.getItem('pr_price')||'200');
+  var pricePerKg = (ps + pa) / 2;
+  var marginPct  = parseFloat(localStorage.getItem('pr_margin_summer')||localStorage.getItem('pr_margin')||'20');
   function costVal(c){ return parseFloat(c.total||0) || parseFloat(c.qty||1)*parseFloat(c.price||0); }
   var totalCosts = (D.costs||[]).filter(function(c){return (c.date||'').startsWith(yr);}).reduce(function(s,c){return s+costVal(c);},0);
-  var harvestedKg = (D.harvest||[]).filter(function(h){return (h.date||'').startsWith(yr)&&(h.species||'').toLowerCase().includes('apple');}).reduce(function(s,h){return s+parseFloat(h.kg||0);},0);
+  var harvestedKg = (D.harvest||[]).filter(function(h){
+    return (h.date||'').startsWith(yr) && (h.category==='summer' || h.category==='autumn');
+  }).reduce(function(s,h){return s+parseFloat(h.kg||0);},0);
   if(!totalCosts) { el.innerHTML=''; return; }
   var breakEvenKg = Math.ceil(totalCosts/pricePerKg);
   var profitTarget = Math.ceil(totalCosts*(1+marginPct/100)/pricePerKg);
@@ -8254,45 +8385,62 @@ function renderOverviewProfit(){
 }
 
 function renderProfitCard(){
-  var priceEl  = document.getElementById('pr-price');
-  var marginEl = document.getElementById('pr-margin');
+  var priceSummerEl  = document.getElementById('pr-price-summer');
+  var marginSummerEl = document.getElementById('pr-margin-summer');
+  var priceAutumnEl  = document.getElementById('pr-price-autumn');
+  var marginAutumnEl = document.getElementById('pr-margin-autumn');
   var yearEl   = document.getElementById('pr-year');
   var results  = document.getElementById('profit-results');
   var progress = document.getElementById('profit-progress');
-  if(!priceEl || !results) return;
+  if(!priceSummerEl || !results) return;
 
-  // Save settings to localStorage
-  var pricePerKg  = parseFloat(priceEl.value) || 200;
-  var marginPct   = parseFloat(marginEl.value) || 20;
+  var priceSummer  = parseFloat(priceSummerEl.value) || 200;
+  var marginSummer = parseFloat(marginSummerEl.value) || 20;
+  var priceAutumn  = parseFloat(priceAutumnEl.value) || 200;
+  var marginAutumn = parseFloat(marginAutumnEl.value) || 20;
   var yr          = yearEl ? yearEl.value : new Date().getFullYear().toString();
-  localStorage.setItem('pr_price', pricePerKg);
-  localStorage.setItem('pr_margin', marginPct);
+  localStorage.setItem('pr_price_summer', priceSummer);
+  localStorage.setItem('pr_margin_summer', marginSummer);
+  localStorage.setItem('pr_price_autumn', priceAutumn);
+  localStorage.setItem('pr_margin_autumn', marginAutumn);
   localStorage.setItem('pr_year', yr);
 
-  // Calculate total costs for selected year
   function costVal(c){ return parseFloat(c.total||0) || parseFloat(c.qty||1)*parseFloat(c.price||0); }
   var totalCosts = (D.costs||[])
     .filter(function(c){ return (c.date||'').startsWith(yr); })
     .reduce(function(s,c){ return s + costVal(c); }, 0);
 
-  // Total apple kg harvested this year
-  var harvestedKg = (D.harvest||[])
-    .filter(function(h){ return (h.date||'').startsWith(yr) && (h.species||'').toLowerCase().includes('apple'); })
-    .reduce(function(s,h){ return s + parseFloat(h.kg||0); }, 0);
+  // Ensure categories
+  (D.harvest||[]).forEach(function(h){ if(!h.category) h.category='unclassified'; });
 
-  // Break-even & profit targets
-  var breakEvenKg  = totalCosts > 0 ? Math.ceil(totalCosts / pricePerKg) : 0;
-  var profitTarget = Math.ceil(totalCosts * (1 + marginPct/100) / pricePerKg);
-  var revenueNow   = harvestedKg * pricePerKg;
-  var profitNow    = revenueNow - totalCosts;
-  var remainBE     = Math.max(0, breakEvenKg - harvestedKg);
-  var remainProfit = Math.max(0, profitTarget - harvestedKg);
-  var pctBE        = breakEvenKg > 0 ? Math.min(100, Math.round(harvestedKg/breakEvenKg*100)) : 0;
-  var pctProfit    = profitTarget > 0 ? Math.min(100, Math.round(harvestedKg/profitTarget*100)) : 0;
+  var summerKg = (D.harvest||[])
+    .filter(function(h){ return (h.date||'').startsWith(yr) && h.category==='summer'; })
+    .reduce(function(s,h){ return s + parseFloat(h.kg||0); }, 0);
+  var autumnKg = (D.harvest||[])
+    .filter(function(h){ return (h.date||'').startsWith(yr) && h.category==='autumn'; })
+    .reduce(function(s,h){ return s + parseFloat(h.kg||0); }, 0);
+  var classifiedKg = summerKg + autumnKg;
+
+  // Separate targets (costs allocated proportionally by current classified kg, or 50/50 if none)
+  var summerShare = classifiedKg > 0 ? (summerKg / classifiedKg) : 0.5;
+  var autumnShare = classifiedKg > 0 ? (autumnKg / classifiedKg) : 0.5;
+  var summerCosts = totalCosts * summerShare;
+  var autumnCosts = totalCosts * autumnShare;
+
+  var beSummer  = summerCosts > 0 ? Math.ceil(summerCosts / priceSummer) : 0;
+  var beAutumn  = autumnCosts > 0 ? Math.ceil(autumnCosts / priceAutumn) : 0;
+  var ptSummer  = Math.ceil(summerCosts * (1 + marginSummer/100) / priceSummer);
+  var ptAutumn  = Math.ceil(autumnCosts * (1 + marginAutumn/100) / priceAutumn);
+
+  var revSummer = summerKg * priceSummer;
+  var revAutumn = autumnKg * priceAutumn;
+  var profitSummer = revSummer - summerCosts;
+  var profitAutumn = revAutumn - autumnCosts;
+  var profitTotal  = profitSummer + profitAutumn;
 
   function kpi(val, label, color, sub){
     return '<div style="background:var(--surface2);border-radius:10px;padding:12px 14px;border-left:4px solid '+color+';">'
-      +'<div style="font-size:20px;font-weight:800;color:'+color+';">'+val+'</div>'
+      +'<div style="font-size:18px;font-weight:800;color:'+color+';">'+val+'</div>'
       +'<div style="font-size:12px;color:var(--text2);font-weight:600;margin-top:2px;">'+label+'</div>'
       +(sub?'<div style="font-size:11px;color:var(--text3);margin-top:2px;">'+sub+'</div>':'')
       +'</div>';
@@ -8300,12 +8448,12 @@ function renderProfitCard(){
 
   results.innerHTML =
     kpi(Math.round(totalCosts).toLocaleString()+' DZD', 'Total costs '+yr+' · مجموع التكاليف', '#f97316', (D.costs||[]).filter(function(c){return (c.date||'').startsWith(yr);}).length+' entries')
-   +kpi(breakEvenKg.toLocaleString()+' kg', 'Break-even target · نقطة التعادل', '#6366f1', 'At '+pricePerKg+' DZD/kg to cover costs')
-   +kpi(profitTarget.toLocaleString()+' kg', 'Profit target ('+marginPct+'%) · هدف الربح', '#22c55e', 'Revenue needed: '+(Math.ceil(totalCosts*(1+marginPct/100))).toLocaleString()+' DZD')
-   +kpi(harvestedKg.toLocaleString()+' kg', 'Apple harvested so far · محصول التفاح', '#64748b', 'Revenue: '+Math.round(revenueNow).toLocaleString()+' DZD')
-   +kpi((profitNow>=0?'+':'')+Math.round(profitNow).toLocaleString()+' DZD', 'P&L so far · الربح/الخسارة', profitNow>=0?'#22c55e':'#ef4444', profitNow>=0?'✅ Profitable':'⚠️ In deficit');
+   +kpi(summerKg.toLocaleString()+' kg', '🌞 Summer harvested', '#f59e0b', 'BE: '+beSummer.toLocaleString()+' kg · Target: '+ptSummer.toLocaleString()+' kg')
+   +kpi(autumnKg.toLocaleString()+' kg', '🍂 Autumn harvested', '#ea580c', 'BE: '+beAutumn.toLocaleString()+' kg · Target: '+ptAutumn.toLocaleString()+' kg')
+   +kpi((profitSummer>=0?'+':'')+Math.round(profitSummer).toLocaleString()+' DZD', 'Summer P&L', profitSummer>=0?'#22c55e':'#ef4444', 'At '+priceSummer+' DZD/kg')
+   +kpi((profitAutumn>=0?'+':'')+Math.round(profitAutumn).toLocaleString()+' DZD', 'Autumn P&L', profitAutumn>=0?'#22c55e':'#ef4444', 'At '+priceAutumn+' DZD/kg')
+   +kpi((profitTotal>=0?'+':'')+Math.round(profitTotal).toLocaleString()+' DZD', 'Combined P&L', profitTotal>=0?'#22c55e':'#ef4444', 'Classified only');
 
-  // Progress bars
   var bar = function(pct, label, color, remaining, unit){
     return '<div style="margin-bottom:10px;">'
       +'<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;margin-bottom:4px;">'
@@ -8313,29 +8461,52 @@ function renderProfitCard(){
         +'<span style="color:var(--text3);">'+pct+'% · '+(remaining>0?remaining.toLocaleString()+' '+unit+' remaining':'✅ Reached')+'</span>'
       +'</div>'
       +'<div style="height:12px;background:var(--surface3);border-radius:6px;overflow:hidden;">'
-        +'<div style="height:100%;width:'+pct+'%;background:'+color+';border-radius:6px;transition:width .5s;"></div>'
+        +'<div style="height:100%;width:'+Math.min(100,pct)+'%;background:'+color+';border-radius:6px;transition:width .5s;"></div>'
       +'</div>'
     +'</div>';
   };
 
+  var pctBeS = beSummer>0 ? Math.min(100, Math.round(summerKg/beSummer*100)) : 0;
+  var pctBeA = beAutumn>0 ? Math.min(100, Math.round(autumnKg/beAutumn*100)) : 0;
+  var pctPtS = ptSummer>0 ? Math.min(100, Math.round(summerKg/ptSummer*100)) : 0;
+  var pctPtA = ptAutumn>0 ? Math.min(100, Math.round(autumnKg/ptAutumn*100)) : 0;
+
   progress.innerHTML =
     '<div style="padding:12px 0 4px;">'
-    + bar(pctBE, '📊 Break-even progress · نسبة التعادل', '#6366f1', remainBE, 'kg')
-    + bar(pctProfit, '🎯 Profit target progress · نسبة الهدف', '#22c55e', remainProfit, 'kg')
+    + bar(pctBeS, '🌞 Summer break-even', '#f59e0b', Math.max(0, beSummer-summerKg), 'kg')
+    + bar(pctPtS, '🌞 Summer profit target', '#22c55e', Math.max(0, ptSummer-summerKg), 'kg')
+    + bar(pctBeA, '🍂 Autumn break-even', '#ea580c', Math.max(0, beAutumn-autumnKg), 'kg')
+    + bar(pctPtA, '🍂 Autumn profit target', '#16a34a', Math.max(0, ptAutumn-autumnKg), 'kg')
     +'</div>';
 }
 
 function initProfitCard(){
-  var p = localStorage.getItem('pr_price');
-  var m = localStorage.getItem('pr_margin');
-  var y = localStorage.getItem('pr_year');
-  var pe = document.getElementById('pr-price');
-  var me = document.getElementById('pr-margin');
-  var ye = document.getElementById('pr-year');
-  if(pe && p) pe.value = p;
-  if(me && m) me.value = m;
+  var ps = localStorage.getItem('pr_price_summer') || localStorage.getItem('pr_price') || '200';
+  var ms = localStorage.getItem('pr_margin_summer') || localStorage.getItem('pr_margin') || '20';
+  var pa = localStorage.getItem('pr_price_autumn') || localStorage.getItem('pr_price') || '200';
+  var ma = localStorage.getItem('pr_margin_autumn') || localStorage.getItem('pr_margin') || '20';
+  var y  = localStorage.getItem('pr_year');
+  var pse = document.getElementById('pr-price-summer');
+  var mse = document.getElementById('pr-margin-summer');
+  var pae = document.getElementById('pr-price-autumn');
+  var mae = document.getElementById('pr-margin-autumn');
+  var ye  = document.getElementById('pr-year');
+  if(pse) pse.value = ps;
+  if(mse) mse.value = ms;
+  if(pae) pae.value = pa;
+  if(mae) mae.value = ma;
   if(ye && y) ye.value = y;
+  // Init variety buttons
+  if(typeof updateVarietyButtons === 'function') updateVarietyButtons();
 }
+
+// Ensure profit card inputs are populated from localStorage once DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function(){ setTimeout(initProfitCard, 200); });
+} else {
+  setTimeout(initProfitCard, 200);
+}
+
 
 function getCostImgs(id){
   try{
