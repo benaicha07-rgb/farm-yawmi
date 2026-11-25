@@ -571,7 +571,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.42</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.43</div>
       </div>
     </div>
   </div>
@@ -2554,6 +2554,44 @@ function closeMonthPanel() {
   if (p) p.remove();
   selectedMonth = -1;
   document.querySelectorAll('.tl-month').forEach(function(el){ el.classList.remove('active-month'); });
+  // Restore current month brief
+  if(typeof updateMonthBrief === 'function'){
+    var curM = new Date().getMonth();
+    var curY = new Date().getFullYear();
+    updateMonthBrief(curM, curY);
+  }
+}
+
+
+function updateMonthBrief(idx, calYear){
+  var s = SEASON[idx];
+  var briefEl = document.getElementById('ai-brief');
+  if(briefEl && s){
+    briefEl.innerHTML = '<strong>'+s.en+' · '+s.ar+'</strong> — Priority tasks this month:<br>' + s.tasks.map(function(t){ return '• '+t; }).join('<br>');
+  }
+  // Update notes for the selected month
+  var notesEl = document.getElementById('ov-notes-summary');
+  if(notesEl){
+    var monthKey = calYear + '-' + String(idx+1).padStart(2,'0');
+    var key = 'month:'+monthKey;
+    var monthNotes = (D.notes && D.notes[key]) || [];
+    if(!monthNotes.length){
+      notesEl.innerHTML = '';
+    } else {
+      var monthLabel = new Date(monthKey+'-01').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
+      var html = '<div style="background:#fffbea;border:1.5px solid #f59e0b;border-radius:10px;padding:12px 14px;margin-bottom:6px;">';
+      html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">';
+      html += '<div style="font-size:13px;font-weight:700;color:#92400e;">📝 Notes · '+monthLabel+'</div>';
+      html += '<button class="btn btn-sm" onclick="goPage(\'notes\',null)" style="font-size:11px;border-color:#f59e0b;color:#92400e;">All notes →</button>';
+      html += '</div>';
+      monthNotes.slice().reverse().slice(0,3).forEach(function(n){
+        html += '<div style="font-size:13px;color:#78350f;padding:4px 0;border-bottom:1px solid #fde68a;line-height:1.4;">'+n.text+'</div>';
+      });
+      if(monthNotes.length>3) html += '<div style="font-size:11px;color:#a78028;margin-top:4px;">+ '+(monthNotes.length-3)+' more</div>';
+      html += '</div>';
+      notesEl.innerHTML = html;
+    }
+  }
 }
 
 function openMonthPanel(idx) {
@@ -2600,6 +2638,9 @@ function openMonthPanel(idx) {
   var harvests = (D.harvest||[]).filter(function(h){ return (h.date||'').startsWith(prefix) && isInSeason(h.date, seasonYear); });
   var costs = (D.costs||[]).filter(function(c){ return (c.date||'').startsWith(prefix) && isInSeason(c.date, seasonYear); });
   var rains = (D.weather||[]).filter(function(w){ return (w.date||'').startsWith(prefix) && isInSeason(w.date, seasonYear); });
+  // Update the brief section for the selected month
+  updateMonthBrief(idx, calYear);
+
 
   var seasonColor = s.color || '#5dcaa5';
   var html = '<div id="month-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-top:10px;box-shadow:0 8px 32px rgba(0,0,0,.12);overflow:hidden;">';
