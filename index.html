@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.38</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.39</div>
       </div>
     </div>
   </div>
@@ -648,7 +648,14 @@ function loadLeafletIfNeeded(cb){
 
   <!-- Season timeline -->
   <div class="card">
-    <div class="card-head"><h3>2026 season · الموسم</h3><span id="stage-label" class="badge b-green">Fruit development · تطور الثمار</span></div>
+    <div class="card-head" style="display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn btn-sm" onclick="changeOverviewSeason(-1)" title="Previous season">◀</button>
+        <h3 id="overview-season-title" style="margin:0;">Season 2027 · الموسم</h3>
+        <button class="btn btn-sm" onclick="changeOverviewSeason(1)" title="Next season">▶</button>
+      </div>
+      <span id="stage-label" class="badge b-green">Early dormancy · بداية السكون</span>
+    </div>
     <div class="timeline" id="timeline"></div>
     <div style="font-size:14px;color:var(--text3)" id="stage-tasks">This month: Peak irrigation 3–5 days · ري مكثف · Codling moth traps · فخاخ دودة التفاح</div>
   </div>
@@ -2492,16 +2499,30 @@ function setDefaults(){
 // === TIMELINE ===
 var selectedMonth = new Date().getMonth();
 
+window._overviewSeasonOffset = 0; // 0 = current season
+
+function getOverviewSeasonYear(){
+  var today = new Date();
+  var base = getSeasonYear(today.toISOString().slice(0,10));
+  return base + (window._overviewSeasonOffset || 0);
+}
+
+function changeOverviewSeason(delta){
+  window._overviewSeasonOffset = (window._overviewSeasonOffset || 0) + delta;
+  buildTimeline();
+}
+
 function buildTimeline(){
   const curM = new Date().getMonth(); // 0=Jan ... 10=Nov
   const tl=document.getElementById('timeline');
+  if(!tl) return;
   tl.innerHTML='';
   // Season order: Nov(10), Dec(11), Jan(0), Feb(1), ..., Oct(9)
   const seasonOrder = [10,11,0,1,2,3,4,5,6,7,8,9];
   const seasonAbbr = ['Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'];
   seasonOrder.forEach(function(calIdx, displayIdx){
     const d=document.createElement('div');
-    const isCur = (calIdx === curM);
+    const isCur = (calIdx === curM && window._overviewSeasonOffset === 0);
     d.className='tl-month'+(isCur?' cur':'');
     d.style.background=SEASON[calIdx].color+(isCur?'':'aa');
     d.style.color='#1a1a18';
@@ -2512,8 +2533,17 @@ function buildTimeline(){
     tl.appendChild(d);
   });
   const s=SEASON[curM];
-  document.getElementById('stage-label').textContent=s.en+' · '+s.ar;
-  document.getElementById('stage-tasks').textContent='This month: '+s.tasks.slice(0,2).join(' · ');
+  var stageEl = document.getElementById('stage-label');
+  if(stageEl) stageEl.textContent=s.en+' · '+s.ar;
+  var tasksEl = document.getElementById('stage-tasks');
+  if(tasksEl) tasksEl.textContent='This month: '+s.tasks.slice(0,2).join(' · ');
+
+  // Update season title
+  var titleEl = document.getElementById('overview-season-title');
+  if(titleEl){
+    var sy = getOverviewSeasonYear();
+    titleEl.textContent = 'Season '+sy+' · الموسم';
+  }
 }
 
 function closeMonthPanel() {
