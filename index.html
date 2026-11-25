@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.40</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.41</div>
       </div>
     </div>
   </div>
@@ -2510,6 +2510,7 @@ function getOverviewSeasonYear(){
 function changeOverviewSeason(delta){
   window._overviewSeasonOffset = (window._overviewSeasonOffset || 0) + delta;
   buildTimeline();
+  if(typeof renderOverviewKPIs==='function') renderOverviewKPIs();
 }
 
 function buildTimeline(){
@@ -2949,18 +2950,41 @@ function renderAll(){
 }
 
 function renderOverviewKPIs(){
-  // Fast KPI-only update for header numbers - no heavy DOM rendering
+  // Fast KPI-only update for header numbers - follows selected season
   try{
-    var pending=D.tasks.filter(t=>!t.done).length;
+    var seasonYear = (typeof getOverviewSeasonYear === 'function') ? getOverviewSeasonYear() : getSeasonYear(new Date().toISOString().slice(0,10));
+
+    // Tasks pending in the selected season
+    var pending = (D.tasks||[]).filter(function(t){
+      return !t.done && isInSeason(t.date, seasonYear);
+    }).length;
     var el=document.getElementById('ov-pending'); if(el) el.textContent=pending;
-    var lastIr=[...D.irrigation].sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-    var el2=document.getElementById('ov-irrig'); if(el2) el2.textContent=lastIr?Math.round((Date.now()-new Date(lastIr.date))/86400000)+'d ago':'—';
-    var kg=D.harvest.reduce((s,h)=>s+parseFloat(h.kg||0),0);
-    var el3=document.getElementById('ov-yield'); if(el3) el3.textContent=Math.round(kg)+' kg';
-    var tot=D.costs.reduce((s,c)=>s+(parseFloat(c.total||0)||parseFloat(c.qty||1)*parseFloat(c.price||0)),0);
+
+    // Last irrigation - special message for Nov-Mar
+    var curMonth = new Date().getMonth(); // 0=Jan ... 10=Nov
+    var el2=document.getElementById('ov-irrig');
+    if(el2){
+      if(curMonth >= 10 || curMonth <= 2){ // Nov, Dec, Jan, Feb, Mar
+        el2.textContent = 'Irrigation not started yet';
+      } else {
+        var seasonIrrig = (D.irrigation||[]).filter(function(r){ return isInSeason(r.date, seasonYear); });
+        var lastIr = seasonIrrig.sort(function(a,b){ return new Date(b.date)-new Date(a.date); })[0];
+        el2.textContent = lastIr ? Math.round((Date.now()-new Date(lastIr.date))/86400000)+'d ago' : '—';
+      }
+    }
+
+    // Season yield
+    var kg = (D.harvest||[]).filter(function(h){ return isInSeason(h.date, seasonYear); })
+      .reduce(function(s,h){ return s + parseFloat(h.kg||0); }, 0);
+    var el3=document.getElementById('ov-yield'); if(el3) el3.textContent=Math.round(kg).toLocaleString()+' kg';
+
+    // Season costs
+    var tot = (D.costs||[]).filter(function(c){ return isInSeason(c.date, seasonYear); })
+      .reduce(function(s,c){ return s + (parseFloat(c.total||0)||parseFloat(c.qty||1)*parseFloat(c.price||0)); }, 0);
     var el4=document.getElementById('ov-costs'); if(el4) el4.textContent=Math.round(tot).toLocaleString();
-    var el5=document.getElementById('task-counts'); if(el5) el5.textContent=pending+' pending · '+D.tasks.filter(t=>t.done).length+' done';
-  }catch(e){}
+
+    var el5=document.getElementById('task-counts'); if(el5) el5.textContent=pending+' pending · '+(D.tasks||[]).filter(t=>t.done && isInSeason(t.date, seasonYear)).length+' done';
+  }catch(e){ console.warn(e); }
 }
 
 function renderCurrentPage(){
@@ -2980,14 +3004,7 @@ function renderCurrentPage(){
 
 function renderOverview(){
   buildAlerts();
-  const pending=D.tasks.filter(t=>!t.done).length;
-  document.getElementById('ov-pending').textContent=pending;
-  const lastIr=[...D.irrigation].sort((a,b)=>new Date(b.date)-new Date(a.date))[0];
-  document.getElementById('ov-irrig').textContent=lastIr?Math.round((Date.now()-new Date(lastIr.date))/86400000)+'d ago':'—';
-  const totalKg=D.harvest.reduce((s,h)=>s+parseFloat(h.kg||0),0);
-  document.getElementById('ov-yield').textContent=totalKg?totalKg.toLocaleString()+' kg':'0 kg';
-  const totalCost=D.costs.reduce((s,c)=>s+(parseFloat(c.total||0)||parseFloat(c.qty||1)*parseFloat(c.price||0)),0);
-  document.getElementById('ov-costs').textContent=Math.round(totalCost).toLocaleString();
+  if(typeof renderOverviewKPIs==='function') renderOverviewKPIs();
 
   const taskPrev=document.getElementById('ov-tasks');
   const curYr = new Date().getFullYear();
