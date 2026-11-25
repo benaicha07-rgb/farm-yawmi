@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.39</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.40</div>
       </div>
     </div>
   </div>
@@ -2562,26 +2562,39 @@ function openMonthPanel(idx) {
   selectedMonth = idx;
   var now = new Date();
   var curMonth = now.getMonth();
-  var year = now.getFullYear();
   var s = SEASON[idx];
   var monthName = ['January','February','March','April','May','June','July','August','September','October','November','December'][idx];
-  var isPast = idx < curMonth;
-  var isCur = idx === curMonth;
-  var isFuture = idx > curMonth;
 
-  // Gather logged data for this month
+  // Determine calendar year for this month inside the selected season
+  var seasonYear = getOverviewSeasonYear(); // e.g. 2027
+  var calYear = (idx >= 10) ? (seasonYear - 1) : seasonYear; // Nov/Dec belong to previous calendar year
+  var year = calYear;
+  var isPast = false;
+  var isCur = false;
+  var isFuture = false;
+  if (window._overviewSeasonOffset === 0) {
+    isPast = idx < curMonth;
+    isCur = idx === curMonth;
+    isFuture = idx > curMonth;
+  } else if (window._overviewSeasonOffset > 0) {
+    isFuture = true;
+  } else {
+    isPast = true;
+  }
+
+  // Gather logged data for this month of the selected season only
   var prefix = year+'-'+String(idx+1).padStart(2,'0');
-  var tasks = (D.tasks||[]).filter(function(t){ return (t.date||'').startsWith(prefix); });
-  var irrigs = (D.irrigation||[]).filter(function(r){ return (r.date||'').startsWith(prefix); });
-  var harvests = (D.harvest||[]).filter(function(h){ return (h.date||'').startsWith(prefix); });
-  var costs = (D.costs||[]).filter(function(c){ return (c.date||'').startsWith(prefix); });
-  var rains = (D.weather||[]).filter(function(w){ return (w.date||'').startsWith(prefix); });
+  var tasks = (D.tasks||[]).filter(function(t){ return (t.date||'').startsWith(prefix) && isInSeason(t.date, seasonYear); });
+  var irrigs = (D.irrigation||[]).filter(function(r){ return (r.date||'').startsWith(prefix) && isInSeason(r.date, seasonYear); });
+  var harvests = (D.harvest||[]).filter(function(h){ return (h.date||'').startsWith(prefix) && isInSeason(h.date, seasonYear); });
+  var costs = (D.costs||[]).filter(function(c){ return (c.date||'').startsWith(prefix) && isInSeason(c.date, seasonYear); });
+  var rains = (D.weather||[]).filter(function(w){ return (w.date||'').startsWith(prefix) && isInSeason(w.date, seasonYear); });
 
   var seasonColor = s.color || '#5dcaa5';
   var html = '<div id="month-panel" style="background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-top:10px;box-shadow:0 8px 32px rgba(0,0,0,.12);overflow:hidden;">';
   // Colored top bar
   html += '<div style="background:'+seasonColor+';padding:14px 20px;display:flex;align-items:center;justify-content:space-between;">';
-  html += '<div><span style="font-size:18px;font-weight:800;color:#1a1a18;">'+monthName+'</span> <span style="font-size:13px;color:rgba(0,0,0,.55);font-weight:600;">'+year+' · '+s.en+' · '+s.ar+'</span></div>';
+  html += '<div><span style="font-size:18px;font-weight:800;color:#1a1a18;">'+monthName+'</span> <span style="font-size:13px;color:rgba(0,0,0,.55);font-weight:600;">'+year+' · Season '+seasonYear+' · '+s.en+'</span></div>';
   html += '<button onclick="closeMonthPanel()" style="border:none;background:rgba(0,0,0,.15);border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:16px;color:#1a1a18;line-height:1;display:flex;align-items:center;justify-content:center;">×</button></div>';
   html += '<div style="padding:16px 20px;">';
 
