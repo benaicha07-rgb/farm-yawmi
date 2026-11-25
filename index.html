@@ -192,6 +192,8 @@ textarea{resize:vertical;min-height:52px}
 .timeline{display:flex;gap:3px;margin-bottom:8px}
 .tl-month{flex:1;padding:10px 4px;border-radius:6px;text-align:center;font-size:13px;font-weight:600;cursor:default;transition:all .2s}
 .tl-month.cur{outline:2px solid var(--green-mid);font-weight:700}
+.tl-month.active-month{outline:2px solid #16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.25);position:relative}
+.tl-month.active-month:after{content:"";position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);border:6px solid transparent;border-top-color:#16a34a}
 
 /* ── AI BRIEF ── */
 .ai-brief{background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--r);padding:14px 16px;margin-bottom:16px}
@@ -569,7 +571,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.41</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.42</div>
       </div>
     </div>
   </div>
@@ -2551,6 +2553,7 @@ function closeMonthPanel() {
   var p = document.getElementById('month-panel');
   if (p) p.remove();
   selectedMonth = -1;
+  document.querySelectorAll('.tl-month').forEach(function(el){ el.classList.remove('active-month'); });
 }
 
 function openMonthPanel(idx) {
@@ -2561,6 +2564,13 @@ function openMonthPanel(idx) {
     return;
   }
   selectedMonth = idx;
+  // Visual link: highlight the clicked month
+  document.querySelectorAll('.tl-month').forEach(function(el){ el.classList.remove('active-month'); });
+  var months = document.querySelectorAll('.tl-month');
+  var seasonOrder = [10,11,0,1,2,3,4,5,6,7,8,9];
+  var displayIdx = seasonOrder.indexOf(idx);
+  if(displayIdx >= 0 && months[displayIdx]) months[displayIdx].classList.add('active-month');
+
   var now = new Date();
   var curMonth = now.getMonth();
   var s = SEASON[idx];
@@ -3020,18 +3030,27 @@ function renderOverview(){
     </div>`).join('');
 
   const irPrev=document.getElementById('ov-irrig-status');
-  irPrev.innerHTML=BLOCKS.map(b=>{
-    const last=getLastIrrig(b.id);
-    const days=last?Math.round((Date.now()-new Date(last))/86400000):null;
-    const pct=days!==null?Math.min(100,Math.round(days/6*100)):0;
-    const color=pct>90?'var(--red-mid)':pct>65?'var(--amber-mid)':'var(--green-mid)';
-    return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
-      <div style="width:10px;height:10px;border-radius:50%;background:${b.color};flex-shrink:0"></div>
-      <span style="font-size:14px;min-width:68px;font-weight:500">${b.name}</span>
-      <div style="flex:1"><div class="prog"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div></div>
-      <span style="font-size:11px;color:var(--text3);min-width:55px;text-align:right">${days!==null?days+'d ago':'—'}</span>
-    </div>`;
-  }).join('');
+  if(irPrev){
+    var curM = new Date().getMonth();
+    var winter = (curM >= 10 || curM <= 2); // Nov-Mar
+    var seasonYear = (typeof getOverviewSeasonYear==='function') ? getOverviewSeasonYear() : getSeasonYear(new Date().toISOString().slice(0,10));
+    if(winter || window._overviewSeasonOffset > 0){
+      irPrev.innerHTML = '<div style="text-align:center;padding:18px 10px;color:var(--text3);font-size:13px;">Irrigation not started yet · الري لم يبدأ بعد</div>';
+    } else {
+      irPrev.innerHTML=BLOCKS.map(b=>{
+        const last=getLastIrrig(b.id);
+        const days=last?Math.round((Date.now()-new Date(last))/86400000):null;
+        const pct=days!==null?Math.min(100,Math.round(days/6*100)):0;
+        const color=pct>90?'var(--red-mid)':pct>65?'var(--amber-mid)':'var(--green-mid)';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+          <div style="width:10px;height:10px;border-radius:50%;background:${b.color};flex-shrink:0"></div>
+          <span style="font-size:14px;min-width:68px;font-weight:500">${b.name}</span>
+          <div style="flex:1"><div class="prog"><div class="prog-fill" style="width:${pct}%;background:${color}"></div></div></div>
+          <span style="font-size:11px;color:var(--text3);min-width:55px;text-align:right">${days!==null?days+'d ago':'—'}</span>
+        </div>`;
+      }).join('');
+    }
+  }
 }
 
 // === TASKS ===
