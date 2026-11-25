@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.36</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.37</div>
       </div>
     </div>
   </div>
@@ -1142,9 +1142,12 @@ function loadLeafletIfNeeded(cb){
           </div>
         </div>
         <div class="fg" style="min-width:120px;flex:0.8;">
-          <label>Year · السنة</label>
+          <label>Season · الموسم</label>
           <select id="pr-year" onchange="renderProfitCard()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);font-size:14px;">
-            <option>2025</option><option selected>2026</option><option>2027</option>
+            <option value="2025">Season 2025</option>
+            <option value="2026" selected>Season 2026</option>
+            <option value="2027">Season 2027</option>
+            <option value="2028">Season 2028</option>
           </select>
         </div>
       </div>
@@ -2246,6 +2249,38 @@ window._treeData = {"trees":[{"id":1,"species":"apple-orange","lat":35.418547810
 
 // === DATA ===
 let D={tasks:[],irrigation:[],harvest:[],costs:[],weather:[],materials:[],utilities:[],docs:[],taskOrder:{},products:[],album:[],tinBlocks:{},tinNotes:{},tinNumbers:{},notes:{},budgets:{},pruning:[]};
+
+// === SEASON HELPERS (Nov 1 → Oct 31) ===
+function getSeasonYear(dateStr) {
+  if (!dateStr) return null;
+  var d = new Date(dateStr);
+  if (isNaN(d)) return null;
+  var y = d.getFullYear();
+  var m = d.getMonth(); // 0=Jan ... 10=Nov
+  return (m >= 10) ? y + 1 : y; // Nov/Dec belong to next season
+}
+function isInSeason(dateStr, seasonYear) {
+  var sy = getSeasonYear(dateStr);
+  return sy === parseInt(seasonYear);
+}
+function getSeasonRange(seasonYear) {
+  var y = parseInt(seasonYear);
+  return {
+    start: (y-1) + '-11-01',
+    end: y + '-10-31'
+  };
+}
+function getSeasonMonths() {
+  return ['November','December','January','February','March','April','May','June','July','August','September','October'];
+}
+function getSeasonMonthOrder(seasonYear) {
+  var y = parseInt(seasonYear);
+  return [
+    (y-1)+'-11', (y-1)+'-12',
+    y+'-01', y+'-02', y+'-03', y+'-04', y+'-05', y+'-06', y+'-07', y+'-08', y+'-09', y+'-10'
+  ];
+}
+
 var yearInEditMode = null;
 const saved=localStorage.getItem('farmYawmi3');
 if(saved)try{D=JSON.parse(saved);}catch(e){}
@@ -3204,7 +3239,7 @@ function renderTasks(){
       var yColor = YEAR_COLORS[yi % YEAR_COLORS.length];
       var yBorder = YEAR_BORDER[yi % YEAR_BORDER.length];
       yi++;
-      var isCurYr = yr === curYear;
+      var isCurYr = (getSeasonYear(today.toISOString().slice(0,10)) === parseInt(yr));
       var yStored = localStorage.getItem('ty_'+yr);
       var yOpen = yStored !== null ? yStored==='1' : false;
       html += '<div style="margin-bottom:12px;border-radius:10px;overflow:hidden;border:2px solid '+yBorder+';">';
@@ -3234,18 +3269,19 @@ function renderTasks(){
     return;
   }
 
-  // ── MONTH VIEW ── grouped Year → Month with analytics + heatmap + year summary
+  // ── MONTH VIEW ── grouped by Season (Nov–Oct) → Month with analytics + heatmap + year summary
   var monthGroups = {};
   D.tasks.forEach(function(t){
     var d = t.date ? new Date(t.date) : null;
-    var yr = d ? String(d.getFullYear()) : 'zz';
+    var seasonYr = d ? getSeasonYear(t.date) : null;
+    var yr = seasonYr ? String(seasonYr) : 'zz';
     var mk = d ? d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0') : 'zz-no-date';
     var ml = d ? MONTHS[d.getMonth()] : 'No date';
-    if(!monthGroups[mk]) monthGroups[mk] = {label:ml, year:yr, tasks:[]};
+    if(!monthGroups[mk]) monthGroups[mk] = {label:ml, year:yr, tasks:[], sortKey: mk};
     monthGroups[mk].tasks.push(t);
   });
   var yearMonths = {};
-  Object.keys(monthGroups).sort().forEach(function(mk){
+  Object.keys(monthGroups).forEach(function(mk){
     var yr = monthGroups[mk].year;
     if(!yearMonths[yr]) yearMonths[yr] = {};
     yearMonths[yr][mk] = monthGroups[mk];
@@ -3267,7 +3303,7 @@ function renderTasks(){
 
     html += '<div style="margin-bottom:14px;border-radius:12px;overflow:hidden;border:2px solid '+yBorder+';">';
     html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:'+yBorder+';user-select:none;">';
-    html += '<span onclick="toggleYearGroup(\''+yr+'\')" style="font-weight:800;font-size:17px;color:#fff;letter-spacing:.5px;cursor:pointer;flex:1;">'+(isCurYr?'📅 ':'')+yr+'</span>';
+    html += '<span onclick="toggleYearGroup(\''+yr+'\')" style="font-weight:800;font-size:17px;color:#fff;letter-spacing:.5px;cursor:pointer;flex:1;">'+(isCurYr?'📅 ':'')+'Season '+yr+'</span>';
     html += '<div style="display:flex;align-items:center;gap:8px;">';
     if(yPending) html += '<span style="background:rgba(255,255,255,.25);color:#fff;padding:2px 10px;border-radius:20px;font-size:12px;font-weight:600;">'+yPending+' pending</span>';
     if(isFutureYr) {
@@ -3296,8 +3332,11 @@ function renderTasks(){
     var monthCounts = new Array(12).fill(0);
     allYrFlat.forEach(function(t){ if(t.date){ monthCounts[new Date(t.date).getMonth()]++; } });
     var maxM = Math.max.apply(null,monthCounts) || 1;
-    var MONTH_ABBR=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-    var curMo = new Date().getFullYear().toString()===yr ? new Date().getMonth() : -1;
+    // Season order: Nov, Dec, Jan ... Oct
+    var SEASON_ABBR = ['Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'];
+    var SEASON_IDX  = [10,11,0,1,2,3,4,5,6,7,8,9]; // map display position to calendar month
+    var curMo = new Date().getMonth();
+    var isCurrentSeason = (getSeasonYear(new Date().toISOString().slice(0,10)) === parseInt(yr));
     var sumStored = localStorage.getItem('ys_'+yr);
     var sumOpen = sumStored !== null ? sumStored==='1' : true;
 
@@ -3330,13 +3369,15 @@ function renderTasks(){
     html += '</div></div>';
     html += '<div><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">Month heatmap · خريطة الأشهر</div>';
     html += '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;">';
-    for(var mi=0;mi<12;mi++){
+    for(var di=0;di<12;di++){
+      var mi = SEASON_IDX[di];
       var cnt=monthCounts[mi];
       var intensity=cnt?Math.max(0.25,cnt/maxM):0;
       var bg=cnt?yBorder:'#f3f4f6';
-      var cellOpacity=(mi===curMo)?'1':cnt?intensity.toFixed(2):'1';
-      html += '<div style="text-align:center;border-radius:5px;padding:4px 2px;background:'+bg+';opacity:'+cellOpacity+';border:'+(mi===curMo?'2px solid '+yBorder:'1px solid #e5e7eb')+';cursor:default;" title="'+MONTH_ABBR[mi]+': '+cnt+' tasks">'
-        + '<div style="font-size:9px;font-weight:700;color:'+(cnt?yBorder:'#d1d5db')+';background:#fff;border-radius:2px;line-height:1.5;padding:0 1px;">'+MONTH_ABBR[mi]+'</div>'
+      var isCur = isCurrentSeason && mi===curMo;
+      var cellOpacity=isCur?'1':cnt?intensity.toFixed(2):'1';
+      html += '<div style="text-align:center;border-radius:5px;padding:4px 2px;background:'+bg+';opacity:'+cellOpacity+';border:'+(isCur?'2px solid '+yBorder:'1px solid #e5e7eb')+';cursor:default;" title="'+SEASON_ABBR[di]+': '+cnt+' tasks">'
+        + '<div style="font-size:9px;font-weight:700;color:'+(cnt?yBorder:'#d1d5db')+';background:#fff;border-radius:2px;line-height:1.5;padding:0 1px;">'+SEASON_ABBR[di]+'</div>'
         + '</div>';
     }
     html += '</div><div style="font-size:10px;color:var(--text3);margin-top:4px;">Darker = more tasks · أغمق = أكثر</div>';
@@ -8399,7 +8440,7 @@ function renderProfitCard(){
   var marginSummer = parseFloat(marginSummerEl.value) || 20;
   var priceAutumn  = parseFloat(priceAutumnEl.value) || 200;
   var marginAutumn = parseFloat(marginAutumnEl.value) || 20;
-  var yr          = yearEl ? yearEl.value : new Date().getFullYear().toString();
+  var yr          = yearEl ? yearEl.value : '2026';
   localStorage.setItem('pr_price_summer', priceSummer);
   localStorage.setItem('pr_margin_summer', marginSummer);
   localStorage.setItem('pr_price_autumn', priceAutumn);
@@ -8408,21 +8449,17 @@ function renderProfitCard(){
 
   function costVal(c){ return parseFloat(c.total||0) || parseFloat(c.qty||1)*parseFloat(c.price||0); }
   var totalCosts = (D.costs||[])
-    .filter(function(c){ return (c.date||'').startsWith(yr); })
+    .filter(function(c){ return isInSeason(c.date, yr); })
     .reduce(function(s,c){ return s + costVal(c); }, 0);
 
   // Ensure categories
   (D.harvest||[]).forEach(function(h){ if(!h.category) h.category='unclassified'; });
 
-  function yearOf(h){
-    var d = String(h.date||'').trim();
-    return d.slice(0,4);
-  }
   var summerKg = (D.harvest||[])
-    .filter(function(h){ return yearOf(h)===yr && (h.category||'')==='summer'; })
+    .filter(function(h){ return isInSeason(h.date, yr) && (h.category||'')==='summer'; })
     .reduce(function(s,h){ return s + parseFloat(h.kg||0); }, 0);
   var autumnKg = (D.harvest||[])
-    .filter(function(h){ return yearOf(h)===yr && (h.category||'')==='autumn'; })
+    .filter(function(h){ return isInSeason(h.date, yr) && (h.category||'')==='autumn'; })
     .reduce(function(s,h){ return s + parseFloat(h.kg||0); }, 0);
   var classifiedKg = summerKg + autumnKg;
 
