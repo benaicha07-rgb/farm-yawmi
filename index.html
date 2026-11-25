@@ -569,7 +569,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.37</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.38</div>
       </div>
     </div>
   </div>
@@ -2493,21 +2493,25 @@ function setDefaults(){
 var selectedMonth = new Date().getMonth();
 
 function buildTimeline(){
-  const m=new Date().getMonth();
+  const curM = new Date().getMonth(); // 0=Jan ... 10=Nov
   const tl=document.getElementById('timeline');
   tl.innerHTML='';
-  MONTHS.forEach((mo,i)=>{
+  // Season order: Nov(10), Dec(11), Jan(0), Feb(1), ..., Oct(9)
+  const seasonOrder = [10,11,0,1,2,3,4,5,6,7,8,9];
+  const seasonAbbr = ['Nov','Dec','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'];
+  seasonOrder.forEach(function(calIdx, displayIdx){
     const d=document.createElement('div');
-    d.className='tl-month'+(i===m?' cur':'');
-    d.style.background=SEASON[i].color+(i===m?'':'aa');
+    const isCur = (calIdx === curM);
+    d.className='tl-month'+(isCur?' cur':'');
+    d.style.background=SEASON[calIdx].color+(isCur?'':'aa');
     d.style.color='#1a1a18';
     d.style.cursor='pointer';
-    d.title=SEASON[i].en+' — click for details';
-    d.textContent=mo;
-    d.onclick=(function(idx){ return function(){ openMonthPanel(idx); }; })(i);
+    d.title=SEASON[calIdx].en+' — click for details';
+    d.textContent=seasonAbbr[displayIdx];
+    d.onclick=(function(idx){ return function(){ openMonthPanel(idx); }; })(calIdx);
     tl.appendChild(d);
   });
-  const s=SEASON[m];
+  const s=SEASON[curM];
   document.getElementById('stage-label').textContent=s.en+' · '+s.ar;
   document.getElementById('stage-tasks').textContent='This month: '+s.tasks.slice(0,2).join(' · ');
 }
