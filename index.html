@@ -571,7 +571,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.44</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.45</div>
       </div>
     </div>
   </div>
@@ -5888,6 +5888,12 @@ function addBlockLabels() {
 function renderIrrigStatusStrip() {
   var strip = document.getElementById('irrig-status-strip');
   if (!strip) return;
+  var curM = new Date().getMonth(); // 0=Jan ... 10=Nov
+  var noIrrigMonths = (curM >= 10 || curM <= 2); // Nov, Dec, Jan, Feb, Mar
+  if (noIrrigMonths) {
+    strip.innerHTML = '<div style="width:100%;text-align:center;padding:14px 10px;color:var(--text3);font-size:13px;background:var(--surface2);border-radius:8px;border:1px dashed var(--border);">Irrigation not started yet · الري لم يبدأ بعد<br><span style="font-size:11px;">Status will appear from April</span></div>';
+    return;
+  }
   var blocks = ['A','B','C','D','E','F'];
   strip.innerHTML = blocks.map(function(id) {
     var info = BLOCK_INFO[id];
