@@ -571,7 +571,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.45</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.46</div>
       </div>
     </div>
   </div>
@@ -877,6 +877,15 @@ function loadLeafletIfNeeded(cb){
       <button class="btn btn-sm" onclick="document.getElementById(&#39;dpanel&#39;).style.display=&#39;none&#39;">✕</button>
     </div>
     <div class="dev-grid" id="day-events"></div>
+    <!-- Quick Note -->
+    <div style="margin:12px 0;padding:10px 12px;background:#fffbea;border:1px solid #fde68a;border-radius:8px;">
+      <div style="font-size:12px;font-weight:700;color:#92400e;margin-bottom:6px;">📝 Quick note · ملاحظة سريعة</div>
+      <textarea id="day-quick-note" rows="2" placeholder="What will you do this day? · ماذا ستفعل هذا اليوم؟" style="width:100%;padding:8px;border:1px solid #fde68a;border-radius:6px;font-size:13px;resize:vertical;background:#fffef8;"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:6px;">
+        <button class="btn btn-sm" onclick="saveDayQuickNote()" style="background:#f59e0b;color:#fff;border:none;">Save note · حفظ</button>
+      </div>
+      <div id="day-notes-list" style="margin-top:8px;font-size:12px;color:#78350f;"></div>
+    </div>
     <div class="day-add">
       <h4>+ Add entry for this day · إضافة إدخال</h4>
       <div class="form-grid">
@@ -6217,6 +6226,33 @@ function renderWeekView() {
   }
 }
 
+
+function saveDayQuickNote(){
+  if(!selectedDate) return;
+  var ta = document.getElementById('day-quick-note');
+  if(!ta) return;
+  var text = ta.value.trim();
+  if(!text) return;
+  if(!D.notes) D.notes = {};
+  var key = 'day:' + selectedDate;
+  if(!D.notes[key]) D.notes[key] = [];
+  D.notes[key].push({text: text, ts: new Date().toISOString()});
+  persist();
+  ta.value = '';
+  openDayPanel(selectedDate);
+}
+
+function renderDayNotes(dateKey){
+  var el = document.getElementById('day-notes-list');
+  if(!el) return;
+  var key = 'day:' + dateKey;
+  var notes = (D.notes && D.notes[key]) || [];
+  if(!notes.length){ el.innerHTML = ''; return; }
+  el.innerHTML = notes.slice().reverse().map(function(n, i){
+    return '<div style="padding:4px 0;border-bottom:1px solid #fde68a;">• ' + n.text + '</div>';
+  }).join('');
+}
+
 function openDayPanel(dateKey) {
   selectedDate = dateKey;
   var panel = document.getElementById('dpanel');
@@ -6248,6 +6284,7 @@ function openDayPanel(dateKey) {
   // Set the date in add form
   var da = document.getElementById('da-desc');
   if (da) da.value = '';
+  renderDayNotes(selectedDate);
   panel.scrollIntoView({behavior:'smooth', block:'nearest'});
   renderCalendar();
 }
