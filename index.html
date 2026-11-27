@@ -571,7 +571,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.43</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.44</div>
       </div>
     </div>
   </div>
@@ -2694,11 +2694,26 @@ function openMonthPanel(idx) {
       if(costs.length>6) html += '<span style="font-size:12px;color:var(--text3);padding:3px 6px;">+' +(costs.length-6)+' more</span>';
       html += '</div>';
     }
-    if (!tasks.length && !irrigs.length && !rains.length) {
-      html += '<div style="font-size:14px;color:var(--text3);font-style:italic;padding:8px 0;text-align:center;">No data logged for this month yet · لا توجد بيانات</div>';
-      html += '<div style="font-size:13px;color:var(--text2);margin-top:10px;background:var(--surface2);border-radius:8px;padding:10px;">📋 Suggested tasks:<br>';
+    if (!tasks.length && !irrigs.length && !harvests.length && !costs.length && !rains.length) {
+      html += '<div style="font-size:14px;color:var(--text3);font-style:italic;padding:12px 0;text-align:center;">No data logged for this month yet · لا توجد بيانات لهذا الشهر</div>';
+      html += '<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-radius:8px;padding:10px 12px;margin-bottom:10px;line-height:1.6;">';
+      html += 'Data comes from the other tabs:<br>';
+      html += '• <b>Tasks</b> tab → tasks for this month<br>';
+      html += '• <b>Irrigation</b> tab → irrigation sessions<br>';
+      html += '• <b>Harvest</b> tab → harvest logs<br>';
+      html += '• <b>Costs</b> tab → expenses for this month';
+      html += '</div>';
+      html += '<div style="font-size:13px;color:var(--text2);margin-top:6px;background:var(--surface2);border-radius:8px;padding:10px;">📋 Suggested tasks:<br>';
       s.tasks.forEach(function(t){ html += '<span style="color:var(--green);">→</span> '+t+'<br>'; });
       html += '</div>';
+    } else {
+      // Partial empty states
+      if (!costs.length) {
+        html += '<div style="font-size:12px;color:var(--text3);margin-top:6px;padding:6px 0;">💰 No costs logged for this month · add them in the <b>Costs</b> tab</div>';
+      }
+      if (!irrigs.length) {
+        html += '<div style="font-size:12px;color:var(--text3);margin-top:2px;padding:4px 0;">💧 No irrigation logged for this month · add them in the <b>Irrigation</b> tab</div>';
+      }
     }
   }
   html += '</div></div>'; // close padding div + panel div
