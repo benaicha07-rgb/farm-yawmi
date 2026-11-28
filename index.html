@@ -571,7 +571,7 @@ function loadLeafletIfNeeded(cb){
       <div class="sidebar-logo-icon">🌿</div>
       <div>
         <div class="sidebar-logo-name">Farm Yawmi</div>
-        <div class="sidebar-logo-sub">مزرعة يومي · v6.46</div>
+        <div class="sidebar-logo-sub">مزرعة يومي · v6.47</div>
       </div>
     </div>
   </div>
@@ -6236,10 +6236,35 @@ function saveDayQuickNote(){
   if(!D.notes) D.notes = {};
   var key = 'day:' + selectedDate;
   if(!D.notes[key]) D.notes[key] = [];
-  D.notes[key].push({text: text, ts: new Date().toISOString()});
+  D.notes[key].push({id: Date.now(), text: text, ts: new Date().toISOString()});
   persist();
   ta.value = '';
   openDayPanel(selectedDate);
+}
+
+
+function editDayNote(dateKey, id){
+  var key = 'day:' + dateKey;
+  var notes = (D.notes && D.notes[key]) || [];
+  var note = notes.find(function(n){ return n.id === id; });
+  if(!note) return;
+  var newText = prompt('Edit note:', note.text);
+  if(newText === null) return;
+  newText = newText.trim();
+  if(!newText) return;
+  note.text = newText;
+  note.edited = true;
+  persist();
+  openDayPanel(dateKey);
+}
+
+function deleteDayNote(dateKey, id){
+  if(!confirm('Delete this note?')) return;
+  var key = 'day:' + dateKey;
+  if(!D.notes || !D.notes[key]) return;
+  D.notes[key] = D.notes[key].filter(function(n){ return n.id !== id; });
+  persist();
+  openDayPanel(dateKey);
 }
 
 function renderDayNotes(dateKey){
@@ -6248,8 +6273,13 @@ function renderDayNotes(dateKey){
   var key = 'day:' + dateKey;
   var notes = (D.notes && D.notes[key]) || [];
   if(!notes.length){ el.innerHTML = ''; return; }
-  el.innerHTML = notes.slice().reverse().map(function(n, i){
-    return '<div style="padding:4px 0;border-bottom:1px solid #fde68a;">• ' + n.text + '</div>';
+  el.innerHTML = notes.slice().reverse().map(function(n){
+    var id = n.id || 0;
+    return '<div style="display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-bottom:1px solid #fde68a;">'
+      + '<span style="flex:1;">• ' + n.text + '</span>'
+      + '<button onclick="editDayNote(\''+dateKey+'\','+id+')" style="border:none;background:none;cursor:pointer;font-size:11px;color:#92400e;">✏️</button>'
+      + '<button onclick="deleteDayNote(\''+dateKey+'\','+id+')" style="border:none;background:none;cursor:pointer;font-size:11px;color:#c2410c;">✕</button>'
+      + '</div>';
   }).join('');
 }
 
@@ -8399,8 +8429,8 @@ function renderNotesPage(){
   var container = document.getElementById('notes-list');
   if(!container) return;
 
-  var TYPE_LABELS = {month:'📅 Month · شهر', block:'🌿 Block · قطعة', tree:'🌳 Tree · شجرة', general:'📋 General · عام'};
-  var TYPE_COLORS = {month:'#6366f1', block:'#22c55e', tree:'#f97316', general:'#64748b'};
+  var TYPE_LABELS = {month:'📅 Month · شهر', block:'🌿 Block · قطعة', tree:'🌳 Tree · شجرة', general:'📋 General · عام', day:'📅 Day · يوم'};
+  var TYPE_COLORS = {month:'#6366f1', block:'#22c55e', tree:'#f97316', general:'#64748b', day:'#f59e0b'};
 
   // Collect all notes grouped by type → month → key
   var grouped = {};
@@ -8415,6 +8445,8 @@ function renderNotesPage(){
       var calMonth;
       if(type === 'month') {
         calMonth = key.split(':')[1]; // e.g. "2026-08"
+      } else if(type === 'day') {
+        calMonth = key.split(':')[1].slice(0,7); // day:2026-11-27 → 2026-11
       } else {
         calMonth = n.ts ? n.ts.slice(0,7) : 'unknown';
       }
@@ -8429,7 +8461,7 @@ function renderNotesPage(){
   }
 
   var html = '';
-  ['month','block','tree','general'].forEach(function(type){
+  ['month','block','tree','general','day'].forEach(function(type){
     if(!grouped[type]) return;
     var color = TYPE_COLORS[type];
     html += '<div style="margin-bottom:20px;">';
